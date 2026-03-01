@@ -1,0 +1,47 @@
+{
+  "name": "localtag",
+  "version": "1.0.0",
+  "description": "",
+  "main": "dist-main/main.js",
+  "scripts": {
+    "dev:next": "next dev ./renderer -p 3123",
+    "build:next": "next build ./renderer",
+    "build:electron": "tsup",
+    "dev:electron": "cross-env NODE_ENV=development tsup && electron .",
+    "dev": "concurrently -k \"npm run dev:next\" \"wait-on tcp:3123 && npm run dev:electron\"",
+    "build": "npm run build:next && npm run build:electron && electron-builder"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/redbullack/localTag.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/redbullack/localTag/issues"
+  },
+  "homepage": "https://github.com/redbullack/localTag#readme",
+  "dependencies": {
+    "better-sqlite3": "^12.6.2",
+    "next": "^16.1.6",
+    "react": "^19.2.4",
+    "react-dom": "^19.2.4"
+  },
+  "devDependencies": {
+    "@types/better-sqlite3": "^7.6.13",
+    "@types/node": "^25.3.3",
+    "@types/react": "^19.2.14",
+    "autoprefixer": "^10.4.27",
+    "concurrently": "^9.2.1",
+    "cross-env": "^10.1.0",
+    "electron": "^40.6.1",
+    "electron-builder": "^26.8.1",
+    "postcss": "^8.5.6",
+    "tailwindcss": "^4.2.1",
+    "tsup": "^8.5.1",
+    "typescript": "^5.9.3",
+    "wait-on": "^9.0.4"
+  }
+}
