@@ -23,9 +23,18 @@ Electron과 Next.js 기반의 데스크탑 애플리케이션 프로젝트입니
   * **작업 내용**: 태그 CRUD 시스템 구현. Backend IPC 핸들러(`tag:create`, `tag:get-all`, `tag:update`, `tag:delete`), 태그 DB 레이어 분리(`tag-repository.ts`). Frontend 사이드바+콘텐츠 레이아웃 변경, `TagSidebar`(계층형 트리), `TagFormModal`(생성/수정 모달), `TagBadge`(색상 뱃지) 컴포넌트 신규 구축. Discord 스타일 다크/라이트 테마 CSS 변수 시스템 도입.
   * **변경된 핵심 파일**: `main/lib/tag-repository.ts`, `main/ipc/tag-handler.ts`, `main/main.ts`, `main/preload.ts`, `renderer/global.d.ts`, `renderer/app/page.tsx`, `renderer/app/globals.css`, `renderer/app/types.ts`, `renderer/app/components/tag-sidebar/`, `renderer/app/components/tag-form-modal/`, `renderer/app/components/tag-badge/`
 
+  * **작업 내용**: 상위 태그 셀렉트박스에 컬러 dot 아이콘 추가. HTML 네이티브 `<select>`는 내부 커스텀 렌더링이 불가하여 커스텀 드롭다운 컴포넌트(`ParentTagSelect`)로 교체. 각 태그 옵션 왼쪽에 해당 태그 색상의 원형 아이콘 표시, 외부 클릭/Escape 닫힘 처리, fade-in 애니메이션 적용.
+  * **변경된 핵심 파일**: `renderer/app/components/tag-form-modal/parent-tag-select.tsx`(신규), `renderer/app/components/tag-form-modal/parent-tag-select.css`(신규), `renderer/app/components/tag-form-modal/tag-form-modal.tsx`
+
 * **2026-03-01**
   * **작업 내용**: Next.js 및 Electron 수동 연동 초기 세팅 완료 및 TailwindCSS 초기 적용.
   * **변경된 핵심 파일**: `package.json`, `main/main.ts`, `main/preload.ts`, `renderer/app/page.tsx`, `tailwind.config.ts`, `postcss.config.mjs`, `renderer/app/globals.css`
+
+  * **작업 내용**: Vault 경로 선택 UI 및 SQLite DB 초기화 구현. `electron-store`를 활용한 Vault 경로 저장, `better-sqlite3`로 DB 스키마(`files`, `tags`, `file_tags` 테이블) 자동 생성, Vault 선택 시 `MyTaggedFiles` 폴더 자동 생성 로직 추가.
+  * **변경된 핵심 파일**: `main/lib/store.ts`(신규), `main/lib/db.ts`(신규), `main/main.ts`, `main/preload.ts`, `renderer/app/page.tsx`, `renderer/global.d.ts`
+
+  * **작업 내용**: `dist-main` 빌드 파일 Git 추적 제거 및 `.gitignore` 정리, Next.js 캐시 파일 무시 설정 추가, `COLOR_PRESETS` 중복 key 에러 수정.
+  * **변경된 핵심 파일**: `.gitignore`, `renderer/app/components/tag-form-modal/tag-form-modal.tsx`
 
 * **2026-02-28**
   * **작업 내용**: AI 에이전트 코드 스타일 가이드 및 워크플로우 세팅 초기화. `README.md` 작성 및 Git PR 브랜치 작업 규칙 명세.
