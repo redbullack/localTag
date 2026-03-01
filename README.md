@@ -20,8 +20,8 @@ Electron과 Next.js 기반의 데스크탑 애플리케이션 프로젝트입니
 ## 진행 및 수정 사항 (Changelog)
 
 * **2026-03-02**
-  * **작업 내용**: Vault 경로 선택 시 `MyTaggedFiles` 폴더를 자동 생성하도록 개선. 사용자가 드라이브/위치만 선택하면 해당 위치에 `MyTaggedFiles` 폴더가 생성되고, 그 경로가 Vault로 저장됨. Renderer UI 안내 문구를 한국어로 변경.
-  * **변경된 핵심 파일**: `main/main.ts`, `renderer/app/page.tsx`
+  * **작업 내용**: 태그 CRUD 시스템 구현. Backend IPC 핸들러(`tag:create`, `tag:get-all`, `tag:update`, `tag:delete`), 태그 DB 레이어 분리(`tag-repository.ts`). Frontend 사이드바+콘텐츠 레이아웃 변경, `TagSidebar`(계층형 트리), `TagFormModal`(생성/수정 모달), `TagBadge`(색상 뱃지) 컴포넌트 신규 구축. Discord 스타일 다크/라이트 테마 CSS 변수 시스템 도입.
+  * **변경된 핵심 파일**: `main/lib/tag-repository.ts`, `main/ipc/tag-handler.ts`, `main/main.ts`, `main/preload.ts`, `renderer/global.d.ts`, `renderer/app/page.tsx`, `renderer/app/globals.css`, `renderer/app/types.ts`, `renderer/app/components/tag-sidebar/`, `renderer/app/components/tag-form-modal/`, `renderer/app/components/tag-badge/`
 
 * **2026-03-01**
   * **작업 내용**: Next.js 및 Electron 수동 연동 초기 세팅 완료 및 TailwindCSS 초기 적용.
