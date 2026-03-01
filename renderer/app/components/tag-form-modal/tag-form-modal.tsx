@@ -41,6 +41,7 @@ export default function TagFormModal({
     const [selectedColor, setSelectedColor] = useState(COLOR_PRESETS[0]);
     const [selectedParentId, setSelectedParentId] = useState<number | null>(null);
     const [errorMessage, setErrorMessage] = useState('');
+    const [isDuplicateName, setIsDuplicateName] = useState(false);
 
     const isEditMode = existingTag !== null;
 
@@ -56,8 +57,33 @@ export default function TagFormModal({
                 setSelectedParentId(null);
             }
             setErrorMessage('');
+            setIsDuplicateName(false);
         }
     }, [isOpen, existingTag]);
+
+    /** 입력된 이름이 기존 태그와 중복되는지 검사 */
+    const checkDuplicateName = (name: string): boolean => {
+        const trimmedLower = name.trim().toLowerCase();
+        if (!trimmedLower) return false;
+
+        return allTags.some((tag) => {
+            if (existingTag && tag.id === existingTag.id) return false;
+            return tag.name.toLowerCase() === trimmedLower;
+        });
+    };
+
+    /** 태그 이름 변경 핸들러 */
+    const handleTagNameChange = (value: string) => {
+        setTagName(value);
+
+        if (checkDuplicateName(value)) {
+            setIsDuplicateName(true);
+            setErrorMessage('이미 동일한 이름의 태그가 존재합니다.');
+        } else {
+            setIsDuplicateName(false);
+            setErrorMessage('');
+        }
+    };
 
     const handleSubmit = () => {
         const trimmedName = tagName.trim();
@@ -65,6 +91,7 @@ export default function TagFormModal({
             setErrorMessage('태그 이름을 입력해 주세요.');
             return;
         }
+        if (isDuplicateName) return;
 
         onSubmit({
             name: trimmedName,
@@ -116,13 +143,10 @@ export default function TagFormModal({
                         </label>
                         <input
                             id="tag-name-input"
-                            className="form-input"
+                            className={`form-input ${isDuplicateName ? 'form-input--error' : ''}`}
                             type="text"
                             value={tagName}
-                            onChange={(e) => {
-                                setTagName(e.target.value);
-                                setErrorMessage('');
-                            }}
+                            onChange={(e) => handleTagNameChange(e.target.value)}
                             placeholder="태그 이름을 입력하세요"
                             maxLength={50}
                             autoFocus
@@ -165,7 +189,7 @@ export default function TagFormModal({
                     <button className="button button--secondary" onClick={onClose}>
                         취소
                     </button>
-                    <button className="button button--primary" onClick={handleSubmit}>
+                    <button className="button button--primary" onClick={handleSubmit} disabled={isDuplicateName}>
                         {isEditMode ? '수정' : '생성'}
                     </button>
                 </div>
