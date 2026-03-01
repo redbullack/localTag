@@ -125,6 +125,14 @@
     color: var(--accent-danger);
 }
 
+.form-input--error {
+    border-color: var(--accent-danger);
+}
+
+.form-input--error:focus {
+    border-color: var(--accent-danger);
+}
+
 /* ===== 색상 팔레트 ===== */
 .color-palette {
     display: flex;
@@ -178,6 +186,11 @@
 
 .button--primary:hover {
     background-color: var(--accent-primary-hover);
+}
+
+.button--primary:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
 }
 
 .button--secondary {
