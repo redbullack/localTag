@@ -42,13 +42,14 @@ export default function Home() {
                         Welcome to LocalTag
                     </h1>
                     <p className="text-gray-300 mb-8">
-                        To get started, please select a folder where your files and metadata will be stored.
+                        파일을 관리할 위치를 선택해 주세요.<br />
+                        선택한 위치에 <code className="text-purple-400">MyTaggedFiles</code> 폴더가 자동으로 생성됩니다.
                     </p>
                     <button
                         onClick={handleSelectVault}
                         className="px-6 py-3 bg-purple-600 hover:bg-purple-700 transition-colors rounded-xl font-semibold text-white shadow-lg shadow-purple-500/30"
                     >
-                        Select Vault Folder
+                        저장 위치 선택
                     </button>
                 </div>
             </main>
