@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import './tag-form-modal.css';
 import type { Tag } from '../../types';
+import ParentTagSelect from './parent-tag-select';
 
 /**
  * TagFormModal - 태그 생성/수정 모달 컴포넌트
@@ -152,22 +153,11 @@ export default function TagFormModal({
                         <label className="form-label" htmlFor="parent-tag-select">
                             상위 태그 (선택사항)
                         </label>
-                        <select
-                            id="parent-tag-select"
-                            className="form-select"
-                            value={selectedParentId ?? ''}
-                            onChange={(e) => {
-                                const value = e.target.value;
-                                setSelectedParentId(value === '' ? null : Number(value));
-                            }}
-                        >
-                            <option value="">없음 (루트 태그)</option>
-                            {availableParentTags.map((tag) => (
-                                <option key={tag.id} value={tag.id}>
-                                    {tag.name}
-                                </option>
-                            ))}
-                        </select>
+                        <ParentTagSelect
+                            tags={availableParentTags}
+                            selectedParentId={selectedParentId}
+                            onChange={setSelectedParentId}
+                        />
                     </div>
                 </div>
 
