@@ -1,8 +1,10 @@
 import { app, BrowserWindow, ipcMain, dialog } from 'electron';
 import * as path from 'path';
+import * as fs from 'fs';
 import { getVaultPath, setVaultPath } from './lib/store';
 import { initDb } from './lib/db';
 
+const VAULT_FOLDER_NAME = 'MyTaggedFiles';
 const isDev = process.env.NODE_ENV === 'development';
 
 function createWindow() {
@@ -37,14 +39,17 @@ app.whenReady().then(() => {
     ipcMain.handle('select-vault-path', async () => {
         const result = await dialog.showOpenDialog({
             properties: ['openDirectory'],
-            title: 'Select Vault Folder',
+            title: 'Select Vault Location',
         });
 
         if (!result.canceled && result.filePaths.length > 0) {
-            const selectedPath = result.filePaths[0];
-            setVaultPath(selectedPath);
+            const selectedLocation = result.filePaths[0];
+            const vaultPath = path.join(selectedLocation, VAULT_FOLDER_NAME);
+
+            fs.mkdirSync(vaultPath, { recursive: true });
+            setVaultPath(vaultPath);
             initDb();
-            return selectedPath;
+            return vaultPath;
         }
         return null;
     });
