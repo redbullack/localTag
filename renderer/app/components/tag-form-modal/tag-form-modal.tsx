@@ -24,7 +24,7 @@ interface TagFormModalProps {
 
 const COLOR_PRESETS = [
     '#5865f2', '#57f287', '#fee75c', '#eb459e', '#ed4245',
-    '#3ba55d', '#faa61a', '#5865f2', '#99aab5', '#e67e22',
+    '#3ba55d', '#faa61a', '#3498db', '#99aab5', '#e67e22',
     '#1abc9c', '#e91e63', '#9b59b6', '#2ecc71', '#e74c3c',
     '#f39c12',
 ];
@@ -135,9 +135,9 @@ export default function TagFormModal({
                     <div className="form-group">
                         <label className="form-label">색상</label>
                         <div className="color-palette">
-                            {COLOR_PRESETS.map((color) => (
+                            {COLOR_PRESETS.map((color, index) => (
                                 <button
-                                    key={color}
+                                    key={index}
                                     className={`color-swatch ${selectedColor === color ? 'color-swatch--selected' : ''}`}
                                     style={{ backgroundColor: color }}
                                     onClick={() => setSelectedColor(color)}
