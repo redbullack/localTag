@@ -19,6 +19,10 @@ Electron과 Next.js 기반의 데스크탑 애플리케이션 프로젝트입니
 ---
 ## 진행 및 수정 사항 (Changelog)
 
+* **2026-03-02**
+  * **작업 내용**: Vault 경로 선택 시 `MyTaggedFiles` 폴더를 자동 생성하도록 개선. 사용자가 드라이브/위치만 선택하면 해당 위치에 `MyTaggedFiles` 폴더가 생성되고, 그 경로가 Vault로 저장됨. Renderer UI 안내 문구를 한국어로 변경.
+  * **변경된 핵심 파일**: `main/main.ts`, `renderer/app/page.tsx`
+
 * **2026-03-01**
   * **작업 내용**: Next.js 및 Electron 수동 연동 초기 세팅 완료 및 TailwindCSS 초기 적용.
   * **변경된 핵심 파일**: `package.json`, `main/main.ts`, `main/preload.ts`, `renderer/app/page.tsx`, `tailwind.config.ts`, `postcss.config.mjs`, `renderer/app/globals.css`
