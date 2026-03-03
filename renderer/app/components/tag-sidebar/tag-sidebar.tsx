@@ -18,6 +18,7 @@ interface TagSidebarProps {
     onCreateTag: () => void;
     onEditTag: (tag: Tag) => void;
     onDeleteTag: (tagId: number) => void;
+    onCreateChildTag: (parentTag: Tag) => void;
 }
 
 /** flat 태그 목록을 계층형 트리 구조로 변환합니다. */
@@ -47,11 +48,13 @@ function TagTreeItem({
     depth,
     onEditTag,
     onDeleteTag,
+    onCreateChildTag,
 }: {
     node: TagTreeNode;
     depth: number;
     onEditTag: (tag: Tag) => void;
     onDeleteTag: (tagId: number) => void;
+    onCreateChildTag: (parentTag: Tag) => void;
 }) {
     const [isExpanded, setIsExpanded] = useState(true);
     const [isHovered, setIsHovered] = useState(false);
@@ -97,6 +100,19 @@ function TagTreeItem({
                             className="tag-tree-item__action-btn"
                             onClick={(e) => {
                                 e.stopPropagation();
+                                onCreateChildTag(node);
+                            }}
+                            aria-label={`${node.name} 하위 태그 생성`}
+                            title="하위 태그 생성"
+                        >
+                            <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+                                <path d="M6 2V10M2 6H10" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+                            </svg>
+                        </button>
+                        <button
+                            className="tag-tree-item__action-btn"
+                            onClick={(e) => {
+                                e.stopPropagation();
                                 onEditTag(node);
                             }}
                             aria-label={`${node.name} 수정`}
@@ -129,6 +145,7 @@ function TagTreeItem({
                             depth={depth + 1}
                             onEditTag={onEditTag}
                             onDeleteTag={onDeleteTag}
+                            onCreateChildTag={onCreateChildTag}
                         />
                     ))}
                 </div>
@@ -142,6 +159,7 @@ export default function TagSidebar({
     onCreateTag,
     onEditTag,
     onDeleteTag,
+    onCreateChildTag,
 }: TagSidebarProps) {
     const tagTree = buildTagTree(tags);
 
@@ -180,6 +198,7 @@ export default function TagSidebar({
                             depth={0}
                             onEditTag={onEditTag}
                             onDeleteTag={onDeleteTag}
+                            onCreateChildTag={onCreateChildTag}
                         />
                     ))
                 )}

@@ -1,5 +1,6 @@
 node_modules
 .next
 renderer/.next
+renderer/out
 dist-main
 package-lock.json
