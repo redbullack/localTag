@@ -14,6 +14,7 @@ export default function Home() {
     const [tagList, setTagList] = useState<Tag[]>([]);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingTag, setEditingTag] = useState<Tag | null>(null);
+    const [defaultParentId, setDefaultParentId] = useState<number | null>(null);
 
     /** Vault 경로 확인 */
     useEffect(() => {
@@ -57,6 +58,14 @@ export default function Home() {
     /** 새 태그 만들기 모달 열기 */
     const handleOpenCreateModal = () => {
         setEditingTag(null);
+        setDefaultParentId(null);
+        setIsModalOpen(true);
+    };
+
+    /** 하위 태그 생성 모달 열기 */
+    const handleOpenCreateChildModal = (parentTag: Tag) => {
+        setEditingTag(null);
+        setDefaultParentId(parentTag.id);
         setIsModalOpen(true);
     };
 
@@ -70,6 +79,7 @@ export default function Home() {
     const handleCloseModal = () => {
         setIsModalOpen(false);
         setEditingTag(null);
+        setDefaultParentId(null);
     };
 
     /** 태그 생성/수정 제출 */
@@ -158,6 +168,7 @@ export default function Home() {
                 onCreateTag={handleOpenCreateModal}
                 onEditTag={handleOpenEditModal}
                 onDeleteTag={handleDeleteTag}
+                onCreateChildTag={handleOpenCreateChildModal}
             />
 
             <main className="main-content">
@@ -183,6 +194,7 @@ export default function Home() {
                 onSubmit={handleSubmitTag}
                 existingTag={editingTag}
                 allTags={tagList}
+                defaultParentId={defaultParentId}
             />
         </div>
     );

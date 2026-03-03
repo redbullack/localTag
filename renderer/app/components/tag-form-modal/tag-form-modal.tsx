@@ -21,6 +21,7 @@ interface TagFormModalProps {
     onSubmit: (data: { name: string; color: string; parentId: number | null }) => void;
     existingTag?: Tag | null;
     allTags: Tag[];
+    defaultParentId?: number | null;
 }
 
 const COLOR_PRESETS = [
@@ -36,6 +37,7 @@ export default function TagFormModal({
     onSubmit,
     existingTag = null,
     allTags,
+    defaultParentId = null,
 }: TagFormModalProps) {
     const [tagName, setTagName] = useState('');
     const [selectedColor, setSelectedColor] = useState(COLOR_PRESETS[0]);
@@ -54,12 +56,12 @@ export default function TagFormModal({
             } else {
                 setTagName('');
                 setSelectedColor(COLOR_PRESETS[0]);
-                setSelectedParentId(null);
+                setSelectedParentId(defaultParentId);
             }
             setErrorMessage('');
             setIsDuplicateName(false);
         }
-    }, [isOpen, existingTag]);
+    }, [isOpen, existingTag, defaultParentId]);
 
     /** 입력된 이름이 기존 태그와 중복되는지 검사 */
     const checkDuplicateName = (name: string): boolean => {
