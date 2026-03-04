@@ -4,6 +4,7 @@ export interface IpcResponse<T> {
     data?: T;
     error?: string;
     duplicates?: string[];
+    totalCount?: number;
 }
 
 /** Tag 데이터 인터페이스 */
@@ -43,8 +44,8 @@ export interface IElectronAPI {
 
     // File CRUD
     addFiles: (params?: { tagIds?: number[] }) => Promise<IpcResponse<FileWithTags[]>>;
-    getAllFiles: () => Promise<IpcResponse<FileWithTags[]>>;
-    getFilesByTags: (params: { tagIds: number[] }) => Promise<IpcResponse<FileWithTags[]>>;
+    getAllFiles: (params?: { page?: number; limit?: number }) => Promise<IpcResponse<FileWithTags[]>>;
+    getFilesByTags: (params: { tagIds: number[]; page?: number; limit?: number }) => Promise<IpcResponse<FileWithTags[]>>;
     renameFile: (params: { id: number; newFilename: string }) => Promise<IpcResponse<FileWithTags>>;
     deleteFile: (params: { id: number }) => Promise<IpcResponse<{ success: boolean }>>;
     updateFileTags: (params: { fileId: number; tagIds: number[] }) => Promise<IpcResponse<FileWithTags>>;

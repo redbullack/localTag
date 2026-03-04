@@ -14,8 +14,8 @@ import {
  *
  * IPC 채널 목록:
  * - file:add             | payload: { tagIds? }                  | OS 파일 선택 다이얼로그 → FileWithTags[]
- * - file:get-all         | payload: 없음                         | return: FileWithTags[]
- * - file:get-by-tag      | payload: { tagId }                    | return: FileWithTags[]
+ * - file:get-all         | payload: { page?, limit? }          | return: { data: FileWithTags[], totalCount: number }
+ * - file:get-by-tag      | payload: { tagIds, page?, limit? }  | return: { data: FileWithTags[], totalCount: number }
  * - file:rename          | payload: { id, newFilename }          | return: FileWithTags
  * - file:delete          | payload: { id }                       | return: { success }
  * - file:update-tags     | payload: { fileId, tagIds }           | return: FileWithTags
@@ -58,17 +58,23 @@ export const registerFileHandlers = (): void => {
         }
     });
 
-    ipcMain.handle('file:get-all', () => {
+    ipcMain.handle('file:get-all', (_event, params?: { page?: number; limit?: number }) => {
         try {
-            return { success: true, data: getAllFiles() };
+            const page = params?.page || 1;
+            const limit = params?.limit || 50;
+            const result = getAllFiles(page, limit);
+            return { success: true, ...result }; // { success: true, data, totalCount }
         } catch (error: any) {
             return { success: false, error: error.message };
         }
     });
 
-    ipcMain.handle('file:get-by-tags', (_event, params: { tagIds: number[] }) => {
+    ipcMain.handle('file:get-by-tags', (_event, params: { tagIds: number[]; page?: number; limit?: number }) => {
         try {
-            return { success: true, data: getFilesByTagIds(params.tagIds) };
+            const page = params.page || 1;
+            const limit = params.limit || 50;
+            const result = getFilesByTagIds(params.tagIds, page, limit);
+            return { success: true, ...result };
         } catch (error: any) {
             return { success: false, error: error.message };
         }
