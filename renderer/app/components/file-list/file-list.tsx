@@ -6,6 +6,9 @@ import type { FileWithTags, Tag } from '../../types';
 
 interface FileListProps {
     files: FileWithTags[];
+    currentPage: number;
+    totalCount: number;
+    onPageChange: (page: number) => void;
     onAddFiles: () => void;
     onRenameFile: (fileId: number, newFilename: string) => void;
     onDeleteFile: (fileId: number) => void;
@@ -163,11 +166,80 @@ function FileRow({
 
 export default function FileList({
     files,
+    currentPage,
+    totalCount,
+    onPageChange,
     onAddFiles,
     onRenameFile,
     onDeleteFile,
     onEditFileTags,
 }: FileListProps) {
+    // ==== 페이징 로직 ====
+    const limit = 50;
+    const totalPages = Math.ceil(totalCount / limit);
+    const pageGroupSize = 5;
+    const currentGroup = Math.ceil(currentPage / pageGroupSize);
+    const startPage = (currentGroup - 1) * pageGroupSize + 1;
+    const endPage = Math.min(startPage + pageGroupSize - 1, totalPages);
+
+    const pages = [];
+    for (let i = startPage; i <= endPage; i++) {
+        pages.push(i);
+    }
+
+    const renderPagination = () => {
+        if (totalPages <= 1) return null;
+
+        return (
+            <div className="file-list__pagination">
+                <button
+                    className="file-list__page-btn file-list__page-btn--icon"
+                    onClick={() => onPageChange(1)}
+                    disabled={currentPage === 1}
+                    title="처음 페이지"
+                >
+                    «
+                </button>
+                <button
+                    className="file-list__page-btn file-list__page-btn--icon"
+                    onClick={() => onPageChange(Math.max(1, startPage - pageGroupSize))}
+                    disabled={currentGroup === 1}
+                    title="이전 5페이지"
+                >
+                    ‹
+                </button>
+
+                <div className="file-list__page-numbers">
+                    {pages.map((p) => (
+                        <button
+                            key={p}
+                            className={`file-list__page-btn ${p === currentPage ? 'file-list__page-btn--active' : ''}`}
+                            onClick={() => onPageChange(p)}
+                        >
+                            {p}
+                        </button>
+                    ))}
+                </div>
+
+                <button
+                    className="file-list__page-btn file-list__page-btn--icon"
+                    onClick={() => onPageChange(Math.min(totalPages, startPage + pageGroupSize))}
+                    disabled={currentGroup === Math.ceil(totalPages / pageGroupSize)}
+                    title="다음 5페이지"
+                >
+                    ›
+                </button>
+                <button
+                    className="file-list__page-btn file-list__page-btn--icon"
+                    onClick={() => onPageChange(totalPages)}
+                    disabled={currentPage === totalPages}
+                    title="마지막 페이지"
+                >
+                    »
+                </button>
+            </div>
+        );
+    };
     return (
         <div className="file-list">
             {/* 헤더 */}
@@ -219,6 +291,9 @@ export default function FileList({
                     </div>
                 </div>
             )}
+
+            {/* Pagination UI */}
+            {renderPagination()}
         </div>
     );
 }

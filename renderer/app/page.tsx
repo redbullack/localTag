@@ -22,6 +22,10 @@ export default function Home() {
     const [fileList, setFileList] = useState<FileWithTags[]>([]);
     const [selectedTagIds, setSelectedTagIds] = useState<number[]>([]);
 
+    // 페이징 상태
+    const [currentPage, setCurrentPage] = useState(1);
+    const [totalCount, setTotalCount] = useState(0);
+
     // 파일 태그 에디터 상태
     const [tagEditorFile, setTagEditorFile] = useState<FileWithTags | null>(null);
 
@@ -53,15 +57,18 @@ export default function Home() {
 
         let response;
         if (selectedTagIds.length > 0) {
-            response = await window.electronAPI.getFilesByTags({ tagIds: selectedTagIds });
+            response = await window.electronAPI.getFilesByTags({ tagIds: selectedTagIds, page: currentPage, limit: 50 });
         } else {
-            response = await window.electronAPI.getAllFiles();
+            response = await window.electronAPI.getAllFiles({ page: currentPage, limit: 50 });
         }
 
         if (response.success && response.data) {
             setFileList(response.data);
+            if (response.totalCount !== undefined) {
+                setTotalCount(response.totalCount);
+            }
         }
-    }, [selectedTagIds]);
+    }, [selectedTagIds, currentPage]);
 
     /** Vault 설정 완료 후 태그 + 파일 로드 */
     useEffect(() => {
@@ -164,6 +171,7 @@ export default function Home() {
                 return [...prevIds, tagId]; // 선택 추가
             }
         });
+        setCurrentPage(1); // 태그 필터 변경 시 첫 페이지로 이동
     };
 
     // ── 파일 CRUD ──
@@ -304,6 +312,9 @@ export default function Home() {
                     </div>
                     <FileList
                         files={fileList}
+                        currentPage={currentPage}
+                        totalCount={totalCount}
+                        onPageChange={(page) => setCurrentPage(page)}
                         onAddFiles={handleAddFiles}
                         onRenameFile={handleRenameFile}
                         onDeleteFile={handleDeleteFile}
