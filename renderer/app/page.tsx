@@ -5,7 +5,7 @@ import TagSidebar from './components/tag-sidebar/tag-sidebar';
 import TagFormModal from './components/tag-form-modal/tag-form-modal';
 import FileList from './components/file-list/file-list';
 import FileTagEditor from './components/file-tag-editor/file-tag-editor';
-import type { Tag, FileWithTags } from './types';
+import type { Tag, FileWithTags, SortOption } from './types';
 import './components/tag-badge/tag-badge.css';
 
 export default function Home() {
@@ -25,6 +25,9 @@ export default function Home() {
     // 페이징 상태
     const [currentPage, setCurrentPage] = useState(1);
     const [totalCount, setTotalCount] = useState(0);
+
+    // 파일 정렬 상태
+    const [sortOption, setSortOption] = useState<SortOption>({ column: 'updatedAt', order: 'desc' });
 
     // 파일 태그 에디터 상태
     const [tagEditorFile, setTagEditorFile] = useState<FileWithTags | null>(null);
@@ -57,9 +60,9 @@ export default function Home() {
 
         let response;
         if (selectedTagIds.length > 0) {
-            response = await window.electronAPI.getFilesByTags({ tagIds: selectedTagIds, page: currentPage, limit: 50 });
+            response = await window.electronAPI.getFilesByTags({ tagIds: selectedTagIds, page: currentPage, limit: 50, sort: sortOption });
         } else {
-            response = await window.electronAPI.getAllFiles({ page: currentPage, limit: 50 });
+            response = await window.electronAPI.getAllFiles({ page: currentPage, limit: 50, sort: sortOption });
         }
 
         if (response.success && response.data) {
@@ -68,7 +71,7 @@ export default function Home() {
                 setTotalCount(response.totalCount);
             }
         }
-    }, [selectedTagIds, currentPage]);
+    }, [selectedTagIds, currentPage, sortOption]);
 
     /** Vault 설정 완료 후 태그 + 파일 로드 */
     useEffect(() => {
@@ -314,6 +317,8 @@ export default function Home() {
                         files={fileList}
                         currentPage={currentPage}
                         totalCount={totalCount}
+                        sortOption={sortOption}
+                        onSortChange={(option) => setSortOption(option)}
                         onPageChange={(page) => setCurrentPage(page)}
                         onAddFiles={handleAddFiles}
                         onRenameFile={handleRenameFile}

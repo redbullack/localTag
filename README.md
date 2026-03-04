@@ -23,6 +23,9 @@ Electron과 Next.js 기반의 데스크탑 애플리케이션 프로젝트입니
   * **작업 내용**: 단일 태그 선택만 가능했던 파일 필터링 기능을 개선하여 **다중 태그 선택 기능**으로 확장. 사용자가 선택한 태그 중 하나라도 일치하는 파일들을 리스트에 보여주도록(OR 조건/합집합) 변경. 좌측 사이드바 트리에서 다수의 태그를 클릭하여 활성화/비활성화(토글 방식) 할 수 있도록 상태 관리를 `selectedTagIds` (배열)로 변경. 백엔드 `getFilesByTagId` 함수를 `getFilesByTagIds`로 교체하고 `IN (?, ?..)` SQL 쿼리를 동적으로 생성하여 대응. 선택한 여러 태그의 이름을 상단 헤더에 나열하도록 UI 개선.
   * **변경된 핵심 파일**: `main/lib/file-repository.ts`, `main/ipc/file-handler.ts`, `main/preload.ts`, `renderer/global.d.ts`, `renderer/app/page.tsx`, `renderer/app/components/tag-sidebar/tag-sidebar.tsx`
 
+  * **작업 내용**: 파일 목록 헤더에서 파일명/확장자/사이즈/생성일/수정일 기준으로 리스트를 오룸차순/내림차순 정렬할 수 있는 기능(Select Box) 구현. DB 조회 시 인메모리 정렬이 아닌 동적 `ORDER BY` 쿼리로 안정적인 페이지네이션 지원.
+  * **변경된 핵심 파일**: `main/lib/file-repository.ts`, `main/ipc/file-handler.ts`, `main/preload.ts`, `renderer/global.d.ts`, `renderer/app/types.ts`, `renderer/app/page.tsx`, `renderer/app/components/file-list/file-list.tsx`, `renderer/app/components/file-list/file-list.css`
+
   * **작업 내용**: 파일 태그 편집 모달(`FileTagEditor`)에서 태그 검색 드롭다운 리스트가 모달 하단에 잘려 보이는 UI 문제 수정. 모달 컨테이너의 `overflow`를 `visible`로 변경하여 드롭다운이 모달 영역 밖으로 확장 가능하게 하고, 드롭다운 `max-height`를 200px → 300px로 늘려 더 많은 태그 항목을 표시하도록 개선.
   * **변경된 핵심 파일**: `renderer/app/components/file-tag-editor/file-tag-editor.css`
 
