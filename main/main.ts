@@ -4,6 +4,7 @@ import * as fs from 'fs';
 import { getVaultPath, setVaultPath } from './lib/store';
 import { initDb } from './lib/db';
 import { registerTagHandlers } from './ipc/tag-handler';
+import { registerFileHandlers } from './ipc/file-handler';
 
 const VAULT_FOLDER_NAME = 'MyTaggedFiles';
 const isDev = process.env.NODE_ENV === 'development';
@@ -34,6 +35,7 @@ app.whenReady().then(() => {
     }
 
     registerTagHandlers();
+    registerFileHandlers();
 
     ipcMain.handle('get-vault-path', () => {
         return getVaultPath();

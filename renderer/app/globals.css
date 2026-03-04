@@ -173,6 +173,7 @@ body {
 .main-content__header {
     display: flex;
     align-items: center;
+    gap: 12px;
     padding: 12px 20px;
     border-bottom: 1px solid var(--border-subtle);
     background-color: var(--bg-primary);
@@ -182,6 +183,22 @@ body {
     font-size: 16px;
     font-weight: 700;
     color: var(--text-primary);
+}
+
+.main-content__clear-filter {
+    padding: 4px 10px;
+    border: 1px solid var(--border-strong);
+    border-radius: 4px;
+    background: transparent;
+    color: var(--text-muted);
+    font-size: 12px;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.main-content__clear-filter:hover {
+    border-color: var(--accent-danger);
+    color: var(--accent-danger);
 }
 
 .main-content__body {

@@ -19,6 +19,10 @@ Electron과 Next.js 기반의 데스크탑 애플리케이션 프로젝트입니
 ---
 ## 진행 및 수정 사항 (Changelog)
 
+* **2026-03-04**
+  * **작업 내용**: 파일 관리 시스템 구현. Backend 파일 CRUD 레이어(`file-repository.ts`, `file-handler.ts`) 구축 — 파일 추가(Vault 복사+DB 등록), 전체/태그별 조회, 이름 변경, 삭제, 태그 할당/해제, 중복 파일명 체크 포함. Frontend에 `FileList` 컴포넌트(테이블 형태 파일 목록, hover 액션, 인라인 이름변경), `FileTagEditor` 모달(태그 칩 + 계층형 드롭다운 검색으로 태그 할당/해제) 신규 생성. 사이드바 태그 클릭 시 해당 태그 파일만 필터링하는 기능 추가(`selectedTagId`/`onSelectTag`). `page.tsx`에 파일 상태 관리 및 전체 컴포넌트 통합.
+  * **변경된 핵심 파일**: `main/lib/file-repository.ts`(신규), `main/ipc/file-handler.ts`(신규), `main/main.ts`, `main/preload.ts`, `renderer/global.d.ts`, `renderer/app/types.ts`, `renderer/app/page.tsx`, `renderer/app/globals.css`, `renderer/app/components/file-list/`(신규), `renderer/app/components/file-tag-editor/`(신규), `renderer/app/components/tag-sidebar/tag-sidebar.tsx`, `renderer/app/components/tag-sidebar/tag-sidebar.css`
+
 * **2026-03-03**
   * **작업 내용**: 사이드바 태그 트리에서 기존 태그 호버 시 "하위 태그 생성(+)" 액션 버튼 추가. 클릭 시 해당 태그가 부모로 미리 선택된 상태의 태그 생성 모달(`TagFormModal`)이 열리도록 구현. `TagFormModal`에 `defaultParentId` prop 추가, `TagSidebar`에 `onCreateChildTag` 콜백 추가, `page.tsx`에서 상태 관리 연동. 빌드 산출물(`renderer/out/`) `.gitignore` 추가.
   * **변경된 핵심 파일**: `renderer/app/page.tsx`, `renderer/app/components/tag-sidebar/tag-sidebar.tsx`, `renderer/app/components/tag-form-modal/tag-form-modal.tsx`, `.gitignore`

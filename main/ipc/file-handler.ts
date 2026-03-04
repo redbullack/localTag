@@ -1,0 +1,109 @@
+import { ipcMain, dialog } from 'electron';
+import {
+    addFile,
+    getAllFiles,
+    getFilesByTagId,
+    renameFile,
+    deleteFile,
+    updateFileTags,
+    checkDuplicateFilenames,
+} from '../lib/file-repository';
+
+/**
+ * 파일 관련 IPC 핸들러를 등록합니다.
+ *
+ * IPC 채널 목록:
+ * - file:add             | payload: { tagIds? }                  | OS 파일 선택 다이얼로그 → FileWithTags[]
+ * - file:get-all         | payload: 없음                         | return: FileWithTags[]
+ * - file:get-by-tag      | payload: { tagId }                    | return: FileWithTags[]
+ * - file:rename          | payload: { id, newFilename }          | return: FileWithTags
+ * - file:delete          | payload: { id }                       | return: { success }
+ * - file:update-tags     | payload: { fileId, tagIds }           | return: FileWithTags
+ * - file:check-duplicate | payload: { filenames }                | return: { duplicates }
+ */
+export const registerFileHandlers = (): void => {
+
+    ipcMain.handle('file:add', async (_event, params: { tagIds?: number[] }) => {
+        try {
+            const result = await dialog.showOpenDialog({
+                properties: ['openFile', 'multiSelections'],
+                title: '추가할 파일 선택',
+            });
+
+            if (result.canceled || result.filePaths.length === 0) {
+                return { success: true, data: [] };
+            }
+
+            // 중복 파일명 체크
+            const filenames = result.filePaths.map(
+                (filePath) => require('path').basename(filePath)
+            );
+            const duplicates = checkDuplicateFilenames(filenames);
+
+            if (duplicates.length > 0) {
+                return {
+                    success: false,
+                    error: `다음 파일명이 이미 존재합니다: ${duplicates.join(', ')}`,
+                    duplicates,
+                };
+            }
+
+            const addedFiles = result.filePaths.map((sourcePath) =>
+                addFile({ sourcePath, tagIds: params?.tagIds })
+            );
+
+            return { success: true, data: addedFiles };
+        } catch (error: any) {
+            return { success: false, error: error.message };
+        }
+    });
+
+    ipcMain.handle('file:get-all', () => {
+        try {
+            return { success: true, data: getAllFiles() };
+        } catch (error: any) {
+            return { success: false, error: error.message };
+        }
+    });
+
+    ipcMain.handle('file:get-by-tag', (_event, params: { tagId: number }) => {
+        try {
+            return { success: true, data: getFilesByTagId(params.tagId) };
+        } catch (error: any) {
+            return { success: false, error: error.message };
+        }
+    });
+
+    ipcMain.handle('file:rename', (_event, params: { id: number; newFilename: string }) => {
+        try {
+            return { success: true, data: renameFile(params.id, params.newFilename) };
+        } catch (error: any) {
+            return { success: false, error: error.message };
+        }
+    });
+
+    ipcMain.handle('file:delete', (_event, params: { id: number }) => {
+        try {
+            return { success: true, data: deleteFile(params.id) };
+        } catch (error: any) {
+            return { success: false, error: error.message };
+        }
+    });
+
+    ipcMain.handle('file:update-tags', (_event, params: { fileId: number; tagIds: number[] }) => {
+        try {
+            return { success: true, data: updateFileTags(params.fileId, params.tagIds) };
+        } catch (error: any) {
+            return { success: false, error: error.message };
+        }
+    });
+
+    ipcMain.handle('file:check-duplicate', (_event, params: { filenames: string[] }) => {
+        try {
+            const duplicates = checkDuplicateFilenames(params.filenames);
+            return { success: true, data: { duplicates } };
+        } catch (error: any) {
+            return { success: false, error: error.message };
+        }
+    });
+};

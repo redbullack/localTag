@@ -14,3 +14,19 @@ export interface Tag {
 export interface TagTreeNode extends Tag {
     children: TagTreeNode[];
 }
+
+/** 파일 레코드 */
+export interface FileRecord {
+    id: number;
+    filename: string;
+    relativePath: string;
+    extension: string | null;
+    size: number | null;
+    createdAt: string;
+    updatedAt: string;
+}
+
+/** 파일 + 연결된 태그 목록 */
+export interface FileWithTags extends FileRecord {
+    tags: Tag[];
+}
