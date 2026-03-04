@@ -2,12 +2,14 @@
 
 import { useState } from 'react';
 import './file-list.css';
-import type { FileWithTags, Tag } from '../../types';
+import type { FileWithTags, Tag, SortOption } from '../../types';
 
 interface FileListProps {
     files: FileWithTags[];
     currentPage: number;
     totalCount: number;
+    sortOption: SortOption;
+    onSortChange: (option: SortOption) => void;
     onPageChange: (page: number) => void;
     onAddFiles: () => void;
     onRenameFile: (fileId: number, newFilename: string) => void;
@@ -168,6 +170,8 @@ export default function FileList({
     files,
     currentPage,
     totalCount,
+    sortOption,
+    onSortChange,
     onPageChange,
     onAddFiles,
     onRenameFile,
@@ -244,16 +248,41 @@ export default function FileList({
         <div className="file-list">
             {/* 헤더 */}
             <div className="file-list__header">
-                <h3 className="file-list__title">
-                    파일 목록
-                    <span className="file-list__count">{files.length}</span>
-                </h3>
-                <button
-                    className="file-list__add-btn"
-                    onClick={onAddFiles}
-                >
-                    + 파일 추가
-                </button>
+                <div className="file-list__header-left">
+                    <h3 className="file-list__title">
+                        파일 목록
+                        <span className="file-list__count">{files.length}</span>
+                    </h3>
+                </div>
+                <div className="file-list__header-right">
+                    <div className="file-list__sort-wrapper">
+                        <select
+                            className="file-list__sort-select"
+                            value={`${sortOption.column}-${sortOption.order}`}
+                            onChange={(e) => {
+                                const [column, order] = e.target.value.split('-') as [SortOption['column'], SortOption['order']];
+                                onSortChange({ column, order });
+                            }}
+                        >
+                            <option value="filename-asc">파일명 (A-Z)</option>
+                            <option value="filename-desc">파일명 (Z-A)</option>
+                            <option value="updatedAt-desc">수정일 (최신순)</option>
+                            <option value="updatedAt-asc">수정일 (오래된순)</option>
+                            <option value="createdAt-desc">생성일 (최신순)</option>
+                            <option value="createdAt-asc">생성일 (오래된순)</option>
+                            <option value="extension-asc">확장자 (A-Z)</option>
+                            <option value="extension-desc">확장자 (Z-A)</option>
+                            <option value="size-desc">크기 (큰순)</option>
+                            <option value="size-asc">크기 (작은순)</option>
+                        </select>
+                    </div>
+                    <button
+                        className="file-list__add-btn"
+                        onClick={onAddFiles}
+                    >
+                        + 파일 추가
+                    </button>
+                </div>
             </div>
 
             {/* 파일 목록 */}

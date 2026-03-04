@@ -23,6 +23,14 @@ export interface FileRecord {
     updatedAt: string;
 }
 
+export type SortColumn = 'filename' | 'extension' | 'size' | 'createdAt' | 'updatedAt';
+export type SortOrder = 'asc' | 'desc';
+
+export interface SortOption {
+    column: SortColumn;
+    order: SortOrder;
+}
+
 /** 파일 + 연결된 태그 목록 */
 export interface FileWithTags extends FileRecord {
     tags: { id: number; name: string; color: string | null }[];
@@ -107,9 +115,10 @@ export const addFile = (params: AddFileParams): FileWithTags => {
  * 모든 파일을 태그 정보와 함께 조회합니다. (N+1 방지: JOIN 활용)
  * @param page - 페이지 번호
  * @param limit - 페이지당 개수
+ * @param sort - 정렬 옵션
  * @returns { data: FileWithTags[], totalCount: number }
  */
-export const getAllFiles = (page: number = 1, limit: number = 50): { data: FileWithTags[], totalCount: number } => {
+export const getAllFiles = (page: number = 1, limit: number = 50, sort?: SortOption): { data: FileWithTags[], totalCount: number } => {
     const db = getDb();
 
     // 전체 개수 조회
@@ -118,11 +127,25 @@ export const getAllFiles = (page: number = 1, limit: number = 50): { data: FileW
 
     const offset = (page - 1) * limit;
 
+    let orderBy = 'updated_at DESC';
+    if (sort) {
+        const columnMap: Record<string, string> = {
+            filename: 'filename',
+            extension: 'extension',
+            size: 'size',
+            createdAt: 'created_at',
+            updatedAt: 'updated_at'
+        };
+        const col = columnMap[sort.column] || 'updated_at';
+        const dir = sort.order === 'asc' ? 'ASC' : 'DESC';
+        orderBy = `${col} ${dir}`;
+    }
+
     const fileRows = db.prepare(`
         SELECT id, filename, relative_path AS relativePath, extension, size,
                created_at AS createdAt, updated_at AS updatedAt
         FROM files
-        ORDER BY updated_at DESC
+        ORDER BY ${orderBy}
         LIMIT ? OFFSET ?
     `).all(limit, offset) as FileRecord[];
 
@@ -162,9 +185,10 @@ export const getAllFiles = (page: number = 1, limit: number = 50): { data: FileW
  * @param tagIds - 필터링할 태그 ID 배열
  * @param page - 페이지 번호
  * @param limit - 페이지당 개수
+ * @param sort - 정렬 옵션
  * @returns { data: FileWithTags[], totalCount: number }
  */
-export const getFilesByTagIds = (tagIds: number[], page: number = 1, limit: number = 50): { data: FileWithTags[], totalCount: number } => {
+export const getFilesByTagIds = (tagIds: number[], page: number = 1, limit: number = 50, sort?: SortOption): { data: FileWithTags[], totalCount: number } => {
     if (!tagIds || tagIds.length === 0) return { data: [], totalCount: 0 };
 
     const db = getDb();
@@ -188,6 +212,20 @@ export const getFilesByTagIds = (tagIds: number[], page: number = 1, limit: numb
 
     const offset = (page - 1) * limit;
 
+    let orderBy = 'f.updated_at DESC';
+    if (sort) {
+        const columnMap: Record<string, string> = {
+            filename: 'f.filename',
+            extension: 'f.extension',
+            size: 'f.size',
+            createdAt: 'f.created_at',
+            updatedAt: 'f.updated_at'
+        };
+        const col = columnMap[sort.column] || 'f.updated_at';
+        const dir = sort.order === 'asc' ? 'ASC' : 'DESC';
+        orderBy = `${col} ${dir}`;
+    }
+
     const fileRows = db.prepare(`
         WITH RECURSIVE tag_tree AS (
             SELECT id FROM tags WHERE id IN (${placeholders})
@@ -200,7 +238,7 @@ export const getFilesByTagIds = (tagIds: number[], page: number = 1, limit: numb
         FROM files f
         JOIN file_tags ft ON f.id = ft.file_id
         WHERE ft.tag_id IN (SELECT id FROM tag_tree)
-        ORDER BY f.updated_at DESC
+        ORDER BY ${orderBy}
         LIMIT ? OFFSET ?
     `).all(...tagIds, limit, offset) as FileRecord[];
 
