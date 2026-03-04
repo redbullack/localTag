@@ -30,3 +30,12 @@ export interface FileRecord {
 export interface FileWithTags extends FileRecord {
     tags: Tag[];
 }
+
+/** 정렬 기준 컬러 */
+export type SortColumn = 'filename' | 'extension' | 'size' | 'createdAt' | 'updatedAt';
+export type SortOrder = 'asc' | 'desc';
+
+export interface SortOption {
+    column: SortColumn;
+    order: SortOrder;
+}

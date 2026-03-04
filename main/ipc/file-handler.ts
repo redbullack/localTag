@@ -7,6 +7,7 @@ import {
     deleteFile,
     updateFileTags,
     checkDuplicateFilenames,
+    SortOption,
 } from '../lib/file-repository';
 
 /**
@@ -58,22 +59,24 @@ export const registerFileHandlers = (): void => {
         }
     });
 
-    ipcMain.handle('file:get-all', (_event, params?: { page?: number; limit?: number }) => {
+    ipcMain.handle('file:get-all', (_event, params?: { page?: number; limit?: number; sort?: SortOption }) => {
         try {
             const page = params?.page || 1;
             const limit = params?.limit || 50;
-            const result = getAllFiles(page, limit);
+            const sort = params?.sort;
+            const result = getAllFiles(page, limit, sort);
             return { success: true, ...result }; // { success: true, data, totalCount }
         } catch (error: any) {
             return { success: false, error: error.message };
         }
     });
 
-    ipcMain.handle('file:get-by-tags', (_event, params: { tagIds: number[]; page?: number; limit?: number }) => {
+    ipcMain.handle('file:get-by-tags', (_event, params: { tagIds: number[]; page?: number; limit?: number; sort?: SortOption }) => {
         try {
             const page = params.page || 1;
             const limit = params.limit || 50;
-            const result = getFilesByTagIds(params.tagIds, page, limit);
+            const sort = params.sort;
+            const result = getFilesByTagIds(params.tagIds, page, limit, sort);
             return { success: true, ...result };
         } catch (error: any) {
             return { success: false, error: error.message };
