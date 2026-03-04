@@ -1,0 +1,238 @@
+/* ===== FileList 컨테이너 ===== */
+
+.file-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    background-color: var(--bg-secondary);
+    border: 1px solid var(--border-subtle);
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+/* ===== 헤더 ===== */
+
+.file-list__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--border-subtle);
+}
+
+.file-list__title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.file-list__count {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 22px;
+    height: 20px;
+    padding: 0 6px;
+    border-radius: 10px;
+    background-color: var(--bg-tertiary);
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text-muted);
+}
+
+.file-list__add-btn {
+    padding: 6px 14px;
+    border: none;
+    border-radius: 6px;
+    background-color: var(--accent-primary);
+    color: white;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background-color 0.15s ease;
+}
+
+.file-list__add-btn:hover {
+    background-color: var(--accent-primary-hover);
+}
+
+/* ===== 빈 상태 ===== */
+
+.file-list__empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 48px 24px;
+    gap: 12px;
+}
+
+.file-list__empty-text {
+    color: var(--text-muted);
+    font-size: 14px;
+}
+
+.file-list__empty-btn {
+    padding: 8px 16px;
+    border: 1px dashed var(--border-strong);
+    border-radius: 6px;
+    background: transparent;
+    color: var(--text-secondary);
+    font-size: 13px;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.file-list__empty-btn:hover {
+    border-color: var(--accent-primary);
+    color: var(--accent-primary);
+    background-color: rgba(88, 101, 242, 0.08);
+}
+
+/* ===== 테이블 ===== */
+
+.file-list__table-header {
+    display: grid;
+    grid-template-columns: 1fr 200px 80px 90px;
+    gap: 8px;
+    padding: 8px 16px;
+    border-bottom: 1px solid var(--border-subtle);
+    background-color: var(--bg-tertiary);
+}
+
+.file-list__th {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.file-list__th--size {
+    text-align: right;
+}
+
+.file-list__body {
+    max-height: calc(100vh - 280px);
+    overflow-y: auto;
+}
+
+/* ===== 파일 행 ===== */
+
+.file-row {
+    display: grid;
+    grid-template-columns: 1fr 200px 80px 90px;
+    gap: 8px;
+    align-items: center;
+    padding: 10px 16px;
+    border-bottom: 1px solid var(--border-subtle);
+    transition: background-color 0.1s ease;
+}
+
+.file-row:last-child {
+    border-bottom: none;
+}
+
+.file-row:hover {
+    background-color: var(--bg-modifier-hover);
+}
+
+/* 파일명 셀 */
+
+.file-row__name-cell {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+}
+
+.file-row__icon {
+    flex-shrink: 0;
+    font-size: 16px;
+    line-height: 1;
+}
+
+.file-row__filename {
+    font-size: 14px;
+    color: var(--text-primary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.file-row__rename-input {
+    flex: 1;
+    padding: 4px 8px;
+    border: 1px solid var(--accent-primary);
+    border-radius: 4px;
+    background-color: var(--bg-primary);
+    color: var(--text-primary);
+    font-size: 13px;
+    outline: none;
+}
+
+/* 태그 뱃지 셀 */
+
+.file-row__tags-cell {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    min-width: 0;
+}
+
+.file-row__no-tags {
+    font-size: 12px;
+    color: var(--text-muted);
+    font-style: italic;
+}
+
+/* 크기 셀 */
+
+.file-row__size-cell {
+    font-size: 12px;
+    color: var(--text-muted);
+    text-align: right;
+    white-space: nowrap;
+}
+
+/* 액션 버튼 셀 */
+
+.file-row__actions-cell {
+    display: flex;
+    gap: 4px;
+    justify-content: flex-end;
+    opacity: 0;
+    transition: opacity 0.15s ease;
+}
+
+.file-row__actions-cell--visible {
+    opacity: 1;
+}
+
+.file-row__action-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    border: none;
+    border-radius: 4px;
+    background: transparent;
+    color: var(--text-muted);
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.file-row__action-btn:hover {
+    background-color: var(--bg-modifier-active);
+    color: var(--text-primary);
+}
+
+.file-row__action-btn--danger:hover {
+    background-color: rgba(218, 55, 60, 0.15);
+    color: var(--accent-danger);
+}

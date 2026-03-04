@@ -1,0 +1,265 @@
+/* ===== 모달 오버레이 (공통) ===== */
+
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: var(--modal-overlay);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    animation: fadeIn 0.15s ease;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
+/* ===== FileTagEditor 모달 ===== */
+
+.file-tag-editor {
+    background-color: var(--modal-bg);
+    border-radius: 12px;
+    box-shadow: var(--shadow-elevation);
+    width: 100%;
+    max-width: 440px;
+    max-height: 80vh;
+    display: flex;
+    flex-direction: column;
+    animation: slideUp 0.2s ease;
+    overflow: visible;
+}
+
+@keyframes slideUp {
+    from {
+        opacity: 0;
+        transform: translateY(12px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* 헤더 */
+
+.file-tag-editor__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--border-subtle);
+}
+
+.file-tag-editor__title {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--text-primary);
+}
+
+.file-tag-editor__close-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    border: none;
+    border-radius: 4px;
+    background: transparent;
+    color: var(--text-muted);
+    font-size: 16px;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.file-tag-editor__close-btn:hover {
+    background-color: var(--bg-modifier-active);
+    color: var(--text-primary);
+}
+
+/* 파일 정보 */
+
+.file-tag-editor__file-info {
+    padding: 12px 20px;
+    font-size: 14px;
+    color: var(--text-secondary);
+    background-color: var(--bg-secondary);
+    border-bottom: 1px solid var(--border-subtle);
+}
+
+/* 섹션 레이블 */
+
+.file-tag-editor__section-label {
+    padding: 12px 20px 6px;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+/* 태그 칩 영역 */
+
+.file-tag-editor__chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    padding: 4px 20px 12px;
+    min-height: 36px;
+}
+
+.file-tag-editor__no-tags {
+    font-size: 13px;
+    color: var(--text-muted);
+    font-style: italic;
+    padding: 4px 0;
+}
+
+/* 검색 + 드롭다운 */
+
+.file-tag-editor__search-wrapper {
+    position: relative;
+    padding: 4px 20px 12px;
+}
+
+.file-tag-editor__search-input {
+    width: 100%;
+    padding: 8px 12px;
+    border: 1px solid var(--border-strong);
+    border-radius: 6px;
+    background-color: var(--bg-primary);
+    color: var(--text-primary);
+    font-size: 14px;
+    outline: none;
+    transition: border-color 0.15s ease;
+}
+
+.file-tag-editor__search-input:focus {
+    border-color: var(--accent-primary);
+}
+
+.file-tag-editor__search-input::placeholder {
+    color: var(--text-muted);
+}
+
+/* 드롭다운 */
+
+.file-tag-editor__dropdown {
+    position: absolute;
+    left: 20px;
+    right: 20px;
+    top: calc(100% - 4px);
+    background-color: var(--bg-secondary);
+    border: 1px solid var(--border-strong);
+    border-radius: 6px;
+    box-shadow: var(--shadow-elevation);
+    max-height: 300px;
+    overflow-y: auto;
+    z-index: 10;
+}
+
+.file-tag-editor__dropdown-empty {
+    padding: 16px;
+    text-align: center;
+    font-size: 13px;
+    color: var(--text-muted);
+}
+
+.file-tag-editor__dropdown-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    padding: 8px 12px;
+    border: none;
+    background: transparent;
+    color: var(--text-primary);
+    font-size: 14px;
+    cursor: pointer;
+    text-align: left;
+    transition: background-color 0.1s ease;
+}
+
+.file-tag-editor__dropdown-item:hover {
+    background-color: var(--bg-modifier-hover);
+}
+
+.file-tag-editor__dropdown-item--selected {
+    background-color: rgba(88, 101, 242, 0.08);
+}
+
+.file-tag-editor__dropdown-item--selected:hover {
+    background-color: rgba(88, 101, 242, 0.15);
+}
+
+.file-tag-editor__dropdown-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+.file-tag-editor__dropdown-name {
+    flex: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.file-tag-editor__dropdown-check {
+    color: var(--accent-primary);
+    font-weight: 700;
+    font-size: 14px;
+}
+
+/* 하단 버튼 */
+
+.file-tag-editor__footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+    padding: 12px 20px;
+    border-top: 1px solid var(--border-subtle);
+}
+
+.file-tag-editor__cancel-btn {
+    padding: 8px 16px;
+    border: none;
+    border-radius: 6px;
+    background: transparent;
+    color: var(--text-secondary);
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.file-tag-editor__cancel-btn:hover {
+    background-color: var(--bg-modifier-hover);
+    color: var(--text-primary);
+}
+
+.file-tag-editor__save-btn {
+    padding: 8px 20px;
+    border: none;
+    border-radius: 6px;
+    background-color: var(--accent-primary);
+    color: white;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background-color 0.15s ease;
+}
+
+.file-tag-editor__save-btn:hover {
+    background-color: var(--accent-primary-hover);
+}
