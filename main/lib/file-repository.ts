@@ -105,19 +105,28 @@ export const addFile = (params: AddFileParams): FileWithTags => {
 
 /**
  * 모든 파일을 태그 정보와 함께 조회합니다. (N+1 방지: JOIN 활용)
- * @returns FileWithTags 배열
+ * @param page - 페이지 번호
+ * @param limit - 페이지당 개수
+ * @returns { data: FileWithTags[], totalCount: number }
  */
-export const getAllFiles = (): FileWithTags[] => {
+export const getAllFiles = (page: number = 1, limit: number = 50): { data: FileWithTags[], totalCount: number } => {
     const db = getDb();
+
+    // 전체 개수 조회
+    const countRow = db.prepare('SELECT COUNT(*) as count FROM files').get() as { count: number };
+    const totalCount = countRow.count;
+
+    const offset = (page - 1) * limit;
 
     const fileRows = db.prepare(`
         SELECT id, filename, relative_path AS relativePath, extension, size,
                created_at AS createdAt, updated_at AS updatedAt
         FROM files
         ORDER BY updated_at DESC
-    `).all() as FileRecord[];
+        LIMIT ? OFFSET ?
+    `).all(limit, offset) as FileRecord[];
 
-    if (fileRows.length === 0) return [];
+    if (fileRows.length === 0) return { data: [], totalCount };
 
     // 전체 file_tags + tags 를 한번에 가져와서 메모리에서 매핑 (N+1 방지)
     const tagMappings = db.prepare(`
@@ -140,34 +149,62 @@ export const getAllFiles = (): FileWithTags[] => {
         });
     }
 
-    return fileRows.map((file) => ({
+    const data = fileRows.map((file) => ({
         ...file,
         tags: tagsByFileId.get(file.id) || [],
     }));
+
+    return { data, totalCount };
 };
 
 /**
- * 여러 태그 중 하나라도 연결된 파일만 조회합니다 (OR 조건)
+ * 여러 태그 중 하나라도 연결된 파일만 조회합니다 (OR 조건, CTE 재귀 포함)
  * @param tagIds - 필터링할 태그 ID 배열
- * @returns FileWithTags 배열
+ * @param page - 페이지 번호
+ * @param limit - 페이지당 개수
+ * @returns { data: FileWithTags[], totalCount: number }
  */
-export const getFilesByTagIds = (tagIds: number[]): FileWithTags[] => {
-    if (!tagIds || tagIds.length === 0) return [];
+export const getFilesByTagIds = (tagIds: number[], page: number = 1, limit: number = 50): { data: FileWithTags[], totalCount: number } => {
+    if (!tagIds || tagIds.length === 0) return { data: [], totalCount: 0 };
 
     const db = getDb();
-
     const placeholders = tagIds.map(() => '?').join(',');
 
+    // 전체 개수 조회 쿼리 (재귀 공통 테이블 식 적용)
+    const countQuery = `
+        WITH RECURSIVE tag_tree AS (
+            SELECT id FROM tags WHERE id IN (${placeholders})
+            UNION ALL
+            SELECT t.id FROM tags t
+            INNER JOIN tag_tree tt ON t.parent_id = tt.id
+        )
+        SELECT COUNT(DISTINCT f.id) as count
+        FROM files f
+        JOIN file_tags ft ON f.id = ft.file_id
+        WHERE ft.tag_id IN (SELECT id FROM tag_tree)
+    `;
+    const countRow = db.prepare(countQuery).get(...tagIds) as { count: number };
+    const totalCount = countRow.count;
+
+    const offset = (page - 1) * limit;
+
     const fileRows = db.prepare(`
+        WITH RECURSIVE tag_tree AS (
+            SELECT id FROM tags WHERE id IN (${placeholders})
+            UNION ALL
+            SELECT t.id FROM tags t
+            INNER JOIN tag_tree tt ON t.parent_id = tt.id
+        )
         SELECT DISTINCT f.id, f.filename, f.relative_path AS relativePath,
                f.extension, f.size, f.created_at AS createdAt, f.updated_at AS updatedAt
         FROM files f
         JOIN file_tags ft ON f.id = ft.file_id
-        WHERE ft.tag_id IN (${placeholders})
+        WHERE ft.tag_id IN (SELECT id FROM tag_tree)
         ORDER BY f.updated_at DESC
-    `).all(...tagIds) as FileRecord[];
+        LIMIT ? OFFSET ?
+    `).all(...tagIds, limit, offset) as FileRecord[];
 
-    if (fileRows.length === 0) return [];
+    if (fileRows.length === 0) return { data: [], totalCount };
 
     // 필터된 파일들의 전체 태그 매핑을 가져옴
     const fileIds = fileRows.map((f) => f.id);
@@ -194,10 +231,12 @@ export const getFilesByTagIds = (tagIds: number[]): FileWithTags[] => {
         });
     }
 
-    return fileRows.map((file) => ({
+    const data = fileRows.map((file) => ({
         ...file,
         tags: tagsByFileId.get(file.id) || [],
     }));
+
+    return { data, totalCount };
 };
 
 /**
