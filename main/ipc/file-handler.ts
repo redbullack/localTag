@@ -2,7 +2,7 @@ import { ipcMain, dialog } from 'electron';
 import {
     addFile,
     getAllFiles,
-    getFilesByTagId,
+    getFilesByTagIds,
     renameFile,
     deleteFile,
     updateFileTags,
@@ -66,9 +66,9 @@ export const registerFileHandlers = (): void => {
         }
     });
 
-    ipcMain.handle('file:get-by-tag', (_event, params: { tagId: number }) => {
+    ipcMain.handle('file:get-by-tags', (_event, params: { tagIds: number[] }) => {
         try {
-            return { success: true, data: getFilesByTagId(params.tagId) };
+            return { success: true, data: getFilesByTagIds(params.tagIds) };
         } catch (error: any) {
             return { success: false, error: error.message };
         }
