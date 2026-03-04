@@ -147,33 +147,37 @@ export const getAllFiles = (): FileWithTags[] => {
 };
 
 /**
- * 특정 태그에 연결된 파일만 조회합니다.
- * @param tagId - 필터링할 태그 ID
+ * 여러 태그 중 하나라도 연결된 파일만 조회합니다 (OR 조건)
+ * @param tagIds - 필터링할 태그 ID 배열
  * @returns FileWithTags 배열
  */
-export const getFilesByTagId = (tagId: number): FileWithTags[] => {
+export const getFilesByTagIds = (tagIds: number[]): FileWithTags[] => {
+    if (!tagIds || tagIds.length === 0) return [];
+
     const db = getDb();
+
+    const placeholders = tagIds.map(() => '?').join(',');
 
     const fileRows = db.prepare(`
         SELECT DISTINCT f.id, f.filename, f.relative_path AS relativePath,
                f.extension, f.size, f.created_at AS createdAt, f.updated_at AS updatedAt
         FROM files f
         JOIN file_tags ft ON f.id = ft.file_id
-        WHERE ft.tag_id = ?
+        WHERE ft.tag_id IN (${placeholders})
         ORDER BY f.updated_at DESC
-    `).all(tagId) as FileRecord[];
+    `).all(...tagIds) as FileRecord[];
 
     if (fileRows.length === 0) return [];
 
     // 필터된 파일들의 전체 태그 매핑을 가져옴
     const fileIds = fileRows.map((f) => f.id);
-    const placeholders = fileIds.map(() => '?').join(',');
+    const fileIdPlaceholders = fileIds.map(() => '?').join(',');
 
     const tagMappings = db.prepare(`
         SELECT ft.file_id AS fileId, t.id, t.name, t.color
         FROM file_tags ft
         JOIN tags t ON ft.tag_id = t.id
-        WHERE ft.file_id IN (${placeholders})
+        WHERE ft.file_id IN (${fileIdPlaceholders})
         ORDER BY ft.file_id, t.name
     `).all(...fileIds) as { fileId: number; id: number; name: string; color: string | null }[];
 
