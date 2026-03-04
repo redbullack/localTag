@@ -100,6 +100,15 @@
     background-color: var(--bg-modifier-hover);
 }
 
+.tag-tree-item__row--active {
+    background-color: var(--bg-modifier-active);
+}
+
+.tag-tree-item__row--active .tag-tree-item__name {
+    color: var(--text-primary);
+    font-weight: 600;
+}
+
 /* 확장/축소 토글 */
 .tag-tree-item__toggle {
     display: flex;

@@ -15,10 +15,12 @@ import type { Tag, TagTreeNode } from '../../types';
 
 interface TagSidebarProps {
     tags: Tag[];
+    selectedTagId: number | null;
     onCreateTag: () => void;
     onEditTag: (tag: Tag) => void;
     onDeleteTag: (tagId: number) => void;
     onCreateChildTag: (parentTag: Tag) => void;
+    onSelectTag: (tagId: number | null) => void;
 }
 
 /** flat 태그 목록을 계층형 트리 구조로 변환합니다. */
@@ -46,25 +48,32 @@ const buildTagTree = (tags: Tag[]): TagTreeNode[] => {
 function TagTreeItem({
     node,
     depth,
+    selectedTagId,
     onEditTag,
     onDeleteTag,
     onCreateChildTag,
+    onSelectTag,
 }: {
     node: TagTreeNode;
     depth: number;
+    selectedTagId: number | null;
     onEditTag: (tag: Tag) => void;
     onDeleteTag: (tagId: number) => void;
     onCreateChildTag: (parentTag: Tag) => void;
+    onSelectTag: (tagId: number | null) => void;
 }) {
     const [isExpanded, setIsExpanded] = useState(true);
     const [isHovered, setIsHovered] = useState(false);
     const hasChildren = node.children.length > 0;
 
+    const isActive = selectedTagId === node.id;
+
     return (
         <div className="tag-tree-item">
             <div
-                className="tag-tree-item__row"
+                className={`tag-tree-item__row ${isActive ? 'tag-tree-item__row--active' : ''}`}
                 style={{ paddingLeft: `${12 + depth * 16}px` }}
+                onClick={() => onSelectTag(isActive ? null : node.id)}
                 onMouseEnter={() => setIsHovered(true)}
                 onMouseLeave={() => setIsHovered(false)}
             >
@@ -143,9 +152,11 @@ function TagTreeItem({
                             key={child.id}
                             node={child}
                             depth={depth + 1}
+                            selectedTagId={selectedTagId}
                             onEditTag={onEditTag}
                             onDeleteTag={onDeleteTag}
                             onCreateChildTag={onCreateChildTag}
+                            onSelectTag={onSelectTag}
                         />
                     ))}
                 </div>
@@ -156,10 +167,12 @@ function TagTreeItem({
 
 export default function TagSidebar({
     tags,
+    selectedTagId,
     onCreateTag,
     onEditTag,
     onDeleteTag,
     onCreateChildTag,
+    onSelectTag,
 }: TagSidebarProps) {
     const tagTree = buildTagTree(tags);
 
@@ -196,9 +209,11 @@ export default function TagSidebar({
                             key={node.id}
                             node={node}
                             depth={0}
+                            selectedTagId={selectedTagId}
                             onEditTag={onEditTag}
                             onDeleteTag={onDeleteTag}
                             onCreateChildTag={onCreateChildTag}
+                            onSelectTag={onSelectTag}
                         />
                     ))
                 )}

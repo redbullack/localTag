@@ -3,6 +3,7 @@ export interface IpcResponse<T> {
     success: boolean;
     data?: T;
     error?: string;
+    duplicates?: string[];
 }
 
 /** Tag 데이터 인터페이스 */
@@ -11,6 +12,22 @@ export interface Tag {
     name: string;
     parentId: number | null;
     color: string | null;
+}
+
+/** 파일 레코드 */
+export interface FileRecord {
+    id: number;
+    filename: string;
+    relativePath: string;
+    extension: string | null;
+    size: number | null;
+    createdAt: string;
+    updatedAt: string;
+}
+
+/** 파일 + 연결된 태그 목록 */
+export interface FileWithTags extends FileRecord {
+    tags: Tag[];
 }
 
 export interface IElectronAPI {
@@ -23,6 +40,15 @@ export interface IElectronAPI {
     getAllTags: () => Promise<IpcResponse<Tag[]>>;
     updateTag: (params: { id: number; name?: string; color?: string; parentId?: number | null }) => Promise<IpcResponse<Tag>>;
     deleteTag: (params: { id: number }) => Promise<IpcResponse<{ success: boolean }>>;
+
+    // File CRUD
+    addFiles: (params?: { tagIds?: number[] }) => Promise<IpcResponse<FileWithTags[]>>;
+    getAllFiles: () => Promise<IpcResponse<FileWithTags[]>>;
+    getFilesByTag: (params: { tagId: number }) => Promise<IpcResponse<FileWithTags[]>>;
+    renameFile: (params: { id: number; newFilename: string }) => Promise<IpcResponse<FileWithTags>>;
+    deleteFile: (params: { id: number }) => Promise<IpcResponse<{ success: boolean }>>;
+    updateFileTags: (params: { fileId: number; tagIds: number[] }) => Promise<IpcResponse<FileWithTags>>;
+    checkDuplicateFilenames: (params: { filenames: string[] }) => Promise<IpcResponse<{ duplicates: string[] }>>;
 }
 
 declare global {

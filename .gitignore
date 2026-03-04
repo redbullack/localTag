@@ -4,3 +4,4 @@ renderer/.next
 renderer/out
 dist-main
 package-lock.json
+next-env.d.ts
