@@ -26,9 +26,9 @@ contextBridge.exposeInMainWorld('electronAPI', {
     // File CRUD
     addFiles: (params?: { tagIds?: number[] }) =>
         ipcRenderer.invoke('file:add', params),
-    getAllFiles: () =>
-        ipcRenderer.invoke('file:get-all'),
-    getFilesByTags: (params: { tagIds: number[] }) =>
+    getAllFiles: (params?: { page?: number; limit?: number }) =>
+        ipcRenderer.invoke('file:get-all', params),
+    getFilesByTags: (params: { tagIds: number[]; page?: number; limit?: number }) =>
         ipcRenderer.invoke('file:get-by-tags', params),
     renameFile: (params: { id: number; newFilename: string }) =>
         ipcRenderer.invoke('file:rename', params),
