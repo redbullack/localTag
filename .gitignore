@@ -3,5 +3,6 @@ node_modules
 renderer/.next
 renderer/out
 dist-main
+dist
 package-lock.json
 next-env.d.ts

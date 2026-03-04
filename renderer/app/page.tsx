@@ -20,7 +20,7 @@ export default function Home() {
 
     // 파일 상태
     const [fileList, setFileList] = useState<FileWithTags[]>([]);
-    const [selectedTagId, setSelectedTagId] = useState<number | null>(null);
+    const [selectedTagIds, setSelectedTagIds] = useState<number[]>([]);
 
     // 파일 태그 에디터 상태
     const [tagEditorFile, setTagEditorFile] = useState<FileWithTags | null>(null);
@@ -52,8 +52,8 @@ export default function Home() {
         if (typeof window === 'undefined' || !window.electronAPI) return;
 
         let response;
-        if (selectedTagId !== null) {
-            response = await window.electronAPI.getFilesByTag({ tagId: selectedTagId });
+        if (selectedTagIds.length > 0) {
+            response = await window.electronAPI.getFilesByTags({ tagIds: selectedTagIds });
         } else {
             response = await window.electronAPI.getAllFiles();
         }
@@ -61,7 +61,7 @@ export default function Home() {
         if (response.success && response.data) {
             setFileList(response.data);
         }
-    }, [selectedTagId]);
+    }, [selectedTagIds]);
 
     /** Vault 설정 완료 후 태그 + 파일 로드 */
     useEffect(() => {
@@ -145,8 +145,8 @@ export default function Home() {
 
         const response = await window.electronAPI.deleteTag({ id: tagId });
         if (response.success) {
-            if (selectedTagId === tagId) {
-                setSelectedTagId(null);
+            if (selectedTagIds.includes(tagId)) {
+                setSelectedTagIds(prev => prev.filter(id => id !== tagId));
             }
             await loadTags();
             await loadFiles();
@@ -155,9 +155,15 @@ export default function Home() {
         }
     };
 
-    /** 사이드바 태그 선택 (파일 필터링) */
-    const handleSelectTag = (tagId: number | null) => {
-        setSelectedTagId(tagId);
+    /** 사이드바 태그 선택 (다중 토글) */
+    const handleSelectTag = (tagId: number) => {
+        setSelectedTagIds((prevIds) => {
+            if (prevIds.includes(tagId)) {
+                return prevIds.filter((id) => id !== tagId); // 해제
+            } else {
+                return [...prevIds, tagId]; // 선택 추가
+            }
+        });
     };
 
     // ── 파일 CRUD ──
@@ -167,7 +173,7 @@ export default function Home() {
         if (typeof window === 'undefined' || !window.electronAPI) return;
 
         const response = await window.electronAPI.addFiles(
-            selectedTagId ? { tagIds: [selectedTagId] } : undefined
+            selectedTagIds.length > 0 ? { tagIds: selectedTagIds } : undefined
         );
 
         if (!response.success) {
@@ -228,8 +234,8 @@ export default function Home() {
     };
 
     /** 선택된 태그 이름 */
-    const selectedTagName = selectedTagId
-        ? tagList.find((tag) => tag.id === selectedTagId)?.name || '태그'
+    const selectedTagNames = selectedTagIds.length > 0
+        ? selectedTagIds.map(id => tagList.find(t => t.id === id)?.name).filter(Boolean).join(', ')
         : null;
 
     // ===== 로딩 화면 =====
@@ -269,7 +275,7 @@ export default function Home() {
         <div className="app-layout">
             <TagSidebar
                 tags={tagList}
-                selectedTagId={selectedTagId}
+                selectedTagIds={selectedTagIds}
                 onCreateTag={handleOpenCreateModal}
                 onEditTag={handleOpenEditModal}
                 onDeleteTag={handleDeleteTag}
@@ -280,12 +286,12 @@ export default function Home() {
             <main className="main-content">
                 <div className="main-content__header">
                     <h1 className="main-content__title">
-                        {selectedTagName ? `📁 ${selectedTagName}` : '📁 전체 파일'}
+                        {selectedTagNames ? `📁 ${selectedTagNames}` : '📁 전체 파일'}
                     </h1>
-                    {selectedTagId && (
+                    {selectedTagIds.length > 0 && (
                         <button
                             className="main-content__clear-filter"
-                            onClick={() => setSelectedTagId(null)}
+                            onClick={() => setSelectedTagIds([])}
                         >
                             ✕ 필터 해제
                         </button>
