@@ -159,11 +159,17 @@ export const getFilesByTagIds = (tagIds: number[]): FileWithTags[] => {
     const placeholders = tagIds.map(() => '?').join(',');
 
     const fileRows = db.prepare(`
+        WITH RECURSIVE tag_tree AS (
+            SELECT id FROM tags WHERE id IN (${placeholders})
+            UNION ALL
+            SELECT t.id FROM tags t
+            INNER JOIN tag_tree tt ON t.parent_id = tt.id
+        )
         SELECT DISTINCT f.id, f.filename, f.relative_path AS relativePath,
                f.extension, f.size, f.created_at AS createdAt, f.updated_at AS updatedAt
         FROM files f
         JOIN file_tags ft ON f.id = ft.file_id
-        WHERE ft.tag_id IN (${placeholders})
+        WHERE ft.tag_id IN (SELECT id FROM tag_tree)
         ORDER BY f.updated_at DESC
     `).all(...tagIds) as FileRecord[];
 
