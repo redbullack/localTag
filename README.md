@@ -20,6 +20,9 @@ Electron과 Next.js 기반의 데스크탑 애플리케이션 프로젝트입니
 ## 진행 및 수정 사항 (Changelog)
 
 * **2026-03-04**
+  * **작업 내용**: 파일 태그 편집 모달(`FileTagEditor`)에서 태그 검색 드롭다운 리스트가 모달 하단에 잘려 보이는 UI 문제 수정. 모달 컨테이너의 `overflow`를 `visible`로 변경하여 드롭다운이 모달 영역 밖으로 확장 가능하게 하고, 드롭다운 `max-height`를 200px → 300px로 늘려 더 많은 태그 항목을 표시하도록 개선.
+  * **변경된 핵심 파일**: `renderer/app/components/file-tag-editor/file-tag-editor.css`
+
   * **작업 내용**: 파일 관리 시스템 구현. Backend 파일 CRUD 레이어(`file-repository.ts`, `file-handler.ts`) 구축 — 파일 추가(Vault 복사+DB 등록), 전체/태그별 조회, 이름 변경, 삭제, 태그 할당/해제, 중복 파일명 체크 포함. Frontend에 `FileList` 컴포넌트(테이블 형태 파일 목록, hover 액션, 인라인 이름변경), `FileTagEditor` 모달(태그 칩 + 계층형 드롭다운 검색으로 태그 할당/해제) 신규 생성. 사이드바 태그 클릭 시 해당 태그 파일만 필터링하는 기능 추가(`selectedTagId`/`onSelectTag`). `page.tsx`에 파일 상태 관리 및 전체 컴포넌트 통합.
   * **변경된 핵심 파일**: `main/lib/file-repository.ts`(신규), `main/ipc/file-handler.ts`(신규), `main/main.ts`, `main/preload.ts`, `renderer/global.d.ts`, `renderer/app/types.ts`, `renderer/app/page.tsx`, `renderer/app/globals.css`, `renderer/app/components/file-list/`(신규), `renderer/app/components/file-tag-editor/`(신규), `renderer/app/components/tag-sidebar/tag-sidebar.tsx`, `renderer/app/components/tag-sidebar/tag-sidebar.css`
 
