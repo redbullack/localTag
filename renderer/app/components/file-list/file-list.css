@@ -8,6 +8,8 @@
     border: 1px solid var(--border-subtle);
     border-radius: 8px;
     overflow: hidden;
+    flex: 1;
+    min-height: 0;
 }
 
 /* ===== 헤더 ===== */
@@ -117,6 +119,8 @@
     justify-content: center;
     padding: 48px 24px;
     gap: 12px;
+    flex: 1;
+    min-height: 0;
 }
 
 .file-list__empty-text {
@@ -143,6 +147,13 @@
 
 /* ===== 테이블 ===== */
 
+.file-list__table {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-height: 0;
+}
+
 .file-list__table-header {
     display: grid;
     grid-template-columns: 1fr 200px 80px 90px;
@@ -165,7 +176,8 @@
 }
 
 .file-list__body {
-    max-height: calc(100vh - 280px);
+    flex: 1;
+    min-height: 0;
     overflow-y: auto;
 }
 
