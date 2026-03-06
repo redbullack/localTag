@@ -79,8 +79,17 @@ export const addFile = (params: AddFileParams): FileWithTags => {
         throw new Error(`원본 파일을 찾을 수 없습니다: ${sourcePath}`);
     }
 
-    // Vault로 파일 복사
-    fs.copyFileSync(sourcePath, destinationPath);
+    // Vault로 파일 이동 (실패 시 복사 후 원본 삭제 fallback)
+    try {
+        fs.renameSync(sourcePath, destinationPath);
+    } catch (error: any) {
+        if (error.code === 'EXDEV') {
+            fs.copyFileSync(sourcePath, destinationPath);
+            fs.unlinkSync(sourcePath);
+        } else {
+            throw new Error(`파일 이동 실패: ${error.message}`);
+        }
+    }
 
     const fileStats = fs.statSync(destinationPath);
     const relativePath = filename;

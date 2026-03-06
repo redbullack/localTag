@@ -20,6 +20,9 @@ Electron과 Next.js 기반의 데스크탑 애플리케이션 프로젝트입니
 ## 진행 및 수정 사항 (Changelog)
 
 * **2026-03-06**
+  * **작업 내용**: Vault(`MyTaggedFiles`)에 파일을 등록할 때 파일을 복사(`fs.copyFileSync`)하던 기존 방식을, 파일을 완전히 이동시키는 방식(`fs.renameSync`)으로 동작 변경. 파티션이 다른 드라이브 간 이동 등 OS 환경적 제약으로 `EXDEV` 에러가 발생할 경우를 대비하여 폴백(기존처럼 복사 후 원본 삭제) 로직을 추가하여 시스템 안정성 확보.
+  * **변경된 핵심 파일**: `main/lib/file-repository.ts`
+
   * **작업 내용**: 파일 목록창에서 데이터가 많을 때 하단 페이지네이션 버튼이 스크린 밖으로 밀려 가려지는 이슈 해결. 고정 스크롤 영역 할당 대신, Flexbox(`flex: 1`, `min-height: 0`)를 적용하여 브라우저 가용 높이에 맞게 리스트 스크롤 영역이 유연하게 계산되고 하단 페이지네이션이 항상 노출되도록 레이아웃을 개선.
   * **변경된 핵심 파일**: `renderer/app/globals.css`, `renderer/app/components/file-list/file-list.css`
 
