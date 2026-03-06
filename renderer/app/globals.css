@@ -204,7 +204,7 @@ body {
 .main-content__body {
     flex: 1;
     padding: 20px;
-    overflow-y: auto;
+    overflow: hidden;
     display: flex;
     flex-direction: column;
     gap: 16px;

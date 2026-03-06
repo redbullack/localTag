@@ -19,6 +19,10 @@ Electron과 Next.js 기반의 데스크탑 애플리케이션 프로젝트입니
 ---
 ## 진행 및 수정 사항 (Changelog)
 
+* **2026-03-06**
+  * **작업 내용**: 파일 목록창에서 데이터가 많을 때 하단 페이지네이션 버튼이 스크린 밖으로 밀려 가려지는 이슈 해결. 고정 스크롤 영역 할당 대신, Flexbox(`flex: 1`, `min-height: 0`)를 적용하여 브라우저 가용 높이에 맞게 리스트 스크롤 영역이 유연하게 계산되고 하단 페이지네이션이 항상 노출되도록 레이아웃을 개선.
+  * **변경된 핵심 파일**: `renderer/app/globals.css`, `renderer/app/components/file-list/file-list.css`
+
 * **2026-03-04**
   * **작업 내용**: 단일 태그 선택만 가능했던 파일 필터링 기능을 개선하여 **다중 태그 선택 기능**으로 확장. 사용자가 선택한 태그 중 하나라도 일치하는 파일들을 리스트에 보여주도록(OR 조건/합집합) 변경. 좌측 사이드바 트리에서 다수의 태그를 클릭하여 활성화/비활성화(토글 방식) 할 수 있도록 상태 관리를 `selectedTagIds` (배열)로 변경. 백엔드 `getFilesByTagId` 함수를 `getFilesByTagIds`로 교체하고 `IN (?, ?..)` SQL 쿼리를 동적으로 생성하여 대응. 선택한 여러 태그의 이름을 상단 헤더에 나열하도록 UI 개선.
   * **변경된 핵심 파일**: `main/lib/file-repository.ts`, `main/ipc/file-handler.ts`, `main/preload.ts`, `renderer/global.d.ts`, `renderer/app/page.tsx`, `renderer/app/components/tag-sidebar/tag-sidebar.tsx`
