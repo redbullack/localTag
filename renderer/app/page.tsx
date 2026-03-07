@@ -303,17 +303,21 @@ export default function Home() {
 
             <main className="main-content">
                 <div className="main-content__header">
+                    <div className="main-content__header-left">
+                        <span className="main-content__header-icon">📁</span>
+                        <span className="main-content__file-count">({totalCount})</span>
+                        {selectedTagIds.length > 0 && (
+                            <button
+                                className="main-content__clear-filter"
+                                onClick={() => setSelectedTagIds([])}
+                            >
+                                ✕ 필터 해제
+                            </button>
+                        )}
+                    </div>
                     <h1 className="main-content__title">
-                        {selectedTagNames ? `📁 ${selectedTagNames}` : '📁 전체 파일'}
+                        {selectedTagNames ? selectedTagNames : '전체 파일'}
                     </h1>
-                    {selectedTagIds.length > 0 && (
-                        <button
-                            className="main-content__clear-filter"
-                            onClick={() => setSelectedTagIds([])}
-                        >
-                            ✕ 필터 해제
-                        </button>
-                    )}
                 </div>
                 <div className="main-content__body">
                     <div className="vault-info">
