@@ -201,3 +201,74 @@
 .button--secondary:hover {
     text-decoration: underline;
 }
+
+/* ===== 커스텀 셀렉트 (상위 태그) ===== */
+
+.parent-select {
+    display: flex;
+    flex-direction: column;
+}
+
+.parent-select__selected-value {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    padding: 10px 12px;
+    border-radius: 4px;
+    border: 1px solid var(--border-subtle);
+    background-color: var(--bg-secondary);
+    color: var(--text-primary);
+    font-size: 14px;
+    margin-bottom: 8px;
+}
+
+.parent-select__search-wrapper {
+    position: relative;
+    width: 100%;
+}
+
+.parent-select__search-input-placeholder {
+    width: 100%;
+    padding: 8px 12px;
+    border: 1px solid var(--border-subtle);
+    border-radius: 6px;
+    background-color: var(--bg-primary);
+    color: var(--text-muted);
+    /* Placeholder text color */
+    font-size: 14px;
+    outline: none;
+    cursor: text;
+}
+
+/* ===== 부모 태그 선택 드롭다운 영역 설정 (TagSearchDropdown 공통 컴포넌트 사용) ===== */
+.parent-select__dropdown-wrapper {
+    position: absolute;
+    top: calc(100% + 4px);
+    left: 0;
+    right: 0;
+    z-index: 10;
+    animation: dropdownFadeIn 0.15s ease;
+}
+
+@keyframes dropdownFadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-4px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* ===== 태그 컬러 점 (단일 선택 태그 이름 앞) ===== */
+.tag-color-dot {
+    display: inline-block;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+}
