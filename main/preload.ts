@@ -1,4 +1,4 @@
-import { contextBridge, ipcRenderer } from 'electron';
+import { contextBridge, ipcRenderer, webUtils } from 'electron';
 
 /**
  * Electron Main ↔ Renderer 간 안전한 통신을 위한 Context Bridge
@@ -24,7 +24,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
         ipcRenderer.invoke('tag:delete', params),
 
     // File CRUD
-    addFiles: (params?: { tagIds?: number[] }) =>
+    addFiles: (params?: { tagIds?: number[]; filePaths?: string[] }) =>
         ipcRenderer.invoke('file:add', params),
     getAllFiles: (params?: { page?: number; limit?: number; sort?: { column: string; order: string } }) =>
         ipcRenderer.invoke('file:get-all', params),
@@ -38,4 +38,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
         ipcRenderer.invoke('file:update-tags', params),
     checkDuplicateFilenames: (params: { filenames: string[] }) =>
         ipcRenderer.invoke('file:check-duplicate', params),
+    getTotalFileCount: () =>
+        ipcRenderer.invoke('file:get-total-count'),
+    getPathForFile: (file: File) => webUtils.getPathForFile(file),
 });

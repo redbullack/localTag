@@ -26,19 +26,26 @@ import {
  */
 export const registerFileHandlers = (): void => {
 
-    ipcMain.handle('file:add', async (_event, params: { tagIds?: number[] }) => {
+    ipcMain.handle('file:add', async (_event, params: { tagIds?: number[]; filePaths?: string[] }) => {
         try {
-            const result = await dialog.showOpenDialog({
-                properties: ['openFile', 'multiSelections'],
-                title: '추가할 파일 선택',
-            });
+            let filePathsToProcess: string[] = [];
 
-            if (result.canceled || result.filePaths.length === 0) {
-                return { success: true, data: [] };
+            if (params.filePaths && params.filePaths.length > 0) {
+                filePathsToProcess = params.filePaths;
+            } else {
+                const result = await dialog.showOpenDialog({
+                    properties: ['openFile', 'multiSelections'],
+                    title: '추가할 파일 선택',
+                });
+
+                if (result.canceled || result.filePaths.length === 0) {
+                    return { success: true, data: [] };
+                }
+                filePathsToProcess = result.filePaths;
             }
 
             // 중복 파일명 체크
-            const filenames = result.filePaths.map(
+            const filenames = filePathsToProcess.map(
                 (filePath) => require('path').basename(filePath)
             );
             const duplicates = checkDuplicateFilenames(filenames);
@@ -51,7 +58,7 @@ export const registerFileHandlers = (): void => {
                 };
             }
 
-            const addedFiles = result.filePaths.map((sourcePath) =>
+            const addedFiles = filePathsToProcess.map((sourcePath) =>
                 addFile({ sourcePath, tagIds: params?.tagIds })
             );
 
