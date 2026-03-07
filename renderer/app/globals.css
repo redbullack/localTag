@@ -173,10 +173,26 @@ body {
 .main-content__header {
     display: flex;
     align-items: center;
-    gap: 12px;
+    justify-content: space-between;
     padding: 12px 20px;
     border-bottom: 1px solid var(--border-subtle);
     background-color: var(--bg-primary);
+}
+
+.main-content__header-left {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.main-content__header-icon {
+    font-size: 16px;
+}
+
+.main-content__file-count {
+    color: var(--text-muted);
+    font-size: 14px;
+    font-weight: 600;
 }
 
 .main-content__title {

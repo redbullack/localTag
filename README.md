@@ -20,6 +20,9 @@ Electron과 Next.js 기반의 데스크탑 애플리케이션 프로젝트입니
 ## 진행 및 수정 사항 (Changelog)
 
 * **2026-03-07**
+  * **작업 내용**: 파일 목록 헤더 영역에 전체 파일 개수를 표기하고, "✕ 필터 해제" 버튼을 파일 개수 옆으로 나란히 배치하도록 UI 구조 변경. 📁 아이콘을 가장 좌측에 고정하고, 우측 가장자리에 "전체 파일" 또는 선택된 태그명이 표시되도록 Flexbox 정렬 수정.
+  * **변경된 핵심 파일**: `renderer/app/page.tsx`, `renderer/app/globals.css`
+
   * **작업 내용**: 사이드바 상단 "태그" 타이틀 옆에 전체 태그 및 파일 개수 표기, 그리고 각 태그 이름 옆에 연결된 파일 개수를 표시하도록 파일 필터 UI 개선.
   * **추가된 최적화**: `getAllTags` 호출 시 하위 태그들이 소유한 파일 개수까지 모두 포함하되, 중복되는 파일은 DB 레이어가 아닌 Node.js 메모리 단에서 `Set`을 이용한 Bottom-up 방식 취합으로 처리하여 쿼리 성능(부하 방지) 최적화 도입.
   * **변경된 핵심 파일**: `main/lib/tag-repository.ts`, `main/lib/file-repository.ts`, `main/ipc/file-handler.ts`, `renderer/global.d.ts`, `renderer/app/types.ts`, `renderer/app/page.tsx`, `renderer/app/components/tag-sidebar/tag-sidebar.tsx`, `renderer/app/components/tag-sidebar/tag-sidebar.css`
