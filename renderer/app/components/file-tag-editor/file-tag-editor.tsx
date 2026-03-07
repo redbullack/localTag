@@ -2,7 +2,8 @@
 
 import { useState, useMemo, useEffect, useRef } from 'react';
 import './file-tag-editor.css';
-import type { FileWithTags, Tag, TagTreeNode } from '../../types';
+import type { FileWithTags, Tag } from '../../types';
+import TagSearchDropdown from '../shared/tag-search-dropdown';
 
 interface FileTagEditorProps {
     /** 모달 열림 여부 */
@@ -17,41 +18,6 @@ interface FileTagEditorProps {
     onClose: () => void;
 }
 
-/** flat 태그 → 계층형 트리 변환 (태그 사이드바와 동일 로직) */
-const buildTagTree = (tags: Tag[]): TagTreeNode[] => {
-    const tagMap = new Map<number, TagTreeNode>();
-    const rootNodes: TagTreeNode[] = [];
-
-    tags.forEach((tag) => {
-        tagMap.set(tag.id, { ...tag, children: [] });
-    });
-
-    tags.forEach((tag) => {
-        const treeNode = tagMap.get(tag.id)!;
-        if (tag.parentId !== null && tagMap.has(tag.parentId)) {
-            tagMap.get(tag.parentId)!.children.push(treeNode);
-        } else {
-            rootNodes.push(treeNode);
-        }
-    });
-
-    return rootNodes;
-};
-
-/** 트리를 들여쓰기 레벨과 함께 flat 리스트로 변환 */
-const flattenTree = (nodes: TagTreeNode[], depth: number = 0): { tag: Tag; depth: number }[] => {
-    const result: { tag: Tag; depth: number }[] = [];
-
-    for (const node of nodes) {
-        result.push({ tag: node, depth });
-        if (node.children.length > 0) {
-            result.push(...flattenTree(node.children, depth + 1));
-        }
-    }
-
-    return result;
-};
-
 export default function FileTagEditor({
     isOpen,
     file,
@@ -60,16 +26,13 @@ export default function FileTagEditor({
     onClose,
 }: FileTagEditorProps) {
     const [selectedTagIds, setSelectedTagIds] = useState<Set<number>>(new Set());
-    const [searchQuery, setSearchQuery] = useState('');
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
     const dropdownRef = useRef<HTMLDivElement>(null);
-    const searchInputRef = useRef<HTMLInputElement>(null);
 
     /** 모달 열릴 때 기존 태그 ID 세트 초기화 */
     useEffect(() => {
         if (isOpen && file) {
             setSelectedTagIds(new Set(file.tags.map((tag) => tag.id)));
-            setSearchQuery('');
             setIsDropdownOpen(false);
         }
     }, [isOpen, file]);
@@ -102,24 +65,10 @@ export default function FileTagEditor({
         };
     }, [isDropdownOpen, onClose]);
 
-    /** 전체 태그 트리를 flat 리스트로 변환 (검색 + 계층 들여쓰기) */
-    const flatTagList = useMemo(() => {
-        const tree = buildTagTree(allTags);
-        return flattenTree(tree);
-    }, [allTags]);
+    /** 태그 토글 (추가/제거) - TagSearchDropdown에서 사용 */
+    const handleToggleTag = (tagId: number | null) => {
+        if (tagId === null) return;
 
-    /** 검색으로 필터링된 태그 리스트 */
-    const filteredTagList = useMemo(() => {
-        if (!searchQuery.trim()) return flatTagList;
-
-        const lowerQuery = searchQuery.toLowerCase();
-        return flatTagList.filter(({ tag }) =>
-            tag.name.toLowerCase().includes(lowerQuery)
-        );
-    }, [flatTagList, searchQuery]);
-
-    /** 태그 토글 (추가/제거) */
-    const handleToggleTag = (tagId: number) => {
         setSelectedTagIds((prev) => {
             const next = new Set(prev);
             if (next.has(tagId)) {
@@ -201,49 +150,31 @@ export default function FileTagEditor({
                     )}
                 </div>
 
-                {/* 태그 검색 + 드롭다운 */}
+                {/* 태그 검색 + 드롭다운 공통 컴포넌트 사용 */}
                 <div className="file-tag-editor__section-label">태그 추가</div>
-                <div className="file-tag-editor__search-wrapper" ref={dropdownRef}>
+                <div
+                    className="file-tag-editor__search-wrapper"
+                    ref={dropdownRef}
+                >
+                    {/* 페이크 인풋. 레이아웃을 유지하고 클릭 시 드롭다운 엶 */}
                     <input
-                        ref={searchInputRef}
-                        className="file-tag-editor__search-input"
+                        className="file-tag-editor__search-input-placeholder"
                         type="text"
                         placeholder="🔍 태그 검색..."
-                        value={searchQuery}
-                        onChange={(e) => setSearchQuery(e.target.value)}
-                        onFocus={() => setIsDropdownOpen(true)}
+                        onClick={() => setIsDropdownOpen(true)}
+                        readOnly
                     />
 
                     {isDropdownOpen && (
-                        <div className="file-tag-editor__dropdown">
-                            {filteredTagList.length === 0 ? (
-                                <div className="file-tag-editor__dropdown-empty">
-                                    일치하는 태그가 없습니다
-                                </div>
-                            ) : (
-                                filteredTagList.map(({ tag, depth }) => {
-                                    const isSelected = selectedTagIds.has(tag.id);
-                                    return (
-                                        <button
-                                            key={tag.id}
-                                            className={`file-tag-editor__dropdown-item ${isSelected ? 'file-tag-editor__dropdown-item--selected' : ''}`}
-                                            style={{ paddingLeft: `${12 + depth * 16}px` }}
-                                            onClick={() => handleToggleTag(tag.id)}
-                                        >
-                                            <span
-                                                className="file-tag-editor__dropdown-dot"
-                                                style={{ backgroundColor: tag.color || '#5865f2' }}
-                                            />
-                                            <span className="file-tag-editor__dropdown-name">
-                                                {tag.name}
-                                            </span>
-                                            {isSelected && (
-                                                <span className="file-tag-editor__dropdown-check">✓</span>
-                                            )}
-                                        </button>
-                                    );
-                                })
-                            )}
+                        <div className="file-tag-editor__dropdown-wrapper">
+                            <TagSearchDropdown
+                                tags={allTags}
+                                selectedTagIds={selectedTagIds}
+                                onSelectTag={handleToggleTag}
+                                selectionMode="multiple"
+                                searchPlaceholder="🔍 태그 검색..."
+                                autoFocus={true}
+                            />
                         </div>
                     )}
                 </div>
