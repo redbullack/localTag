@@ -12,6 +12,7 @@ interface FileListProps {
     onSortChange: (option: SortOption) => void;
     onPageChange: (page: number) => void;
     onAddFiles: () => void;
+    onDropFiles?: (filePaths: string[]) => void;
     onRenameFile: (fileId: number, newFilename: string) => void;
     onDeleteFile: (fileId: number) => void;
     onEditFileTags: (file: FileWithTags) => void;
@@ -174,10 +175,65 @@ export default function FileList({
     onSortChange,
     onPageChange,
     onAddFiles,
+    onDropFiles,
     onRenameFile,
     onDeleteFile,
     onEditFileTags,
 }: FileListProps) {
+    const [isDragging, setIsDragging] = useState(false);
+
+    const handleDragOver = (e: React.DragEvent) => {
+        e.preventDefault();
+        e.stopPropagation();
+        if (!isDragging) setIsDragging(true);
+    };
+
+    const handleDragLeave = (e: React.DragEvent) => {
+        e.preventDefault();
+        e.stopPropagation();
+        if (e.currentTarget.contains(e.relatedTarget as Node)) return;
+        setIsDragging(false);
+    };
+
+    const handleDrop = (e: React.DragEvent) => {
+        e.preventDefault();
+        e.stopPropagation();
+        setIsDragging(false);
+
+        const items = e.dataTransfer.items;
+        if (!items) return;
+
+        for (let i = 0; i < items.length; i++) {
+            const item = items[i];
+            if (item.kind === 'file') {
+                const entry = item.webkitGetAsEntry();
+                if (entry && entry.isDirectory) {
+                    alert('폴더는 업로드할 수 없습니다. 파일만 드래그 앤 드롭해주세요.');
+                    return;
+                }
+            }
+        }
+
+        const files = e.dataTransfer.files;
+        const filePaths: string[] = [];
+        for (let i = 0; i < files.length; i++) {
+            const file = files[i];
+            const path = window.electronAPI.getPathForFile(file);
+            if (path && typeof path === 'string') {
+                filePaths.push(path);
+            }
+        }
+
+        if (filePaths.length === 0) {
+            alert('유효한 파일 경로를 찾을 수 없습니다.');
+            return;
+        }
+
+        if (onDropFiles) {
+            onDropFiles(filePaths);
+        }
+    };
+
     // ==== 페이징 로직 ====
     const limit = 50;
     const totalPages = Math.ceil(totalCount / limit);
@@ -186,7 +242,7 @@ export default function FileList({
     const startPage = (currentGroup - 1) * pageGroupSize + 1;
     const endPage = Math.min(startPage + pageGroupSize - 1, totalPages);
 
-    const pages = [];
+    const pages: number[] = [];
     for (let i = startPage; i <= endPage; i++) {
         pages.push(i);
     }
@@ -245,7 +301,12 @@ export default function FileList({
         );
     };
     return (
-        <div className="file-list">
+        <div
+            className={`file-list ${isDragging ? 'file-list--dragging' : ''}`}
+            onDragOver={handleDragOver}
+            onDragLeave={handleDragLeave}
+            onDrop={handleDrop}
+        >
             {/* 헤더 */}
             <div className="file-list__header">
                 <div className="file-list__header-left">
