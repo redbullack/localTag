@@ -43,7 +43,7 @@ export interface IElectronAPI {
     deleteTag: (params: { id: number }) => Promise<IpcResponse<{ success: boolean }>>;
 
     // File CRUD
-    addFiles: (params?: { tagIds?: number[] }) => Promise<IpcResponse<FileWithTags[]>>;
+    addFiles: (params?: { tagIds?: number[]; filePaths?: string[] }) => Promise<IpcResponse<FileWithTags[]>>;
     getAllFiles: (params?: { page?: number; limit?: number; sort?: { column: string; order: string } }) => Promise<IpcResponse<FileWithTags[]>>;
     getFilesByTags: (params: { tagIds: number[]; page?: number; limit?: number; sort?: { column: string; order: string } }) => Promise<IpcResponse<FileWithTags[]>>;
     renameFile: (params: { id: number; newFilename: string }) => Promise<IpcResponse<FileWithTags>>;
@@ -51,6 +51,7 @@ export interface IElectronAPI {
     updateFileTags: (params: { fileId: number; tagIds: number[] }) => Promise<IpcResponse<FileWithTags>>;
     checkDuplicateFilenames: (params: { filenames: string[] }) => Promise<IpcResponse<{ duplicates: string[] }>>;
     getTotalFileCount: () => Promise<IpcResponse<number>>;
+    getPathForFile: (file: File) => string;
 }
 
 declare global {

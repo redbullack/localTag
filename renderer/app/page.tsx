@@ -205,6 +205,34 @@ export default function Home() {
         await loadFiles();
     };
 
+    /** 드래그앤 드롭 파일 추가 */
+    const handleDropFiles = async (filePaths: string[]) => {
+        if (typeof window === 'undefined' || !window.electronAPI) return;
+
+        const tagNameText = selectedTagNames ? `"${selectedTagNames}" 태그로` : '태그 없이';
+        const confirmResult = confirm(`${filePaths.length}개의 파일을 ${tagNameText} 저장하시겠습니까?`);
+
+        if (!confirmResult) return;
+
+        const response = await window.electronAPI.addFiles(
+            {
+                tagIds: selectedTagIds.length > 0 ? selectedTagIds : undefined,
+                filePaths: filePaths
+            }
+        );
+
+        if (!response.success) {
+            if (response.duplicates && response.duplicates.length > 0) {
+                alert(`다음 파일명이 이미 존재합니다:\n${response.duplicates.join('\n')}`);
+            } else if (response.error) {
+                alert(response.error);
+            }
+            return;
+        }
+
+        await loadFiles();
+    };
+
     /** 파일 이름 변경 */
     const handleRenameFile = async (fileId: number, newFilename: string) => {
         if (typeof window === 'undefined' || !window.electronAPI) return;
@@ -314,10 +342,10 @@ export default function Home() {
                                 ✕ 필터 해제
                             </button>
                         )}
+                        <h1 className="main-content__title">
+                            {selectedTagNames ? selectedTagNames : '전체 파일'}
+                        </h1>
                     </div>
-                    <h1 className="main-content__title">
-                        {selectedTagNames ? selectedTagNames : '전체 파일'}
-                    </h1>
                 </div>
                 <div className="main-content__body">
                     <div className="vault-info">
@@ -332,6 +360,7 @@ export default function Home() {
                         onSortChange={(option) => setSortOption(option)}
                         onPageChange={(page) => setCurrentPage(page)}
                         onAddFiles={handleAddFiles}
+                        onDropFiles={handleDropFiles}
                         onRenameFile={handleRenameFile}
                         onDeleteFile={handleDeleteFile}
                         onEditFileTags={handleOpenTagEditor}
