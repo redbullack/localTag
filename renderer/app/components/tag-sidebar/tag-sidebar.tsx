@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import './tag-sidebar.css';
 import type { Tag, TagTreeNode } from '../../types';
+import TagSearchDropdown from '../shared/tag-search-dropdown';
 
 /**
  * TagSidebar - 좌측 사이드바에 태그 목록을 트리 형태로 표시하는 컴포넌트
@@ -189,6 +190,16 @@ export default function TagSidebar({
                 >
                     +
                 </button>
+            </div>
+
+            <div className="tag-sidebar__search">
+                <TagSearchDropdown
+                    tags={tags}
+                    selectedTagIds={new Set(selectedTagIds)}
+                    onSelectTag={(id) => id !== null && onSelectTag(id)}
+                    selectionMode="single"
+                    searchPlaceholder="태그 검색..."
+                />
             </div>
 
             {/* 태그 목록 */}

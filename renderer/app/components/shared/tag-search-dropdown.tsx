@@ -37,7 +37,23 @@ export default function TagSearchDropdown({
     autoFocus = false,
 }: TagSearchDropdownProps) {
     const [searchQuery, setSearchQuery] = useState('');
+    const [isDropdownOpen, setIsDropdownOpen] = useState(false);
     const searchInputRef = useRef<HTMLInputElement>(null);
+    const dropdownRef = useRef<HTMLDivElement>(null);
+
+    // 컴포넌트 외부 클릭 시 드롭다운 닫기
+    useEffect(() => {
+        const handleClickOutside = (event: MouseEvent) => {
+            if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+                setIsDropdownOpen(false);
+            }
+        };
+
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => {
+            document.removeEventListener('mousedown', handleClickOutside);
+        };
+    }, []);
 
     // 컴포넌트가 마운트되거나 autoFocus 값이 변경될 때 포커스 제어
     useEffect(() => {
@@ -65,64 +81,73 @@ export default function TagSearchDropdown({
     const isRootSelected = selectionMode === 'single' && selectedTagIds.size === 0;
 
     return (
-        <div className={`tag-search-dropdown ${className}`}>
+        <div className={`tag-search-dropdown ${className}`} ref={dropdownRef}>
             <input
                 ref={searchInputRef}
                 className="tag-search-dropdown__input"
                 type="text"
                 placeholder={searchPlaceholder}
                 value={searchQuery}
+                onFocus={() => setIsDropdownOpen(true)}
                 onChange={(e) => setSearchQuery(e.target.value)}
             />
-            <ul className="tag-search-dropdown__list" role="listbox">
-                {/* 단일 선택 모드 & showRootOption이 true일 때만 "없음" 옵션 렌더링 */}
-                {selectionMode === 'single' && showRootOption && (
-                    <li
-                        className={`tag-search-dropdown__item ${isRootSelected ? 'tag-search-dropdown__item--selected' : ''}`}
-                        role="option"
-                        aria-selected={isRootSelected}
-                        onClick={() => onSelectTag(null)}
-                    >
-                        없음 (루트 태그)
-                    </li>
-                )}
+            {isDropdownOpen && (
+                <ul className="tag-search-dropdown__list" role="listbox">
+                    {/* 단일 선택 모드 & showRootOption이 true일 때만 "없음" 옵션 렌더링 */}
+                    {selectionMode === 'single' && showRootOption && (
+                        <li
+                            className={`tag-search-dropdown__item ${isRootSelected ? 'tag-search-dropdown__item--selected' : ''}`}
+                            role="option"
+                            aria-selected={isRootSelected}
+                            onClick={() => {
+                                onSelectTag(null);
+                                setIsDropdownOpen(false);
+                            }}
+                        >
+                            없음 (루트 태그)
+                        </li>
+                    )}
 
-                {/* 태그 리스트 렌더링 */}
-                {filteredTagList.length === 0 ? (
-                    <li className="tag-search-dropdown__empty">
-                        일치하는 태그가 없습니다
-                    </li>
-                ) : (
-                    filteredTagList.map(({ tag, depth }) => {
-                        const isSelected = selectedTagIds.has(tag.id);
-                        return (
-                            <button
-                                type="button"
-                                key={tag.id}
-                                className={`tag-search-dropdown__item ${isSelected ? 'tag-search-dropdown__item--selected' : ''}`}
-                                role="option"
-                                aria-selected={isSelected}
-                                style={{ paddingLeft: `${10 + depth * 16}px` }}
-                                onClick={() => onSelectTag(tag.id)}
-                            >
-                                <span
-                                    className="tag-color-dot"
-                                    style={{
-                                        backgroundColor: tag.color || '#99aab5',
+                    {/* 태그 리스트 렌더링 */}
+                    {filteredTagList.length === 0 ? (
+                        <li className="tag-search-dropdown__empty">
+                            일치하는 태그가 없습니다
+                        </li>
+                    ) : (
+                        filteredTagList.map(({ tag, depth }) => {
+                            const isSelected = selectedTagIds.has(tag.id);
+                            return (
+                                <button
+                                    type="button"
+                                    key={tag.id}
+                                    className={`tag-search-dropdown__item ${isSelected ? 'tag-search-dropdown__item--selected' : ''}`}
+                                    role="option"
+                                    aria-selected={isSelected}
+                                    style={{ paddingLeft: `${10 + depth * 16}px` }}
+                                    onClick={() => {
+                                        onSelectTag(tag.id);
+                                        setIsDropdownOpen(false);
                                     }}
-                                />
-                                {tag.name}
-                                {/* 만약 다중 선택 모드이고, 선택된 상태라면 체크 표시 렌더링 */}
-                                {selectionMode === 'multiple' && isSelected && (
-                                    <span className="tag-search-dropdown__item-check">
-                                        ✓
-                                    </span>
-                                )}
-                            </button>
-                        );
-                    })
-                )}
-            </ul>
+                                >
+                                    <span
+                                        className="tag-color-dot"
+                                        style={{
+                                            backgroundColor: tag.color || '#99aab5',
+                                        }}
+                                    />
+                                    {tag.name}
+                                    {/* 만약 다중 선택 모드이고, 선택된 상태라면 체크 표시 렌더링 */}
+                                    {selectionMode === 'multiple' && isSelected && (
+                                        <span className="tag-search-dropdown__item-check">
+                                            ✓
+                                        </span>
+                                    )}
+                                </button>
+                            );
+                        })
+                    )}
+                </ul>
+            )}
         </div>
     );
 }
