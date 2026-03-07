@@ -20,6 +20,10 @@ Electron과 Next.js 기반의 데스크탑 애플리케이션 프로젝트입니
 ## 진행 및 수정 사항 (Changelog)
 
 * **2026-03-07**
+  * **작업 내용**: 사이드바 상단 "태그" 타이틀 옆에 전체 태그 및 파일 개수 표기, 그리고 각 태그 이름 옆에 연결된 파일 개수를 표시하도록 파일 필터 UI 개선.
+  * **추가된 최적화**: `getAllTags` 호출 시 하위 태그들이 소유한 파일 개수까지 모두 포함하되, 중복되는 파일은 DB 레이어가 아닌 Node.js 메모리 단에서 `Set`을 이용한 Bottom-up 방식 취합으로 처리하여 쿼리 성능(부하 방지) 최적화 도입.
+  * **변경된 핵심 파일**: `main/lib/tag-repository.ts`, `main/lib/file-repository.ts`, `main/ipc/file-handler.ts`, `renderer/global.d.ts`, `renderer/app/types.ts`, `renderer/app/page.tsx`, `renderer/app/components/tag-sidebar/tag-sidebar.tsx`, `renderer/app/components/tag-sidebar/tag-sidebar.css`
+
   * **작업 내용**: 태그 검색 및 계층 렌더링 로직을 공유하는 공통 컴포넌트(`TagSearchDropdown`)를 생성하여 리팩토링 진행. 파일 태그 편집(`FileTagEditor`) 모달과 새 태그 만들기(`TagFormModal`) 모달 기능에서 분편화되었던 로직을 하나로 통합하고, `parent-tag-select` 관련 파일들을 완전히 제거함. 두 개의 모달 모두 부모 태그를 검색할 때 검색창을 클릭하면 드롭다운이 뜨는 통일된 UI/UX 제공.
   * **변경된 핵심 파일**: `renderer/app/utils/tag-tree.ts`(신규), `renderer/app/components/shared/tag-search-dropdown.tsx`(신규), `renderer/app/components/tag-form-modal/tag-form-modal.tsx`, `renderer/app/components/file-tag-editor/file-tag-editor.tsx`
 

@@ -25,6 +25,7 @@ export default function Home() {
     // 페이징 상태
     const [currentPage, setCurrentPage] = useState(1);
     const [totalCount, setTotalCount] = useState(0);
+    const [overallFileCount, setOverallFileCount] = useState(0);
 
     // 파일 정렬 상태
     const [sortOption, setSortOption] = useState<SortOption>({ column: 'updatedAt', order: 'desc' });
@@ -70,6 +71,11 @@ export default function Home() {
             if (response.totalCount !== undefined) {
                 setTotalCount(response.totalCount);
             }
+        }
+
+        const countResponse = await window.electronAPI.getTotalFileCount();
+        if (countResponse.success && countResponse.data !== undefined) {
+            setOverallFileCount(countResponse.data);
         }
     }, [selectedTagIds, currentPage, sortOption]);
 
@@ -287,6 +293,7 @@ export default function Home() {
             <TagSidebar
                 tags={tagList}
                 selectedTagIds={selectedTagIds}
+                overallFileCount={overallFileCount}
                 onCreateTag={handleOpenCreateModal}
                 onEditTag={handleOpenEditModal}
                 onDeleteTag={handleDeleteTag}
