@@ -19,6 +19,11 @@
     border-bottom: 1px solid var(--border-subtle);
 }
 
+.tag-sidebar__search {
+    padding: 8px 12px;
+    border-bottom: 1px solid var(--border-subtle);
+}
+
 .tag-sidebar__title {
     font-size: 12px;
     font-weight: 700;

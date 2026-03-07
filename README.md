@@ -23,6 +23,9 @@ Electron과 Next.js 기반의 데스크탑 애플리케이션 프로젝트입니
   * **작업 내용**: 태그 검색 및 계층 렌더링 로직을 공유하는 공통 컴포넌트(`TagSearchDropdown`)를 생성하여 리팩토링 진행. 파일 태그 편집(`FileTagEditor`) 모달과 새 태그 만들기(`TagFormModal`) 모달 기능에서 분편화되었던 로직을 하나로 통합하고, `parent-tag-select` 관련 파일들을 완전히 제거함. 두 개의 모달 모두 부모 태그를 검색할 때 검색창을 클릭하면 드롭다운이 뜨는 통일된 UI/UX 제공.
   * **변경된 핵심 파일**: `renderer/app/utils/tag-tree.ts`(신규), `renderer/app/components/shared/tag-search-dropdown.tsx`(신규), `renderer/app/components/tag-form-modal/tag-form-modal.tsx`, `renderer/app/components/file-tag-editor/file-tag-editor.tsx`
 
+  * **작업 내용**: 공통 태그 검색 컴포넌트(`TagSearchDropdown`)를 재사용하여, 사이드바 태그 메뉴 상단에 실시간 태그 필터링 및 선택 기능 추가. 검색창 클릭(포커스) 시에만 드롭다운 리스트가 노출되고, 외부 클릭 시 닫히도록 UI 개선 및 기존 파일 필터링 로직과 연동.
+  * **변경된 핵심 파일**: `renderer/app/components/tag-sidebar/tag-sidebar.tsx`, `renderer/app/components/tag-sidebar/tag-sidebar.css`, `renderer/app/components/shared/tag-search-dropdown.tsx`
+
 * **2026-03-06**
   * **작업 내용**: Vault(`MyTaggedFiles`)에 파일을 등록할 때 파일을 복사(`fs.copyFileSync`)하던 기존 방식을, 파일을 완전히 이동시키는 방식(`fs.renameSync`)으로 동작 변경. 파티션이 다른 드라이브 간 이동 등 OS 환경적 제약으로 `EXDEV` 에러가 발생할 경우를 대비하여 폴백(기존처럼 복사 후 원본 삭제) 로직을 추가하여 시스템 안정성 확보.
   * **변경된 핵심 파일**: `main/lib/file-repository.ts`
