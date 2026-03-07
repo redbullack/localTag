@@ -125,101 +125,34 @@
     padding: 4px 0;
 }
 
-/* 검색 + 드롭다운 */
+/* 검색 + 드롭다운 래퍼 */
 
 .file-tag-editor__search-wrapper {
     position: relative;
     padding: 4px 20px 12px;
 }
 
-.file-tag-editor__search-input {
+/* 닫혀 있을 때 보여주는 페이크 인풋 */
+.file-tag-editor__search-input-placeholder {
     width: 100%;
     padding: 8px 12px;
     border: 1px solid var(--border-strong);
     border-radius: 6px;
     background-color: var(--bg-primary);
-    color: var(--text-primary);
+    color: var(--text-muted);
+    /* Placeholder text color */
     font-size: 14px;
     outline: none;
-    transition: border-color 0.15s ease;
+    cursor: text;
 }
 
-.file-tag-editor__search-input:focus {
-    border-color: var(--accent-primary);
-}
-
-.file-tag-editor__search-input::placeholder {
-    color: var(--text-muted);
-}
-
-/* 드롭다운 */
-
-.file-tag-editor__dropdown {
+.file-tag-editor__dropdown-wrapper {
     position: absolute;
+    top: 4px;
     left: 20px;
     right: 20px;
-    top: calc(100% - 4px);
-    background-color: var(--bg-secondary);
-    border: 1px solid var(--border-strong);
-    border-radius: 6px;
-    box-shadow: var(--shadow-elevation);
-    max-height: 300px;
-    overflow-y: auto;
     z-index: 10;
-}
-
-.file-tag-editor__dropdown-empty {
-    padding: 16px;
-    text-align: center;
-    font-size: 13px;
-    color: var(--text-muted);
-}
-
-.file-tag-editor__dropdown-item {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    width: 100%;
-    padding: 8px 12px;
-    border: none;
-    background: transparent;
-    color: var(--text-primary);
-    font-size: 14px;
-    cursor: pointer;
-    text-align: left;
-    transition: background-color 0.1s ease;
-}
-
-.file-tag-editor__dropdown-item:hover {
-    background-color: var(--bg-modifier-hover);
-}
-
-.file-tag-editor__dropdown-item--selected {
-    background-color: rgba(88, 101, 242, 0.08);
-}
-
-.file-tag-editor__dropdown-item--selected:hover {
-    background-color: rgba(88, 101, 242, 0.15);
-}
-
-.file-tag-editor__dropdown-dot {
-    width: 10px;
-    height: 10px;
-    border-radius: 50%;
-    flex-shrink: 0;
-}
-
-.file-tag-editor__dropdown-name {
-    flex: 1;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-}
-
-.file-tag-editor__dropdown-check {
-    color: var(--accent-primary);
-    font-weight: 700;
-    font-size: 14px;
+    animation: fadeIn 0.15s ease;
 }
 
 /* 하단 버튼 */
