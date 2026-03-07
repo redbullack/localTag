@@ -10,6 +10,13 @@
     overflow: hidden;
     flex: 1;
     min-height: 0;
+    transition: background-color 0.2s ease, border-color 0.2s ease;
+}
+
+.file-list--dragging {
+    background-color: var(--bg-modifier-hover);
+    border-color: var(--accent-primary);
+    box-shadow: 0 0 0 2px var(--accent-primary) inset;
 }
 
 /* ===== 헤더 ===== */
