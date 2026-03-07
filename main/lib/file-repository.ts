@@ -287,6 +287,20 @@ export const getFilesByTagIds = (tagIds: number[], page: number = 1, limit: numb
 };
 
 /**
+ * 전체 로컬 파일의 개수만 조회합니다. (페이징이나 데이터 없이 개수만 필요할 때 사용)
+ * @returns { count: number }
+ */
+export const getTotalFileCount = (): { count: number } => {
+    const db = getDb();
+
+    // 전체 개수 조회
+    const countRow = db.prepare('SELECT COUNT(*) as count FROM files').get() as { count: number };
+    const totalCount = countRow.count;
+
+    return { count: totalCount };
+};
+
+/**
  * 파일 이름을 변경합니다. (DB + 파일시스템 동시 변경)
  * @param id - 파일 ID
  * @param newFilename - 새 파일명 (확장자 포함)

@@ -50,6 +50,7 @@ export interface IElectronAPI {
     deleteFile: (params: { id: number }) => Promise<IpcResponse<{ success: boolean }>>;
     updateFileTags: (params: { fileId: number; tagIds: number[] }) => Promise<IpcResponse<FileWithTags>>;
     checkDuplicateFilenames: (params: { filenames: string[] }) => Promise<IpcResponse<{ duplicates: string[] }>>;
+    getTotalFileCount: () => Promise<IpcResponse<number>>;
 }
 
 declare global {

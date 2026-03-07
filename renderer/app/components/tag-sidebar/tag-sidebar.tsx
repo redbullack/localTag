@@ -17,6 +17,7 @@ import TagSearchDropdown from '../shared/tag-search-dropdown';
 interface TagSidebarProps {
     tags: Tag[];
     selectedTagIds: number[];
+    overallFileCount: number;
     onCreateTag: () => void;
     onEditTag: (tag: Tag) => void;
     onDeleteTag: (tagId: number) => void;
@@ -100,8 +101,11 @@ function TagTreeItem({
                     style={{ backgroundColor: node.color || '#5865f2' }}
                 />
 
-                {/* 태그 이름 */}
-                <span className="tag-tree-item__name">{node.name}</span>
+                {/* 태그 이름 및 파일 개수 */}
+                <span className="tag-tree-item__name">
+                    {node.name}
+                    <span className="tag-tree-item__count">({node.fileCount || 0})</span>
+                </span>
 
                 {/* 액션 버튼 (hover 시 표시) */}
                 {isHovered && (
@@ -169,6 +173,7 @@ function TagTreeItem({
 export default function TagSidebar({
     tags,
     selectedTagIds,
+    overallFileCount,
     onCreateTag,
     onEditTag,
     onDeleteTag,
@@ -181,7 +186,12 @@ export default function TagSidebar({
         <aside className="tag-sidebar">
             {/* 사이드바 헤더 */}
             <div className="tag-sidebar__header">
-                <h2 className="tag-sidebar__title">태그</h2>
+                <h2 className="tag-sidebar__title">
+                    태그
+                    <span className="tag-sidebar__count">
+                        ({tags.length}) 파일 ({overallFileCount})
+                    </span>
+                </h2>
                 <button
                     className="tag-sidebar__add-btn"
                     onClick={onCreateTag}
