@@ -7,6 +7,7 @@ import {
     deleteFile,
     updateFileTags,
     checkDuplicateFilenames,
+    getTotalFileCount,
     SortOption,
 } from '../lib/file-repository';
 
@@ -21,6 +22,7 @@ import {
  * - file:delete          | payload: { id }                       | return: { success }
  * - file:update-tags     | payload: { fileId, tagIds }           | return: FileWithTags
  * - file:check-duplicate | payload: { filenames }                | return: { duplicates }
+ * - file:get-total-count | payload: 없음                          | return: { data: number }
  */
 export const registerFileHandlers = (): void => {
 
@@ -111,6 +113,15 @@ export const registerFileHandlers = (): void => {
         try {
             const duplicates = checkDuplicateFilenames(params.filenames);
             return { success: true, data: { duplicates } };
+        } catch (error: any) {
+            return { success: false, error: error.message };
+        }
+    });
+
+    ipcMain.handle('file:get-total-count', () => {
+        try {
+            const result = getTotalFileCount();
+            return { success: true, data: result.count };
         } catch (error: any) {
             return { success: false, error: error.message };
         }

@@ -32,6 +32,15 @@
     color: var(--text-muted);
 }
 
+.tag-sidebar__count {
+    font-size: 0.85em;
+    font-weight: 400;
+    color: var(--text-secondary);
+    margin-left: 6px;
+    text-transform: none;
+    letter-spacing: normal;
+}
+
 .tag-sidebar__add-btn {
     display: flex;
     align-items: center;
@@ -158,6 +167,15 @@
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.tag-tree-item__count {
+    font-size: 11px;
+    color: var(--text-muted);
+    margin-left: 6px;
 }
 
 .tag-tree-item__row:hover .tag-tree-item__name {

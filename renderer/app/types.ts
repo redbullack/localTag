@@ -8,6 +8,7 @@ export interface Tag {
     name: string;
     parentId: number | null;
     color: string | null;
+    fileCount?: number;
 }
 
 /** 계층형 태그 트리 노드 */

@@ -12,6 +12,7 @@ export interface Tag {
     name: string;
     parentId: number | null;
     color: string | null;
+    fileCount?: number;
 }
 
 interface CreateTagParams {
@@ -59,13 +60,67 @@ export const createTag = (params: CreateTagParams): Tag => {
 export const getAllTags = (): Tag[] => {
     const db = getDb();
 
-    const stmt = db.prepare(`
+    // 1. 모든 태그 정보 조회
+    const tags = db.prepare(`
         SELECT id, name, parent_id AS parentId, color
         FROM tags
         ORDER BY parent_id IS NOT NULL, parent_id, name
-    `);
+    `).all() as Tag[];
 
-    return stmt.all() as Tag[];
+    // 2. 모든 파일-태그 매핑 조회
+    const fileTags = db.prepare('SELECT file_id, tag_id FROM file_tags').all() as { file_id: number; tag_id: number }[];
+
+    // 3. 태그 ID별로 파일 ID 집합(Set) 초기화
+    const tagFileIdsMap = new Map<number, Set<number>>();
+    tags.forEach(tag => {
+        tagFileIdsMap.set(tag.id, new Set());
+    });
+
+    // 4. 직접 연결된 파일 ID 병합
+    fileTags.forEach(ft => {
+        if (tagFileIdsMap.has(ft.tag_id)) {
+            tagFileIdsMap.get(ft.tag_id)!.add(ft.file_id);
+        }
+    });
+
+    // 5. 자식 태그 구조(Map) 생성
+    const childrenMap = new Map<number, number[]>();
+    tags.forEach(t => childrenMap.set(t.id, []));
+
+    const rootTagIds: number[] = [];
+    tags.forEach(t => {
+        if (t.parentId && childrenMap.has(t.parentId)) {
+            childrenMap.get(t.parentId)!.push(t.id);
+        } else {
+            rootTagIds.push(t.id);
+        }
+    });
+
+    // 6. 재귀적으로 하위 태그의 파일 ID 집합을 현재 태그에 합침 (Set을 이용해 중복 제거)
+    const mergeFileIds = (tagId: number): Set<number> => {
+        const currentFileIds = tagFileIdsMap.get(tagId)!;
+        const children = childrenMap.get(tagId) || [];
+
+        for (const childId of children) {
+            const childFileIds = mergeFileIds(childId); // 하위 태그의 모든 파일 집합 반환
+            childFileIds.forEach(fileId => {
+                currentFileIds.add(fileId);
+            });
+        }
+
+        return currentFileIds;
+    };
+
+    // 루트 태그들부터 아래로 내려가며 처리(포스트오더 방식으로 합쳐짐)
+    for (const rootId of rootTagIds) {
+        mergeFileIds(rootId);
+    }
+
+    // 7. 결과 반환: 각 태그에 중복 제거된 하위 폴더 포함 파일 개수 삽입
+    return tags.map(tag => ({
+        ...tag,
+        fileCount: tagFileIdsMap.get(tag.id)!.size
+    }));
 };
 
 /**
