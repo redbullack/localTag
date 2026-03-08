@@ -43,6 +43,7 @@ export interface IElectronAPI {
     deleteTag: (params: { id: number }) => Promise<IpcResponse<{ success: boolean }>>;
 
     // File CRUD
+    selectFiles: () => Promise<IpcResponse<{ filePaths: string[] }>>;
     addFiles: (params?: { tagIds?: number[]; filePaths?: string[] }) => Promise<IpcResponse<FileWithTags[]>>;
     getAllFiles: (params?: { page?: number; limit?: number; sort?: { column: string; order: string } }) => Promise<IpcResponse<FileWithTags[]>>;
     getFilesByTags: (params: { tagIds: number[]; page?: number; limit?: number; sort?: { column: string; order: string } }) => Promise<IpcResponse<FileWithTags[]>>;
