@@ -427,6 +427,108 @@ export const checkDuplicateFilenames = (filenames: string[]): string[] => {
     });
 };
 
+/**
+ * Vault(디렉토리)와 DB 파일 목록을 비교하여 동기화합니다.
+ * @returns { addedCount: number; deletedCount: number; updatedCount: number }
+ */
+export const syncVault = (): { addedCount: number; deletedCount: number; updatedCount: number; success: boolean, error?: string } => {
+    try {
+        const db = getDb();
+        const vaultPath = getVaultPathOrThrow();
+
+        if (!fs.existsSync(vaultPath)) {
+            return { addedCount: 0, deletedCount: 0, updatedCount: 0, success: true };
+        }
+
+        // 1. 물리적 파일 목록 읽기
+        const filesInDir = fs.readdirSync(vaultPath, { withFileTypes: true });
+
+        // 2. 물리적 파일 정보를 Map으로 구성
+        const physicalFiles = new Map<string, { size: number, extension: string | null }>();
+        for (const dirent of filesInDir) {
+            if (dirent.isFile()) {
+                const filePath = path.join(vaultPath, dirent.name);
+                try {
+                    const stats = fs.statSync(filePath);
+                    const extension = path.extname(dirent.name).slice(1) || null;
+                    physicalFiles.set(dirent.name, {
+                        size: stats.size,
+                        extension
+                    });
+                } catch (err) {
+                    console.error(`Failed to stat file ${dirent.name}:`, err);
+                }
+            }
+        }
+
+        // 3. DB 파일 목록 읽기
+        const dbFilesRows = db.prepare('SELECT id, filename, size FROM files').all() as { id: number, filename: string, size: number | null }[];
+        const dbFiles = new Map<string, { id: number, size: number | null }>();
+        for (const row of dbFilesRows) {
+            dbFiles.set(row.filename, { id: row.id, size: row.size });
+        }
+
+        let addedCount = 0;
+        let deletedCount = 0;
+        let updatedCount = 0;
+
+        // 4. 삭제 대상 파악 및 크기 변경 파악
+        const toDeleteIds: number[] = [];
+        const toUpdateSizes: { id: number, size: number }[] = [];
+
+        for (const [filename, dbInfo] of Array.from(dbFiles.entries())) {
+            if (!physicalFiles.has(filename)) {
+                // 물리적 파일이 없으면 DB에서 삭제
+                toDeleteIds.push(dbInfo.id);
+                deletedCount++;
+            } else {
+                // 물리적 파일이 있으면 크기 비교
+                const physicalSize = physicalFiles.get(filename)!.size;
+                if (dbInfo.size !== physicalSize) {
+                    toUpdateSizes.push({ id: dbInfo.id, size: physicalSize });
+                    updatedCount++;
+                }
+            }
+        }
+
+        // 5. 추가 대상 파악
+        const toInsert: { filename: string, extension: string | null, size: number }[] = [];
+        for (const [filename, physicalInfo] of Array.from(physicalFiles.entries())) {
+            if (!dbFiles.has(filename)) {
+                toInsert.push({ filename, extension: physicalInfo.extension, size: physicalInfo.size });
+                addedCount++;
+            }
+        }
+
+        // 6. DB 트랜잭션 실행
+        if (addedCount > 0 || deletedCount > 0 || updatedCount > 0) {
+            db.pragma('foreign_keys = ON');
+
+            const deleteStmt = db.prepare('DELETE FROM files WHERE id = ?');
+            const updateSizeStmt = db.prepare('UPDATE files SET size = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?');
+            const insertStmt = db.prepare('INSERT INTO files (filename, relative_path, extension, size) VALUES (?, ?, ?, ?)');
+
+            const transaction = db.transaction(() => {
+                for (const id of toDeleteIds) {
+                    deleteStmt.run(id);
+                }
+                for (const update of toUpdateSizes) {
+                    updateSizeStmt.run(update.size, update.id);
+                }
+                for (const insert of toInsert) {
+                    insertStmt.run(insert.filename, insert.filename, insert.extension, insert.size);
+                }
+            });
+
+            transaction();
+        }
+
+        return { addedCount, deletedCount, updatedCount, success: true };
+    } catch (error: any) {
+        return { addedCount: 0, deletedCount: 0, updatedCount: 0, success: false, error: error.message };
+    }
+};
+
 // ─── 내부 헬퍼 ───────────────────────────────────────
 
 /** ID로 단일 파일 + 태그 정보를 조회합니다. */

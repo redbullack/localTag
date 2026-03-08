@@ -20,6 +20,10 @@ Electron과 Next.js 기반의 데스크탑 애플리케이션 프로젝트입니
 ## 진행 및 수정 사항 (Changelog)
 
 * **2026-03-08**
+  * **작업 내용**: 물리적 폴더 내 파일과 로컬 DB의 싱크를 맞추는 Vault 동기화(`syncVault`) 기능과 화면 하단에서 나타나는 애니메이션 Toast 알림 컴포넌트(`ToastProvider`)를 전역적으로 상시 사용할 수 있도록 구현. 앱 화면에 포커스 될 시 자동 조용한 동기화가 이루어지며, 동기화 진행 중일 경우 충돌이 없게끔 중복 실행 방지 락(Lock) 상태와 버튼 비활성화를 도입해 데이터 접근 안정성을 강화함. 덤으로 동기화 버튼 호버 시 정보를 제공하는 전역 툴팁(`data-tooltip`) 컴포넌트를 직접 CSS로 구현하여 적용.
+  * **변경된 핵심 파일**: `main/lib/file-repository.ts`, `main/ipc/file-handler.ts`, `main/preload.ts`, `renderer/global.d.ts`, `renderer/app/page.tsx`, `renderer/app/globals.css`, `renderer/app/components/file-list/file-list.tsx`, `renderer/app/components/shared/toast.tsx`, `renderer/app/components/shared/toast.css`, `renderer/app/components/shared/toast-provider.tsx`
+
+* **2026-03-08**
   * **작업 내용**: "파일 추가" 버튼 클릭 시에도 파일 드래그 앤 드롭 방식과 동일하게 사용자 확인창(`confirm`)이 나타나도록 구현. 이를 위해 메인 프로세스와 렌더러 프로세스 간의 통신(IPC) 구조를 개선하여, 새롭게 `file:select` 채널을 도입함으로써 파일 선택과 추가 단계를 분리. 선택된 파일 수량 및 적용될 태그명을 사용자에게 명확히 안내한 뒤에만 최종적으로 파일이 추가되도록 강화.
   * **변경된 핵심 파일**: `main/ipc/file-handler.ts`, `main/preload.ts`, `renderer/global.d.ts`, `renderer/app/page.tsx`
 
