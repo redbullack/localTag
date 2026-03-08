@@ -20,6 +20,14 @@ Electron과 Next.js 기반의 데스크탑 애플리케이션 프로젝트입니
 ## 진행 및 수정 사항 (Changelog)
 
 * **2026-03-08**
+  * **작업 내용**: 안티그래비티 파일 리스트에서 항목을 더블클릭하거나 파일 우측의 액션 버튼(📂)을 클릭하여 로컬 OS의 기본 프로그램으로 파일을 여는 **파일 열기** 기능 구현. Main 프로세스의 `file-handler`를 통해 `shell.openPath` 호출, Renderer의 `global.d.ts`와 컴포넌트에 IPC 통신 연결 작업.
+  * **변경된 핵심 파일**: `main/ipc/file-handler.ts`, `main/preload.ts`, `renderer/global.d.ts`, `renderer/app/components/file-list/file-list.tsx`
+
+* **2026-03-08**
+  * **작업 내용**: 파일 동기화(`syncVault`) 및 파일 수동 추가(`addFile`) 시, MS Office 등에서 생성되는 임시 파일(`~$` 등)과 숨김 파일(`.DS_Store` 등)이 DB에 등록되거나 화면에 표시되지 않도록 `isIgnoredFile` 필터 로직 추가. 임시 파일로 인한 경로 탐색 에러 및 혼동 방지 처리.
+  * **변경된 핵심 파일**: `main/lib/file-repository.ts`
+
+* **2026-03-08**
   * **작업 내용**: 물리적 폴더 내 파일과 로컬 DB의 싱크를 맞추는 Vault 동기화(`syncVault`) 기능과 화면 하단에서 나타나는 애니메이션 Toast 알림 컴포넌트(`ToastProvider`)를 전역적으로 상시 사용할 수 있도록 구현. 앱 화면에 포커스 될 시 자동 조용한 동기화가 이루어지며, 동기화 진행 중일 경우 충돌이 없게끔 중복 실행 방지 락(Lock) 상태와 버튼 비활성화를 도입해 데이터 접근 안정성을 강화함. 덤으로 동기화 버튼 호버 시 정보를 제공하는 전역 툴팁(`data-tooltip`) 컴포넌트를 직접 CSS로 구현하여 적용.
   * **변경된 핵심 파일**: `main/lib/file-repository.ts`, `main/ipc/file-handler.ts`, `main/preload.ts`, `renderer/global.d.ts`, `renderer/app/page.tsx`, `renderer/app/globals.css`, `renderer/app/components/file-list/file-list.tsx`, `renderer/app/components/shared/toast.tsx`, `renderer/app/components/shared/toast.css`, `renderer/app/components/shared/toast-provider.tsx`
 

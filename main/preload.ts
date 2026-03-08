@@ -44,5 +44,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
         ipcRenderer.invoke('file:get-total-count'),
     syncFiles: () =>
         ipcRenderer.invoke('file:sync'),
+    openFile: (params: { filename: string }) =>
+        ipcRenderer.invoke('file:open', params),
     getPathForFile: (file: File) => webUtils.getPathForFile(file),
 });

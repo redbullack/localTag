@@ -95,11 +95,24 @@ function FileRow({
         }
     };
 
+    const handleOpenFile = async () => {
+        try {
+            const result = await window.electronAPI.openFile({ filename: file.filename });
+            if (!result.success) {
+                alert(`파일 열기 실패: ${result.error}`);
+            }
+        } catch (error) {
+            console.error('Failed to open file:', error);
+            alert('파일 열기에 실패했습니다.');
+        }
+    };
+
     return (
         <div
             className={`file-row ${isSelected ? 'file-row--selected' : ''}`}
             onMouseEnter={() => setIsHovered(true)}
             onMouseLeave={() => setIsHovered(false)}
+            onDoubleClick={handleOpenFile}
         >
             <div className="file-row__checkbox-cell">
                 <input
@@ -152,6 +165,13 @@ function FileRow({
 
             {/* 액션 버튼 */}
             <div className={`file-row__actions-cell ${isHovered ? 'file-row__actions-cell--visible' : ''}`}>
+                <button
+                    className="file-row__action-btn"
+                    onClick={handleOpenFile}
+                    title="파일 열기"
+                >
+                    📂
+                </button>
                 <button
                     className="file-row__action-btn"
                     onClick={() => onEditFileTags(file)}
