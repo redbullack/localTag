@@ -43,6 +43,17 @@ interface AddFileParams {
 
 // ─── 유틸리티 ────────────────────────────────────────
 
+/** 특정 임시 파일/숨김 파일을 완전히 무시하는 필터 함수 */
+const isIgnoredFile = (filename: string): boolean => {
+    const lower = filename.toLowerCase();
+    return (
+        filename.startsWith('.') ||
+        filename.startsWith('~$') ||
+        lower === 'thumbs.db' ||
+        lower === 'desktop.ini'
+    );
+};
+
 /** Vault 절대 경로를 안전하게 가져옵니다. */
 const getVaultPathOrThrow = (): string => {
     const vaultPath = getVaultPath();
@@ -68,6 +79,11 @@ export const addFile = (params: AddFileParams): FileWithTags => {
     const filename = path.basename(sourcePath);
     const extension = path.extname(sourcePath).slice(1) || null;
     const destinationPath = path.join(vaultPath, filename);
+
+    // 숨김/임시 파일 필터링
+    if (isIgnoredFile(filename)) {
+        throw new Error(`시스템 또는 임시 파일은 추가할 수 없습니다: ${filename}`);
+    }
 
     // 중복 파일명 체크
     if (fs.existsSync(destinationPath)) {
@@ -446,7 +462,7 @@ export const syncVault = (): { addedCount: number; deletedCount: number; updated
         // 2. 물리적 파일 정보를 Map으로 구성
         const physicalFiles = new Map<string, { size: number, extension: string | null }>();
         for (const dirent of filesInDir) {
-            if (dirent.isFile()) {
+            if (dirent.isFile() && !isIgnoredFile(dirent.name)) {
                 const filePath = path.join(vaultPath, dirent.name);
                 try {
                     const stats = fs.statSync(filePath);

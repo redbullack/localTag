@@ -1,4 +1,6 @@
-import { ipcMain, dialog } from 'electron';
+import { ipcMain, dialog, shell } from 'electron';
+import * as path from 'path';
+import { getVaultPath } from '../lib/store';
 import {
     addFile,
     getAllFiles,
@@ -28,6 +30,7 @@ let isSyncing = false;
  * - file:check-duplicate | payload: { filenames }                | return: { duplicates }
  * - file:get-total-count | payload: 없음                          | return: { data: number }
  * - file:sync            | payload: 없음                          | return: { success, data: { addedCount, deletedCount, updatedCount } }
+ * - file:open            | payload: { filename }                  | return: { success, error? }
  */
 export const registerFileHandlers = (): void => {
 
@@ -179,6 +182,26 @@ export const registerFileHandlers = (): void => {
             return { success: false, error: error.message };
         } finally {
             isSyncing = false;
+        }
+    });
+
+    ipcMain.handle('file:open', async (_event, params: { filename: string }) => {
+        try {
+            const vaultPath = getVaultPath();
+            if (!vaultPath) {
+                return { success: false, error: 'Vault 경로가 설정되지 않았습니다.' };
+            }
+
+            const fullPath = path.join(vaultPath, params.filename);
+            const errorMessage = await shell.openPath(fullPath);
+
+            if (errorMessage) {
+                return { success: false, error: `파일을 여는 데 실패했습니다: ${errorMessage}` };
+            }
+
+            return { success: true };
+        } catch (error: any) {
+            return { success: false, error: error.message };
         }
     });
 };
