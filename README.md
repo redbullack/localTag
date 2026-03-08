@@ -19,6 +19,10 @@ Electron과 Next.js 기반의 데스크탑 애플리케이션 프로젝트입니
 ---
 ## 진행 및 수정 사항 (Changelog)
 
+* **2026-03-08**
+  * **작업 내용**: 파일 목록 헤더 각 컬럼(파일명, 태그, 크기) 사이에 윈도우 파일 탐색기 스타일의 구분선 리사이저를 추가하고 드래그 앤 드롭으로 동적 컬럼 폭 조절 기능을 구현. 구분선 더블 클릭 시 컬럼의 내용 길이에 딱 맞춰 폭을 조정하는 오토 리사이징 추가. CSS 변수 및 CSS Grid 템플릿 제어를 사용해 성능 최적화 진행.
+  * **변경된 핵심 파일**: `renderer/app/components/file-list/file-list.tsx`, `renderer/app/components/file-list/file-list.css`
+
 * **2026-03-07**
   * **작업 내용**: 파일 목록 영역 전체에 드래그 앤 드롭으로 파일을 추가하는 기능 구현. 폴더 드롭 시 방어 로직 추가, 저장 전 사용자 확인 과정(`confirm`) 추가 및 관련 IPC 인터페이스(`webUtils.getPathForFile` 등) 수정. 파일 목록 상단 타이틀이 필터 해제 버튼 우측에 자연스럽게 배치되도록 레이아웃 조정 및 필터 버튼 줄바꿈/깨짐 방지 CSS 처리 적용.
   * **변경된 핵심 파일**: `main/preload.ts`, `main/ipc/file-handler.ts`, `renderer/global.d.ts`, `renderer/app/page.tsx`, `renderer/app/globals.css`, `renderer/app/components/file-list/file-list.tsx`, `renderer/app/components/file-list/file-list.css`
