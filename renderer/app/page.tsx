@@ -189,15 +189,35 @@ export default function Home() {
     const handleAddFiles = async () => {
         if (typeof window === 'undefined' || !window.electronAPI) return;
 
-        const response = await window.electronAPI.addFiles(
-            selectedTagIds.length > 0 ? { tagIds: selectedTagIds } : undefined
-        );
+        // 1. 파일 선택창 열기
+        const selectResponse = await window.electronAPI.selectFiles();
+        if (!selectResponse.success || !selectResponse.data || selectResponse.data.filePaths.length === 0) {
+            // 취소했거나 에러가 난 경우
+            if (selectResponse.error) {
+                alert(selectResponse.error);
+            }
+            return;
+        }
 
-        if (!response.success) {
-            if (response.duplicates && response.duplicates.length > 0) {
-                alert(`다음 파일명이 이미 존재합니다:\n${response.duplicates.join('\n')}`);
-            } else if (response.error) {
-                alert(response.error);
+        const filePaths = selectResponse.data.filePaths;
+
+        // 2. 확인창 띄우기
+        const tagNameText = selectedTagNames ? `"${selectedTagNames}" 태그로` : '태그 없이';
+        const confirmResult = confirm(`${filePaths.length}개의 파일을 ${tagNameText} 저장하시겠습니까?\n\n(사이드바에서 원하는 태그를 선택 후 파일 추가가 가능합니다)`);
+
+        if (!confirmResult) return;
+
+        // 3. 파일 추가 실제 수행
+        const addResponse = await window.electronAPI.addFiles({
+            tagIds: selectedTagIds.length > 0 ? selectedTagIds : undefined,
+            filePaths: filePaths
+        });
+
+        if (!addResponse.success) {
+            if (addResponse.duplicates && addResponse.duplicates.length > 0) {
+                alert(`다음 파일명이 이미 존재합니다:\n${addResponse.duplicates.join('\n')}`);
+            } else if (addResponse.error) {
+                alert(addResponse.error);
             }
             return;
         }
@@ -210,7 +230,7 @@ export default function Home() {
         if (typeof window === 'undefined' || !window.electronAPI) return;
 
         const tagNameText = selectedTagNames ? `"${selectedTagNames}" 태그로` : '태그 없이';
-        const confirmResult = confirm(`${filePaths.length}개의 파일을 ${tagNameText} 저장하시겠습니까?`);
+        const confirmResult = confirm(`${filePaths.length}개의 파일을 ${tagNameText} 저장하시겠습니까?\n\n(사이드바에서 원하는 태그를 선택 후 파일 추가가 가능합니다)`);
 
         if (!confirmResult) return;
 
