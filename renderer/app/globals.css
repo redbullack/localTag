@@ -160,6 +160,26 @@ body {
     border-radius: 8px;
 }
 
+/* =========================================
+   6. Utilities
+   ========================================= */
+
+/* 토스트 메시지 등 아이콘 회전 애니메이션 */
+@keyframes spin {
+    from {
+        transform: rotate(0deg);
+    }
+
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+.spin-animation {
+    display: inline-block;
+    animation: spin 1s linear infinite;
+}
+
 /* ===== 메인 콘텐츠 ===== */
 
 .main-content {
@@ -259,6 +279,73 @@ body {
     font-size: 13px;
     color: var(--accent-success);
     word-break: break-all;
+}
+
+.sync-button {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+    font-weight: 500;
+    padding: 8px 16px;
+    border: 1px solid var(--border-strong);
+    border-radius: 8px;
+    background-color: transparent;
+    color: var(--text-primary);
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.sync-button:hover:not(:disabled) {
+    border-color: var(--accent-primary);
+    background-color: var(--bg-modifier-hover);
+}
+
+.sync-button:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+/* ===== Tooltip (data-tooltip) ===== */
+[data-tooltip] {
+    position: relative;
+}
+
+[data-tooltip]::before {
+    content: attr(data-tooltip);
+    position: absolute;
+    /* 버튼 윗부분이 아닌 아랫부분으로 표시하여 잘림 방지 */
+    top: calc(100% + 8px);
+    /* 버튼이 우측에 있으므로 우측 끝 기준으로 정렬 */
+    right: 0;
+    width: max-content;
+    max-width: 260px;
+    /* 긴 텍스트 줄바꿈 허용 */
+    padding: 10px 14px;
+    border-radius: 8px;
+    background-color: var(--bg-tertiary);
+    color: var(--text-primary);
+    font-size: 12px;
+    font-weight: 500;
+    white-space: normal;
+    line-height: 1.5;
+    text-align: left;
+    box-shadow: var(--shadow-elevation);
+    border: 1px solid var(--border-strong);
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(-4px);
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    /* 다른 요소들에 묻히지 않도록 z-index 상향 조절 */
+    z-index: 9999;
+    pointer-events: none;
+}
+
+[data-tooltip]:hover::before,
+[data-tooltip]:focus::before {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
 }
 
 /* ===== 유틸리티 ===== */

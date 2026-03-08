@@ -8,8 +8,12 @@ import {
     updateFileTags,
     checkDuplicateFilenames,
     getTotalFileCount,
+    syncVault,
     SortOption,
 } from '../lib/file-repository';
+
+// 동기화 중복 실행 방지 플래그
+let isSyncing = false;
 
 /**
  * 파일 관련 IPC 핸들러를 등록합니다.
@@ -23,6 +27,7 @@ import {
  * - file:update-tags     | payload: { fileId, tagIds }           | return: FileWithTags
  * - file:check-duplicate | payload: { filenames }                | return: { duplicates }
  * - file:get-total-count | payload: 없음                          | return: { data: number }
+ * - file:sync            | payload: 없음                          | return: { success, data: { addedCount, deletedCount, updatedCount } }
  */
 export const registerFileHandlers = (): void => {
 
@@ -148,6 +153,32 @@ export const registerFileHandlers = (): void => {
             return { success: true, data: result.count };
         } catch (error: any) {
             return { success: false, error: error.message };
+        }
+    });
+
+    ipcMain.handle('file:sync', async () => {
+        if (isSyncing) {
+            return { success: false, error: '현재 동기화가 진행 중입니다.' };
+        }
+
+        isSyncing = true;
+        try {
+            const result = syncVault();
+            if (!result.success) {
+                return { success: false, error: result.error };
+            }
+            return {
+                success: true,
+                data: {
+                    addedCount: result.addedCount,
+                    deletedCount: result.deletedCount,
+                    updatedCount: result.updatedCount
+                }
+            };
+        } catch (error: any) {
+            return { success: false, error: error.message };
+        } finally {
+            isSyncing = false;
         }
     });
 };
