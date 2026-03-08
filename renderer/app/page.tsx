@@ -1,16 +1,19 @@
 'use client';
 
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import TagSidebar from './components/tag-sidebar/tag-sidebar';
 import TagFormModal from './components/tag-form-modal/tag-form-modal';
 import FileList from './components/file-list/file-list';
 import FileTagEditor from './components/file-tag-editor/file-tag-editor';
+import { useToast } from './components/shared/toast-provider';
 import type { Tag, FileWithTags, SortOption } from './types';
 import './components/tag-badge/tag-badge.css';
 
 export default function Home() {
     const [vaultPath, setVaultPath] = useState<string | null>(null);
     const [isLoading, setIsLoading] = useState(true);
+    const [isSyncing, setIsSyncing] = useState(false);
+    const { showToast } = useToast();
 
     // 태그 상태
     const [tagList, setTagList] = useState<Tag[]>([]);
@@ -87,7 +90,66 @@ export default function Home() {
         }
     }, [vaultPath, loadTags, loadFiles]);
 
-    // ── Vault ──
+    // ── Vault 동기화 (Sync) ──
+
+    const handleSync = useCallback(async (isSilent = false) => {
+        if (typeof window === 'undefined' || !window.electronAPI || !vaultPath || isSyncing) return;
+
+        setIsSyncing(true);
+        try {
+            const response = await window.electronAPI.syncFiles();
+
+            if (response.success && response.data) {
+                const { addedCount, deletedCount, updatedCount } = response.data;
+                const totalChanges = addedCount + deletedCount + updatedCount;
+
+                if (totalChanges > 0) {
+                    await loadTags();
+                    await loadFiles();
+
+                    const messageParts = [];
+                    if (addedCount > 0) messageParts.push(`${addedCount}개 추가`);
+                    if (deletedCount > 0) messageParts.push(`${deletedCount}개 삭제`);
+                    if (updatedCount > 0) messageParts.push(`${updatedCount}개 갱신`);
+
+                    showToast({
+                        message: `동기화 완료: ${messageParts.join(', ')}`,
+                        duration: 4000
+                    });
+                } else if (!isSilent) {
+                    showToast({
+                        message: '모든 파일이 최신 상태입니다.',
+                        duration: 3000
+                    });
+                }
+            } else if (!isSilent) {
+                showToast({
+                    message: response.error || '동기화 중 오류가 발생했습니다.',
+                    duration: 4000
+                });
+            }
+        } catch (error) {
+            console.error('Sync error:', error);
+        } finally {
+            setIsSyncing(false);
+        }
+    }, [vaultPath, isSyncing, loadTags, loadFiles, showToast]);
+
+    /** Window Focus 이벤트로 자동 동기화 */
+    useEffect(() => {
+        const handleFocus = () => {
+            if (vaultPath && !isSyncing) {
+                handleSync(true); // 조용하게 동기화 실행
+            }
+        };
+
+        window.addEventListener('focus', handleFocus);
+        return () => {
+            window.removeEventListener('focus', handleFocus);
+        };
+    }, [vaultPath, isSyncing, handleSync]);
+
+    // ── Vault 경로 설정 핸들러 ──
 
     const handleSelectVault = async () => {
         if (typeof window !== 'undefined' && window.electronAPI) {
@@ -370,9 +432,23 @@ export default function Home() {
                     </div>
                 </div>
                 <div className="main-content__body">
-                    <div className="vault-info">
-                        <span className="vault-info__label">Vault 경로</span>
-                        <code className="vault-info__path">{vaultPath}</code>
+                    <div className="vault-info" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
+                        <div>
+                            <span className="vault-info__label">Vault 경로</span>
+                            <code className="vault-info__path">{vaultPath}</code>
+                            <div style={{ fontSize: '0.8rem', color: 'var(--text-danger, #f87171)', marginTop: '4px', fontWeight: 500 }}>
+                                ⚠️ 주의: 원본 폴더(MyTaggedFiles)에서 파일을 수동으로 지우지 마세요.
+                            </div>
+                        </div>
+                        <button
+                            className="sync-button"
+                            data-tooltip="원본 폴더의 실제 파일과 DB를 비교하여 변경사항(추가/삭제/크기)을 최신화합니다."
+                            onClick={() => handleSync(false)}
+                            disabled={isSyncing}
+                        >
+                            <span className={isSyncing ? 'spin-animation' : ''}>🔄</span>
+                            {isSyncing ? '동기화 중...' : '동기화'}
+                        </button>
                     </div>
                     <FileList
                         files={fileList}
@@ -383,9 +459,10 @@ export default function Home() {
                         onPageChange={(page) => setCurrentPage(page)}
                         onAddFiles={handleAddFiles}
                         onDropFiles={handleDropFiles}
-                        onRenameFile={handleRenameFile}
-                        onDeleteFile={handleDeleteFile}
+                        onRenameFile={isSyncing ? async () => { } : handleRenameFile}
+                        onDeleteFile={isSyncing ? async () => { } : handleDeleteFile}
                         onEditFileTags={handleOpenTagEditor}
+                        isSyncing={isSyncing}
                     />
                 </div>
             </main>

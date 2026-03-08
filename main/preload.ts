@@ -42,5 +42,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
         ipcRenderer.invoke('file:check-duplicate', params),
     getTotalFileCount: () =>
         ipcRenderer.invoke('file:get-total-count'),
+    syncFiles: () =>
+        ipcRenderer.invoke('file:sync'),
     getPathForFile: (file: File) => webUtils.getPathForFile(file),
 });

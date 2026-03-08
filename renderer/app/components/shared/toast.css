@@ -1,0 +1,85 @@
+.toast-container {
+  position: fixed;
+  bottom: 2rem;
+  left: 2rem;
+  z-index: 9999;
+  
+  /* 애니메이션 초기 상태 (아래로 숨겨짐, 투명) */
+  transform: translateY(20px);
+  opacity: 0;
+  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.3s ease;
+  pointer-events: none; /* 사라질 때 클릭 방지 */
+}
+
+/* 팝업 등장 애니메이션 */
+.toast-container.toast-visible {
+  transform: translateY(0);
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* 팝업 퇴장 애니메이션 */
+.toast-container.toast-hiding {
+  transform: translateY(20px);
+  opacity: 0;
+  pointer-events: none;
+}
+
+.toast-content {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.5rem;
+  
+  background-color: var(--background-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 1rem 1.5rem;
+  
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  color: var(--text-primary);
+  font-size: 0.95rem;
+  font-weight: 500;
+  min-width: 250px;
+  max-width: 400px;
+}
+
+.toast-message {
+  flex: 1;
+  line-height: 1.4;
+}
+
+.toast-actions {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.toast-btn {
+  padding: 0.4rem 0.8rem;
+  border-radius: 4px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  border: none;
+  transition: background-color 0.2s;
+}
+
+.toast-btn-cancel {
+  background-color: transparent;
+  color: var(--text-secondary);
+}
+
+.toast-btn-cancel:hover {
+  background-color: var(--background-modifier-hover);
+  color: var(--text-primary);
+}
+
+.toast-btn-confirm {
+  background-color: var(--accent-color);
+  color: white;
+}
+
+.toast-btn-confirm:hover {
+  background-color: var(--accent-hover);
+}
