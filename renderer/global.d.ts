@@ -52,6 +52,7 @@ export interface IElectronAPI {
     updateFileTags: (params: { fileId: number; tagIds: number[] }) => Promise<IpcResponse<FileWithTags>>;
     checkDuplicateFilenames: (params: { filenames: string[] }) => Promise<IpcResponse<{ duplicates: string[] }>>;
     getTotalFileCount: () => Promise<IpcResponse<number>>;
+    syncFiles: () => Promise<IpcResponse<{ addedCount: number; deletedCount: number; updatedCount: number }>>;
     getPathForFile: (file: File) => string;
 }
 

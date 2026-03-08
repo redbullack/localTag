@@ -16,6 +16,7 @@ interface FileListProps {
     onRenameFile: (fileId: number, newFilename: string) => void;
     onDeleteFile: (fileId: number, skipConfirmation?: boolean) => void;
     onEditFileTags: (file: FileWithTags) => void;
+    isSyncing?: boolean;
 }
 
 /** 파일 크기를 읽기 쉬운 문자열로 변환 */
@@ -192,6 +193,7 @@ export default function FileList({
     onRenameFile,
     onDeleteFile,
     onEditFileTags,
+    isSyncing = false,
 }: FileListProps) {
     const [isDragging, setIsDragging] = useState(false);
     const [selectedFiles, setSelectedFiles] = useState<Set<number>>(new Set());
@@ -515,11 +517,18 @@ export default function FileList({
                         </button>
                     )}
                     <button
-                        className="file-list__add-btn"
+                        className="button button--primary file-list__add-button"
                         onClick={onAddFiles}
+                        disabled={isSyncing}
                     >
-                        + 파일 추가
+                        파일 추가
                     </button>
+                    {isDragging && (
+                        <div className="file-list__drag-overlay">
+                            <span className="file-list__drag-icon">📁</span>
+                            <span className="file-list__drag-text">이곳에 파일을 놓으세요</span>
+                        </div>
+                    )}
                 </div>
             </div>
 
