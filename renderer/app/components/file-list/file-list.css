@@ -171,7 +171,7 @@
 
 .file-list__table-header {
     display: grid;
-    grid-template-columns: minmax(150px, 1fr) var(--col-tags, 200px) var(--col-size, 80px) 90px;
+    grid-template-columns: 32px minmax(150px, 1fr) var(--col-tags, 200px) var(--col-size, 80px) 90px;
     gap: 8px;
     padding: 8px 16px;
     border-bottom: 1px solid var(--border-subtle);
@@ -191,6 +191,69 @@
 
 .file-list__th--size {
     justify-content: flex-end;
+}
+
+.file-list__th--checkbox {
+    justify-content: center;
+}
+
+.file-row__checkbox-cell {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.file-list__checkbox {
+    appearance: none;
+    -webkit-appearance: none;
+    width: 14px;
+    height: 14px;
+    border: 1px solid var(--border-strong);
+    border-radius: 4px;
+    background-color: var(--bg-primary);
+    cursor: pointer;
+    position: relative;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.file-list__checkbox:hover {
+    border-color: var(--accent-primary);
+}
+
+.file-list__checkbox:checked {
+    background-color: var(--accent-primary);
+    border-color: var(--accent-primary);
+}
+
+.file-list__checkbox:checked::after {
+    content: '';
+    position: absolute;
+    width: 3px;
+    height: 6px;
+    border: solid white;
+    border-width: 0 1.5px 1.5px 0;
+    transform: rotate(45deg);
+    top: 2px;
+}
+
+.file-list__delete-selected-btn {
+    padding: 6px 14px;
+    border: 1px solid var(--accent-danger);
+    border-radius: 6px;
+    background-color: rgba(218, 55, 60, 0.1);
+    color: var(--accent-danger);
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.file-list__delete-selected-btn:hover {
+    background-color: var(--accent-danger);
+    color: white;
 }
 
 .file-list__resizer {
@@ -230,12 +293,16 @@
 
 .file-row {
     display: grid;
-    grid-template-columns: minmax(150px, 1fr) var(--col-tags, 200px) var(--col-size, 80px) 90px;
+    grid-template-columns: 32px minmax(150px, 1fr) var(--col-tags, 200px) var(--col-size, 80px) 90px;
     gap: 8px;
     align-items: center;
     padding: 10px 16px;
     border-bottom: 1px solid var(--border-subtle);
     transition: background-color 0.1s ease;
+}
+
+.file-row--selected {
+    background-color: rgba(88, 101, 242, 0.08);
 }
 
 .file-row:last-child {

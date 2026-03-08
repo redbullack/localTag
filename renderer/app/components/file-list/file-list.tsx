@@ -14,7 +14,7 @@ interface FileListProps {
     onAddFiles: () => void;
     onDropFiles?: (filePaths: string[]) => void;
     onRenameFile: (fileId: number, newFilename: string) => void;
-    onDeleteFile: (fileId: number) => void;
+    onDeleteFile: (fileId: number, skipConfirmation?: boolean) => void;
     onEditFileTags: (file: FileWithTags) => void;
 }
 
@@ -56,13 +56,17 @@ const getFileIcon = (extension: string | null): string => {
 /** 개별 파일 행 컴포넌트 */
 function FileRow({
     file,
+    isSelected,
+    onToggleSelect,
     onRenameFile,
     onDeleteFile,
     onEditFileTags,
 }: {
     file: FileWithTags;
+    isSelected: boolean;
+    onToggleSelect: (fileId: number) => void;
     onRenameFile: (fileId: number, newFilename: string) => void;
-    onDeleteFile: (fileId: number) => void;
+    onDeleteFile: (fileId: number, skipConfirmation?: boolean) => void;
     onEditFileTags: (file: FileWithTags) => void;
 }) {
     const [isHovered, setIsHovered] = useState(false);
@@ -92,10 +96,19 @@ function FileRow({
 
     return (
         <div
-            className="file-row"
+            className={`file-row ${isSelected ? 'file-row--selected' : ''}`}
             onMouseEnter={() => setIsHovered(true)}
             onMouseLeave={() => setIsHovered(false)}
         >
+            <div className="file-row__checkbox-cell">
+                <input
+                    type="checkbox"
+                    checked={isSelected}
+                    onChange={() => onToggleSelect(file.id)}
+                    className="file-list__checkbox"
+                />
+            </div>
+
             {/* 파일 아이콘 + 이름 */}
             <div className="file-row__name-cell">
                 <span className="file-row__icon">{getFileIcon(file.extension)}</span>
@@ -181,6 +194,42 @@ export default function FileList({
     onEditFileTags,
 }: FileListProps) {
     const [isDragging, setIsDragging] = useState(false);
+    const [selectedFiles, setSelectedFiles] = useState<Set<number>>(new Set());
+
+    useEffect(() => {
+        setSelectedFiles(new Set());
+    }, [files]);
+
+    const handleToggleSelect = useCallback((fileId: number) => {
+        setSelectedFiles(prev => {
+            const newSet = new Set(prev);
+            if (newSet.has(fileId)) {
+                newSet.delete(fileId);
+            } else {
+                newSet.add(fileId);
+            }
+            return newSet;
+        });
+    }, []);
+
+    const handleToggleAll = useCallback(() => {
+        if (files.length === 0) return;
+        if (selectedFiles.size === files.length) {
+            setSelectedFiles(new Set());
+        } else {
+            setSelectedFiles(new Set(files.map(f => f.id)));
+        }
+    }, [files, selectedFiles]);
+
+    const handleDeleteSelected = useCallback(() => {
+        if (selectedFiles.size === 0) return;
+        if (window.confirm(`${selectedFiles.size}개의 파일을 삭제하시겠습니까?`)) {
+            selectedFiles.forEach(id => {
+                onDeleteFile(id, true);
+            });
+            setSelectedFiles(new Set());
+        }
+    }, [selectedFiles, onDeleteFile]);
 
     const [colWidths, setColWidths] = useState({ tags: 200, size: 80 });
     const [resizingCol, setResizingCol] = useState<'name' | 'tags' | null>(null);
@@ -240,7 +289,8 @@ export default function FileList({
 
         const thElement = e.currentTarget.parentElement;
         const tableHeader = thElement?.parentElement;
-        const nameTh = tableHeader?.children[0] as HTMLElement;
+        // Checkbox column is at index 0, Name column is at index 1
+        const nameTh = tableHeader?.children[1] as HTMLElement;
         const startNameWidth = nameTh?.getBoundingClientRect().width || 150;
 
         isResizingRef.current = {
@@ -286,10 +336,10 @@ export default function FileList({
 
                 if (tableEl) {
                     const tableWidth = tableEl.clientWidth;
-                    // 고정된 너비 합산: Name 최소 너비(150) + Size 너비(prev.size) + Actions(90)
-                    // 패딩(32) + 갭(24) = 56
-                    // 총합 = prev.size + 296
-                    const maxAllowed = tableWidth - prev.size - 296;
+                    // 고정된 너비 합산: 체크박스(32) + Name 최소(150) + Size 너비(prev.size) + Actions(90)
+                    // 패딩(32) + 갭(32) = 64
+                    // 총합 = prev.size + 336
+                    const maxAllowed = tableWidth - prev.size - 336;
 
                     if (newTagsWidth > maxAllowed) {
                         newTagsWidth = Math.max(80, maxAllowed);
@@ -456,6 +506,14 @@ export default function FileList({
                             <option value="size-asc">크기 (작은순)</option>
                         </select>
                     </div>
+                    {selectedFiles.size > 0 && (
+                        <button
+                            className="file-list__delete-selected-btn"
+                            onClick={handleDeleteSelected}
+                        >
+                            선택 삭제 ({selectedFiles.size})
+                        </button>
+                    )}
                     <button
                         className="file-list__add-btn"
                         onClick={onAddFiles}
@@ -486,6 +544,14 @@ export default function FileList({
                 >
                     {/* 테이블 헤더 */}
                     <div className="file-list__table-header">
+                        <div className="file-list__th file-list__th--checkbox">
+                            <input
+                                type="checkbox"
+                                checked={files.length > 0 && selectedFiles.size === files.length}
+                                onChange={handleToggleAll}
+                                className="file-list__checkbox"
+                            />
+                        </div>
                         <div className="file-list__th file-list__th--name">
                             파일명
                             <div className={`file-list__resizer ${resizingCol === 'name' ? 'is-resizing' : ''}`} onMouseDown={(e) => handleResizeStart('name', e)} onDoubleClick={(e) => handleResizeDoubleClick('name', e)} />
@@ -504,6 +570,8 @@ export default function FileList({
                             <FileRow
                                 key={file.id}
                                 file={file}
+                                isSelected={selectedFiles.has(file.id)}
+                                onToggleSelect={handleToggleSelect}
                                 onRenameFile={onRenameFile}
                                 onDeleteFile={onDeleteFile}
                                 onEditFileTags={onEditFileTags}
