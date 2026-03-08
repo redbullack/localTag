@@ -26,11 +26,28 @@ import {
  */
 export const registerFileHandlers = (): void => {
 
+    ipcMain.handle('file:select', async () => {
+        try {
+            const result = await dialog.showOpenDialog({
+                properties: ['openFile', 'multiSelections'],
+                title: '추가할 파일 선택',
+            });
+
+            if (result.canceled || result.filePaths.length === 0) {
+                return { success: true, data: { filePaths: [] } };
+            }
+
+            return { success: true, data: { filePaths: result.filePaths } };
+        } catch (error: any) {
+            return { success: false, error: error.message };
+        }
+    });
+
     ipcMain.handle('file:add', async (_event, params: { tagIds?: number[]; filePaths?: string[] }) => {
         try {
             let filePathsToProcess: string[] = [];
 
-            if (params.filePaths && params.filePaths.length > 0) {
+            if (params?.filePaths && params.filePaths.length > 0) {
                 filePathsToProcess = params.filePaths;
             } else {
                 const result = await dialog.showOpenDialog({
