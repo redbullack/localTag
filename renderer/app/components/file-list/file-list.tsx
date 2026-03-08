@@ -279,7 +279,25 @@ export default function FileList({
                 const badgeWidths = Array.from(el.querySelectorAll('.tag-badge')).reduce((sum, b) => sum + b.scrollWidth + 4, 0);
                 maxW = Math.max(maxW, badgeWidths + 32);
             });
-            setColWidths(prev => ({ ...prev, tags: maxW }));
+
+            setColWidths(prev => {
+                let newTagsWidth = maxW;
+                const tableEl = document.querySelector('.file-list__table');
+
+                if (tableEl) {
+                    const tableWidth = tableEl.clientWidth;
+                    // 고정된 너비 합산: Name 최소 너비(150) + Size 너비(prev.size) + Actions(90)
+                    // 패딩(32) + 갭(24) = 56
+                    // 총합 = prev.size + 296
+                    const maxAllowed = tableWidth - prev.size - 296;
+
+                    if (newTagsWidth > maxAllowed) {
+                        newTagsWidth = Math.max(80, maxAllowed);
+                    }
+                }
+
+                return { ...prev, tags: newTagsWidth };
+            });
         }
     };
 
