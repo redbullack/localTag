@@ -246,11 +246,13 @@ export default function Home() {
     };
 
     /** 파일 삭제 */
-    const handleDeleteFile = async (fileId: number) => {
+    const handleDeleteFile = async (fileId: number, skipConfirmation: boolean = false) => {
         if (typeof window === 'undefined' || !window.electronAPI) return;
 
-        const confirmDelete = confirm('이 파일을 삭제하시겠습니까?\n파일시스템에서도 제거됩니다.');
-        if (!confirmDelete) return;
+        if (!skipConfirmation) {
+            const confirmDelete = confirm('이 파일을 삭제하시겠습니까?\n파일시스템에서도 제거됩니다.');
+            if (!confirmDelete) return;
+        }
 
         const response = await window.electronAPI.deleteFile({ id: fileId });
         if (response.success) {
