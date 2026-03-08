@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import './file-list.css';
 import type { FileWithTags, Tag, SortOption } from '../../types';
 
@@ -182,6 +182,107 @@ export default function FileList({
 }: FileListProps) {
     const [isDragging, setIsDragging] = useState(false);
 
+    const [colWidths, setColWidths] = useState({ tags: 200, size: 80 });
+    const [resizingCol, setResizingCol] = useState<'name' | 'tags' | null>(null);
+
+    const isResizingRef = useRef<{
+        column: 'name' | 'tags';
+        startX: number;
+        startWidths: { tags: number; size: number; name: number };
+    } | null>(null);
+
+    const handleResizeMove = useCallback((e: MouseEvent) => {
+        if (!isResizingRef.current) return;
+
+        const { column, startX, startWidths } = isResizingRef.current;
+        const deltaX = e.clientX - startX;
+
+        setColWidths(prev => {
+            if (column === 'name') {
+                let newTagsWidth = startWidths.tags - deltaX;
+                if (newTagsWidth < 80) newTagsWidth = 80;
+                const maxTagsWidth = startWidths.tags + (startWidths.name - 150);
+                if (newTagsWidth > maxTagsWidth) newTagsWidth = maxTagsWidth;
+                return { ...prev, tags: newTagsWidth };
+            } else if (column === 'tags') {
+                let newTagsWidth = startWidths.tags + deltaX;
+                let newSizeWidth = startWidths.size - deltaX;
+
+                if (newTagsWidth < 80) {
+                    const diff = 80 - newTagsWidth;
+                    newTagsWidth = 80;
+                    newSizeWidth -= diff;
+                }
+                if (newSizeWidth < 60) {
+                    const diff = 60 - newSizeWidth;
+                    newSizeWidth = 60;
+                    newTagsWidth -= diff;
+                }
+                return { ...prev, tags: newTagsWidth, size: newSizeWidth };
+            }
+            return prev;
+        });
+    }, []);
+
+    const handleResizeEnd = useCallback(() => {
+        isResizingRef.current = null;
+        document.removeEventListener('mousemove', handleResizeMove);
+        document.removeEventListener('mouseup', handleResizeEnd);
+
+        document.body.style.cursor = '';
+        document.body.style.userSelect = '';
+        setResizingCol(null);
+    }, [handleResizeMove]);
+
+    const handleResizeStart = (column: 'name' | 'tags', e: React.MouseEvent) => {
+        e.preventDefault();
+        e.stopPropagation();
+
+        const thElement = e.currentTarget.parentElement;
+        const tableHeader = thElement?.parentElement;
+        const nameTh = tableHeader?.children[0] as HTMLElement;
+        const startNameWidth = nameTh?.getBoundingClientRect().width || 150;
+
+        isResizingRef.current = {
+            column,
+            startX: e.clientX,
+            startWidths: { tags: colWidths.tags, size: colWidths.size, name: startNameWidth }
+        };
+
+        document.addEventListener('mousemove', handleResizeMove);
+        document.addEventListener('mouseup', handleResizeEnd);
+
+        document.body.style.cursor = 'col-resize';
+        document.body.style.userSelect = 'none';
+        setResizingCol(column);
+    };
+
+    useEffect(() => {
+        return () => {
+            document.removeEventListener('mousemove', handleResizeMove);
+            document.removeEventListener('mouseup', handleResizeEnd);
+        };
+    }, [handleResizeMove, handleResizeEnd]);
+
+    const handleResizeDoubleClick = (column: 'name' | 'tags', e: React.MouseEvent) => {
+        e.preventDefault();
+        e.stopPropagation();
+
+        if (column === 'name') {
+            let maxW = 150;
+            document.querySelectorAll('.file-row__filename').forEach(el => maxW = Math.max(maxW, el.scrollWidth + 60));
+            const curW = (e.currentTarget.parentElement as HTMLElement)?.getBoundingClientRect().width || 150;
+            setColWidths(prev => ({ ...prev, tags: Math.max(80, prev.tags - (maxW - curW)) }));
+        } else if (column === 'tags') {
+            let maxW = 80;
+            document.querySelectorAll('.file-row__tags-cell').forEach(el => {
+                const badgeWidths = Array.from(el.querySelectorAll('.tag-badge')).reduce((sum, b) => sum + b.scrollWidth + 4, 0);
+                maxW = Math.max(maxW, badgeWidths + 32);
+            });
+            setColWidths(prev => ({ ...prev, tags: maxW }));
+        }
+    };
+
     const handleDragOver = (e: React.DragEvent) => {
         e.preventDefault();
         e.stopPropagation();
@@ -358,11 +459,23 @@ export default function FileList({
                     </button>
                 </div>
             ) : (
-                <div className="file-list__table">
+                <div
+                    className={`file-list__table ${resizingCol ? 'file-list__table--resizing' : ''}`}
+                    style={{
+                        '--col-tags': `${colWidths.tags}px`,
+                        '--col-size': `${colWidths.size}px`
+                    } as React.CSSProperties}
+                >
                     {/* 테이블 헤더 */}
                     <div className="file-list__table-header">
-                        <div className="file-list__th file-list__th--name">파일명</div>
-                        <div className="file-list__th file-list__th--tags">태그</div>
+                        <div className="file-list__th file-list__th--name">
+                            파일명
+                            <div className={`file-list__resizer ${resizingCol === 'name' ? 'is-resizing' : ''}`} onMouseDown={(e) => handleResizeStart('name', e)} onDoubleClick={(e) => handleResizeDoubleClick('name', e)} />
+                        </div>
+                        <div className="file-list__th file-list__th--tags">
+                            태그
+                            <div className={`file-list__resizer ${resizingCol === 'tags' ? 'is-resizing' : ''}`} onMouseDown={(e) => handleResizeStart('tags', e)} onDoubleClick={(e) => handleResizeDoubleClick('tags', e)} />
+                        </div>
                         <div className="file-list__th file-list__th--size">크기</div>
                         <div className="file-list__th file-list__th--actions" />
                     </div>

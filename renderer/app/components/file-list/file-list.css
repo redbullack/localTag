@@ -161,9 +161,17 @@
     min-height: 0;
 }
 
+.file-list__table--resizing {
+    cursor: col-resize;
+}
+
+.file-list__table--resizing .file-row {
+    pointer-events: none;
+}
+
 .file-list__table-header {
     display: grid;
-    grid-template-columns: 1fr 200px 80px 90px;
+    grid-template-columns: minmax(150px, 1fr) var(--col-tags, 200px) var(--col-size, 80px) 90px;
     gap: 8px;
     padding: 8px 16px;
     border-bottom: 1px solid var(--border-subtle);
@@ -176,10 +184,40 @@
     color: var(--text-muted);
     text-transform: uppercase;
     letter-spacing: 0.5px;
+    position: relative;
+    display: flex;
+    align-items: center;
 }
 
 .file-list__th--size {
-    text-align: right;
+    justify-content: flex-end;
+}
+
+.file-list__resizer {
+    position: absolute;
+    top: 0;
+    right: -8px;
+    width: 16px;
+    bottom: 0;
+    cursor: col-resize;
+    z-index: 10;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.file-list__resizer::after {
+    content: '';
+    height: 60%;
+    width: 1px;
+    background-color: var(--border-subtle);
+    transition: background-color 0.2s, width 0.2s;
+}
+
+.file-list__resizer:hover::after,
+.file-list__resizer.is-resizing::after {
+    background-color: var(--accent-primary);
+    width: 2px;
 }
 
 .file-list__body {
@@ -192,7 +230,7 @@
 
 .file-row {
     display: grid;
-    grid-template-columns: 1fr 200px 80px 90px;
+    grid-template-columns: minmax(150px, 1fr) var(--col-tags, 200px) var(--col-size, 80px) 90px;
     gap: 8px;
     align-items: center;
     padding: 10px 16px;
