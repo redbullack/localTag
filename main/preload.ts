@@ -24,6 +24,8 @@ contextBridge.exposeInMainWorld('electronAPI', {
         ipcRenderer.invoke('tag:delete', params),
 
     // File CRUD
+    selectFiles: () =>
+        ipcRenderer.invoke('file:select'),
     addFiles: (params?: { tagIds?: number[]; filePaths?: string[] }) =>
         ipcRenderer.invoke('file:add', params),
     getAllFiles: (params?: { page?: number; limit?: number; sort?: { column: string; order: string } }) =>
