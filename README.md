@@ -20,6 +20,10 @@ Electron과 Next.js 기반의 데스크탑 애플리케이션 프로젝트입니
 ## 진행 및 수정 사항 (Changelog)
 
 * **2026-03-09**
+  * **작업 내용**: 파일 목록에서 현재 페이지 기준 다중 선택 상태를 관리하도록 구조를 정리하고, 선택된 여러 파일에 동일한 태그 집합을 한 번에 적용하는 **태그 일괄 편집** 기능을 추가. 태그 편집 모달은 단일 파일/다중 파일 흐름을 함께 처리하도록 확장했고, 선택된 파일 삭제 액션과 파일 추가 확인 문구도 현재 선택 태그 맥락에 맞게 정리.
+  * **변경된 핵심 파일**: `main/lib/file-repository.ts`, `main/ipc/file-handler.ts`, `main/preload.ts`, `renderer/global.d.ts`, `renderer/app/page.tsx`, `renderer/app/components/file-list/file-list.tsx`, `renderer/app/components/file-list/file-list.css`, `renderer/app/components/file-tag-editor/file-tag-editor.tsx`, `renderer/app/components/file-tag-editor/file-tag-editor.css`
+
+* **2026-03-09**
   * **작업 내용**: 기존 `.agents` 백업 자산은 유지한 채, Codex가 직접 읽는 공식 에이전트 구조를 별도로 추가. 루트 `AGENTS.md`를 신설해 공통 규칙과 skill 목록을 정의하고, `blueprint`, `doc`, `fix`, `refactor`, `ui-polish` workflow를 각각 독립 `SKILL.md`로 이식.
   * **변경된 핵심 파일**: `AGENTS.md`, `skills/blueprint/SKILL.md`, `skills/doc/SKILL.md`, `skills/fix/SKILL.md`, `skills/refactor/SKILL.md`, `skills/ui-polish/SKILL.md`
 

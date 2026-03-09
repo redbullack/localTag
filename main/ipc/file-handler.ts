@@ -3,6 +3,7 @@ import * as path from 'path';
 import { getVaultPath } from '../lib/store';
 import {
     addFile,
+    bulkSetFileTags,
     getAllFiles,
     getFilesByTagIds,
     renameFile,
@@ -27,6 +28,7 @@ let isSyncing = false;
  * - file:rename          | payload: { id, newFilename }          | return: FileWithTags
  * - file:delete          | payload: { id }                       | return: { success }
  * - file:update-tags     | payload: { fileId, tagIds }           | return: FileWithTags
+ * - file:bulk-set-tags   | payload: { fileIds, tagIds }          | return: { updatedCount }
  * - file:check-duplicate | payload: { filenames }                | return: { duplicates }
  * - file:get-total-count | payload: 없음                          | return: { data: number }
  * - file:sync            | payload: 없음                          | return: { success, data: { addedCount, deletedCount, updatedCount } }
@@ -136,6 +138,14 @@ export const registerFileHandlers = (): void => {
     ipcMain.handle('file:update-tags', (_event, params: { fileId: number; tagIds: number[] }) => {
         try {
             return { success: true, data: updateFileTags(params.fileId, params.tagIds) };
+        } catch (error: any) {
+            return { success: false, error: error.message };
+        }
+    });
+
+    ipcMain.handle('file:bulk-set-tags', (_event, params: { fileIds: number[]; tagIds: number[] }) => {
+        try {
+            return { success: true, data: bulkSetFileTags(params.fileIds, params.tagIds) };
         } catch (error: any) {
             return { success: false, error: error.message };
         }
