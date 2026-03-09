@@ -1,12 +1,12 @@
 'use client';
 
-import { useEffect, useState, useCallback, useRef } from 'react';
-import TagSidebar from './components/tag-sidebar/tag-sidebar';
-import TagFormModal from './components/tag-form-modal/tag-form-modal';
+import { useCallback, useEffect, useState } from 'react';
 import FileList from './components/file-list/file-list';
 import FileTagEditor from './components/file-tag-editor/file-tag-editor';
 import { useToast } from './components/shared/toast-provider';
-import type { Tag, FileWithTags, SortOption } from './types';
+import TagFormModal from './components/tag-form-modal/tag-form-modal';
+import TagSidebar from './components/tag-sidebar/tag-sidebar';
+import type { FileWithTags, SortOption, Tag } from './types';
 import './components/tag-badge/tag-badge.css';
 
 export default function Home() {
@@ -24,31 +24,32 @@ export default function Home() {
     // 파일 상태
     const [fileList, setFileList] = useState<FileWithTags[]>([]);
     const [selectedTagIds, setSelectedTagIds] = useState<number[]>([]);
+    const [selectedFileIds, setSelectedFileIds] = useState<Set<number>>(new Set());
 
-    // 페이징 상태
+    // 페이징/정렬 상태
     const [currentPage, setCurrentPage] = useState(1);
     const [totalCount, setTotalCount] = useState(0);
     const [overallFileCount, setOverallFileCount] = useState(0);
-
-    // 파일 정렬 상태
     const [sortOption, setSortOption] = useState<SortOption>({ column: 'updatedAt', order: 'desc' });
 
     // 파일 태그 에디터 상태
-    const [tagEditorFile, setTagEditorFile] = useState<FileWithTags | null>(null);
+    const [tagEditorFiles, setTagEditorFiles] = useState<FileWithTags[] | null>(null);
 
-    /** Vault 경로 확인 */
+    /** 최초 진입 시 Vault 경로를 확인한다. */
     useEffect(() => {
         const checkVaultPath = async () => {
             if (typeof window !== 'undefined' && window.electronAPI) {
                 const path = await window.electronAPI.getVaultPath();
                 setVaultPath(path);
             }
+
             setIsLoading(false);
         };
+
         checkVaultPath();
     }, []);
 
-    /** 태그 목록 로드 */
+    /** 사이드바 태그 목록을 새로 불러온다. */
     const loadTags = useCallback(async () => {
         if (typeof window === 'undefined' || !window.electronAPI) return;
 
@@ -58,16 +59,22 @@ export default function Home() {
         }
     }, []);
 
-    /** 파일 목록 로드 */
+    /** 현재 필터/페이지/정렬 조건에 맞는 파일 목록을 불러온다. */
     const loadFiles = useCallback(async () => {
         if (typeof window === 'undefined' || !window.electronAPI) return;
 
-        let response;
-        if (selectedTagIds.length > 0) {
-            response = await window.electronAPI.getFilesByTags({ tagIds: selectedTagIds, page: currentPage, limit: 50, sort: sortOption });
-        } else {
-            response = await window.electronAPI.getAllFiles({ page: currentPage, limit: 50, sort: sortOption });
-        }
+        const response = selectedTagIds.length > 0
+            ? await window.electronAPI.getFilesByTags({
+                tagIds: selectedTagIds,
+                page: currentPage,
+                limit: 50,
+                sort: sortOption,
+            })
+            : await window.electronAPI.getAllFiles({
+                page: currentPage,
+                limit: 50,
+                sort: sortOption,
+            });
 
         if (response.success && response.data) {
             setFileList(response.data);
@@ -80,18 +87,24 @@ export default function Home() {
         if (countResponse.success && countResponse.data !== undefined) {
             setOverallFileCount(countResponse.data);
         }
-    }, [selectedTagIds, currentPage, sortOption]);
+    }, [currentPage, selectedTagIds, sortOption]);
 
-    /** Vault 설정 완료 후 태그 + 파일 로드 */
+    /** Vault가 준비되면 태그와 파일을 함께 로드한다. */
     useEffect(() => {
-        if (vaultPath) {
-            loadTags();
-            loadFiles();
-        }
-    }, [vaultPath, loadTags, loadFiles]);
+        if (!vaultPath) return;
+
+        loadTags();
+        loadFiles();
+    }, [loadFiles, loadTags, vaultPath]);
+
+    /** 파일 목록이 갱신되면 현재 선택된 파일도 초기화한다. */
+    useEffect(() => {
+        setSelectedFileIds(new Set());
+    }, [fileList]);
 
     // ── Vault 동기화 (Sync) ──
 
+    /** 원본 폴더와 DB를 비교해 변경 사항을 동기화한다. */
     const handleSync = useCallback(async (isSilent = false) => {
         if (typeof window === 'undefined' || !window.electronAPI || !vaultPath || isSyncing) return;
 
@@ -114,18 +127,18 @@ export default function Home() {
 
                     showToast({
                         message: `동기화 완료: ${messageParts.join(', ')}`,
-                        duration: 4000
+                        duration: 4000,
                     });
                 } else if (!isSilent) {
                     showToast({
                         message: '모든 파일이 최신 상태입니다.',
-                        duration: 3000
+                        duration: 3000,
                     });
                 }
             } else if (!isSilent) {
                 showToast({
                     message: response.error || '동기화 중 오류가 발생했습니다.',
-                    duration: 4000
+                    duration: 4000,
                 });
             }
         } catch (error) {
@@ -133,13 +146,13 @@ export default function Home() {
         } finally {
             setIsSyncing(false);
         }
-    }, [vaultPath, isSyncing, loadTags, loadFiles, showToast]);
+    }, [isSyncing, loadFiles, loadTags, showToast, vaultPath]);
 
-    /** Window Focus 이벤트로 자동 동기화 */
+    /** 앱이 다시 포커스를 얻으면 조용히 동기화한다. */
     useEffect(() => {
         const handleFocus = () => {
             if (vaultPath && !isSyncing) {
-                handleSync(true); // 조용하게 동기화 실행
+                handleSync(true);
             }
         };
 
@@ -147,16 +160,16 @@ export default function Home() {
         return () => {
             window.removeEventListener('focus', handleFocus);
         };
-    }, [vaultPath, isSyncing, handleSync]);
+    }, [handleSync, isSyncing, vaultPath]);
 
-    // ── Vault 경로 설정 핸들러 ──
+    // ── Vault 경로 설정 ──
 
     const handleSelectVault = async () => {
-        if (typeof window !== 'undefined' && window.electronAPI) {
-            const selectedPath = await window.electronAPI.selectVaultPath();
-            if (selectedPath) {
-                setVaultPath(selectedPath);
-            }
+        if (typeof window === 'undefined' || !window.electronAPI) return;
+
+        const selectedPath = await window.electronAPI.selectVaultPath();
+        if (selectedPath) {
+            setVaultPath(selectedPath);
         }
     };
 
@@ -185,36 +198,33 @@ export default function Home() {
         setDefaultParentId(null);
     };
 
+    /** 생성/수정 모달에서 받은 태그 값을 저장한다. */
     const handleSubmitTag = async (formData: { name: string; color: string; parentId: number | null }) => {
         if (typeof window === 'undefined' || !window.electronAPI) return;
 
-        if (editingTag) {
-            const response = await window.electronAPI.updateTag({
+        const response = editingTag
+            ? await window.electronAPI.updateTag({
                 id: editingTag.id,
                 name: formData.name,
                 color: formData.color,
                 parentId: formData.parentId,
-            });
-            if (!response.success) {
-                alert(response.error || '태그 수정에 실패했습니다.');
-                return;
-            }
-        } else {
-            const response = await window.electronAPI.createTag({
+            })
+            : await window.electronAPI.createTag({
                 name: formData.name,
                 color: formData.color,
                 parentId: formData.parentId ?? undefined,
             });
-            if (!response.success) {
-                alert(response.error || '태그 생성에 실패했습니다.');
-                return;
-            }
+
+        if (!response.success) {
+            alert(response.error || (editingTag ? '태그 수정에 실패했습니다.' : '태그 생성에 실패했습니다.'));
+            return;
         }
 
         handleCloseModal();
         await loadTags();
     };
 
+    /** 태그 삭제 후 현재 필터와 목록을 함께 정리한다. */
     const handleDeleteTag = async (tagId: number) => {
         if (typeof window === 'undefined' || !window.electronAPI) return;
 
@@ -222,39 +232,50 @@ export default function Home() {
         if (!confirmDelete) return;
 
         const response = await window.electronAPI.deleteTag({ id: tagId });
-        if (response.success) {
-            if (selectedTagIds.includes(tagId)) {
-                setSelectedTagIds(prev => prev.filter(id => id !== tagId));
-            }
-            await loadTags();
-            await loadFiles();
-        } else {
+        if (!response.success) {
             alert(response.error || '태그 삭제에 실패했습니다.');
+            return;
         }
+
+        if (selectedTagIds.includes(tagId)) {
+            setSelectedTagIds((prev) => prev.filter((id) => id !== tagId));
+        }
+
+        await loadTags();
+        await loadFiles();
     };
 
-    /** 사이드바 태그 선택 (다중 토글) */
+    /** 사이드바 태그 선택을 토글하고, 필터 변경 시 첫 페이지로 이동한다. */
     const handleSelectTag = (tagId: number) => {
-        setSelectedTagIds((prevIds) => {
-            if (prevIds.includes(tagId)) {
-                return prevIds.filter((id) => id !== tagId); // 해제
-            } else {
-                return [...prevIds, tagId]; // 선택 추가
-            }
-        });
-        setCurrentPage(1); // 태그 필터 변경 시 첫 페이지로 이동
+        setSelectedTagIds((prevIds) => (
+            prevIds.includes(tagId)
+                ? prevIds.filter((id) => id !== tagId)
+                : [...prevIds, tagId]
+        ));
+        setCurrentPage(1);
+    };
+
+    /** 현재 선택된 태그 이름을 파일 추가/헤더 표시에 사용한다. */
+    const selectedTagNames = selectedTagIds.length > 0
+        ? selectedTagIds
+            .map((id) => tagList.find((tag) => tag.id === id)?.name)
+            .filter(Boolean)
+            .join(', ')
+        : null;
+
+    const getAddFilesConfirmText = (fileCount: number) => {
+        const tagDescription = selectedTagNames ? `"${selectedTagNames}" 태그로` : '태그 없이';
+        return `${fileCount}개의 파일을 ${tagDescription} 저장하시겠습니까?\n\n사이드바에서 선택한 태그가 새 파일의 기본값으로 적용됩니다.`;
     };
 
     // ── 파일 CRUD ──
 
-    /** 파일 추가 (OS 다이얼로그) */
+    /** OS 파일 선택창을 통해 파일을 추가한다. */
     const handleAddFiles = async () => {
         if (typeof window === 'undefined' || !window.electronAPI) return;
 
-        // 1. 파일 선택창 열기
         const selectResponse = await window.electronAPI.selectFiles();
         if (!selectResponse.success || !selectResponse.data || selectResponse.data.filePaths.length === 0) {
-            // 취소했거나 에러가 난 경우
             if (selectResponse.error) {
                 alert(selectResponse.error);
             }
@@ -262,17 +283,12 @@ export default function Home() {
         }
 
         const filePaths = selectResponse.data.filePaths;
-
-        // 2. 확인창 띄우기
-        const tagNameText = selectedTagNames ? `"${selectedTagNames}" 태그로` : '태그 없이';
-        const confirmResult = confirm(`${filePaths.length}개의 파일을 ${tagNameText} 저장하시겠습니까?\n\n(사이드바에서 원하는 태그를 선택 후 파일 추가가 가능합니다)`);
-
+        const confirmResult = confirm(getAddFilesConfirmText(filePaths.length));
         if (!confirmResult) return;
 
-        // 3. 파일 추가 실제 수행
         const addResponse = await window.electronAPI.addFiles({
             tagIds: selectedTagIds.length > 0 ? selectedTagIds : undefined,
-            filePaths: filePaths
+            filePaths,
         });
 
         if (!addResponse.success) {
@@ -287,21 +303,17 @@ export default function Home() {
         await loadFiles();
     };
 
-    /** 드래그앤 드롭 파일 추가 */
+    /** 드래그 앤 드롭으로 전달된 파일 목록을 추가한다. */
     const handleDropFiles = async (filePaths: string[]) => {
         if (typeof window === 'undefined' || !window.electronAPI) return;
 
-        const tagNameText = selectedTagNames ? `"${selectedTagNames}" 태그로` : '태그 없이';
-        const confirmResult = confirm(`${filePaths.length}개의 파일을 ${tagNameText} 저장하시겠습니까?\n\n(사이드바에서 원하는 태그를 선택 후 파일 추가가 가능합니다)`);
-
+        const confirmResult = confirm(getAddFilesConfirmText(filePaths.length));
         if (!confirmResult) return;
 
-        const response = await window.electronAPI.addFiles(
-            {
-                tagIds: selectedTagIds.length > 0 ? selectedTagIds : undefined,
-                filePaths: filePaths
-            }
-        );
+        const response = await window.electronAPI.addFiles({
+            tagIds: selectedTagIds.length > 0 ? selectedTagIds : undefined,
+            filePaths,
+        });
 
         if (!response.success) {
             if (response.duplicates && response.duplicates.length > 0) {
@@ -315,7 +327,7 @@ export default function Home() {
         await loadFiles();
     };
 
-    /** 파일 이름 변경 */
+    /** 개별 파일 이름을 변경한다. */
     const handleRenameFile = async (fileId: number, newFilename: string) => {
         if (typeof window === 'undefined' || !window.electronAPI) return;
 
@@ -327,7 +339,7 @@ export default function Home() {
         }
     };
 
-    /** 파일 삭제 */
+    /** 개별 파일을 삭제한다. */
     const handleDeleteFile = async (fileId: number, skipConfirmation: boolean = false) => {
         if (typeof window === 'undefined' || !window.electronAPI) return;
 
@@ -344,28 +356,85 @@ export default function Home() {
         }
     };
 
-    /** 파일 태그 에디터 열기 */
+    /** 파일 리스트에서 선택 상태를 토글한다. */
+    const handleToggleFileSelection = useCallback((fileId: number) => {
+        setSelectedFileIds((prev) => {
+            const next = new Set(prev);
+
+            if (next.has(fileId)) {
+                next.delete(fileId);
+            } else {
+                next.add(fileId);
+            }
+
+            return next;
+        });
+    }, []);
+
+    /** 현재 페이지 파일 전체를 선택/해제한다. */
+    const handleToggleAllFileSelection = useCallback(() => {
+        if (fileList.length === 0) return;
+
+        setSelectedFileIds((prev) => {
+            if (prev.size === fileList.length) {
+                return new Set();
+            }
+
+            return new Set(fileList.map((file) => file.id));
+        });
+    }, [fileList]);
+
+    /** 선택된 파일을 한 번에 삭제한다. */
+    const handleDeleteSelectedFiles = useCallback(async () => {
+        if (typeof window === 'undefined' || !window.electronAPI || selectedFileIds.size === 0) return;
+
+        const fileIds = Array.from(selectedFileIds);
+        const confirmDelete = confirm(`${fileIds.length}개의 파일을 삭제하시겠습니까?`);
+        if (!confirmDelete) return;
+
+        const results = await Promise.all(
+            fileIds.map((fileId) => window.electronAPI.deleteFile({ id: fileId })),
+        );
+        const failedResult = results.find((result) => !result.success);
+
+        if (failedResult) {
+            alert(failedResult.error || '선택한 파일 삭제 중 오류가 발생했습니다.');
+        }
+
+        setSelectedFileIds(new Set());
+        await loadFiles();
+    }, [loadFiles, selectedFileIds]);
+
+    /** 단일 파일 태그 편집 모달을 연다. */
     const handleOpenTagEditor = (file: FileWithTags) => {
-        setTagEditorFile(file);
+        setTagEditorFiles([file]);
     };
 
-    /** 파일 태그 저장 */
-    const handleSaveFileTags = async (fileId: number, tagIds: number[]) => {
+    /** 선택된 여러 파일을 한 번에 태그 편집 대상으로 연다. */
+    const handleOpenBulkTagEditor = useCallback(() => {
+        const filesToEdit = fileList.filter((file) => selectedFileIds.has(file.id));
+        if (filesToEdit.length === 0) return;
+
+        setTagEditorFiles(filesToEdit);
+    }, [fileList, selectedFileIds]);
+
+    /** 단일/다중 파일 태그 저장 요청을 적절한 IPC로 위임한다. */
+    const handleSaveFileTags = async (fileIds: number[], tagIds: number[]) => {
         if (typeof window === 'undefined' || !window.electronAPI) return;
 
-        const response = await window.electronAPI.updateFileTags({ fileId, tagIds });
-        if (response.success) {
-            setTagEditorFile(null);
-            await loadFiles();
-        } else {
-            alert(response.error || '태그 수정에 실패했습니다.');
-        }
-    };
+        const response = fileIds.length === 1
+            ? await window.electronAPI.updateFileTags({ fileId: fileIds[0], tagIds })
+            : await window.electronAPI.bulkSetFileTags({ fileIds, tagIds });
 
-    /** 선택된 태그 이름 */
-    const selectedTagNames = selectedTagIds.length > 0
-        ? selectedTagIds.map(id => tagList.find(t => t.id === id)?.name).filter(Boolean).join(', ')
-        : null;
+        if (!response.success) {
+            alert(response.error || '태그 수정에 실패했습니다.');
+            return;
+        }
+
+        setTagEditorFiles(null);
+        setSelectedFileIds(new Set());
+        await loadFiles();
+    };
 
     // ===== 로딩 화면 =====
     if (isLoading) {
@@ -381,11 +450,10 @@ export default function Home() {
         return (
             <main className="screen-center">
                 <div className="welcome-card">
-                    <h1 className="welcome-title">
-                        Welcome to LocalTag
-                    </h1>
+                    <h1 className="welcome-title">Welcome to LocalTag</h1>
                     <p className="welcome-description">
-                        파일을 관리할 위치를 선택해 주세요.<br />
+                        파일을 관리할 위치를 선택해 주세요.
+                        <br />
                         선택한 위치에 <code className="welcome-code">MyTaggedFiles</code> 폴더가 자동으로 생성됩니다.
                     </p>
                     <button
@@ -431,18 +499,22 @@ export default function Home() {
                         </h1>
                     </div>
                 </div>
+
                 <div className="main-content__body">
-                    <div className="vault-info" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
+                    <div
+                        className="vault-info"
+                        style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}
+                    >
                         <div>
                             <span className="vault-info__label">Vault 경로</span>
                             <code className="vault-info__path">{vaultPath}</code>
                             <div style={{ fontSize: '0.8rem', color: 'var(--text-danger, #f87171)', marginTop: '4px', fontWeight: 500 }}>
-                                ⚠️ 주의: 원본 폴더(MyTaggedFiles)에서 파일을 수동으로 지우지 마세요.
+                                ⚠️ 주의: 원본 폴더(MyTaggedFiles)에서 파일을 수동으로 이동하거나 삭제하지 마세요.
                             </div>
                         </div>
                         <button
                             className="sync-button"
-                            data-tooltip="원본 폴더의 실제 파일과 DB를 비교하여 변경사항(추가/삭제/크기)을 최신화합니다."
+                            data-tooltip="원본 폴더와 DB를 비교하여 파일 추가, 삭제, 메타데이터 변경 사항을 최신 상태로 맞춥니다."
                             onClick={() => handleSync(false)}
                             disabled={isSyncing}
                         >
@@ -450,18 +522,24 @@ export default function Home() {
                             {isSyncing ? '동기화 중...' : '동기화'}
                         </button>
                     </div>
+
                     <FileList
                         files={fileList}
+                        selectedFileIds={selectedFileIds}
                         currentPage={currentPage}
                         totalCount={totalCount}
                         sortOption={sortOption}
-                        onSortChange={(option) => setSortOption(option)}
-                        onPageChange={(page) => setCurrentPage(page)}
+                        onSortChange={setSortOption}
+                        onPageChange={setCurrentPage}
+                        onToggleSelect={handleToggleFileSelection}
+                        onToggleAllSelect={handleToggleAllFileSelection}
                         onAddFiles={handleAddFiles}
                         onDropFiles={handleDropFiles}
                         onRenameFile={isSyncing ? async () => { } : handleRenameFile}
                         onDeleteFile={isSyncing ? async () => { } : handleDeleteFile}
+                        onDeleteSelected={isSyncing ? async () => { } : handleDeleteSelectedFiles}
                         onEditFileTags={handleOpenTagEditor}
+                        onEditSelectedTags={handleOpenBulkTagEditor}
                         isSyncing={isSyncing}
                     />
                 </div>
@@ -476,15 +554,16 @@ export default function Home() {
                 defaultParentId={defaultParentId}
             />
 
-            {tagEditorFile && (
+            {tagEditorFiles && (
                 <FileTagEditor
                     isOpen={true}
-                    file={tagEditorFile}
+                    selectedFiles={tagEditorFiles}
                     allTags={tagList}
                     onSave={handleSaveFileTags}
-                    onClose={() => setTagEditorFile(null)}
+                    onClose={() => setTagEditorFiles(null)}
                 />
             )}
         </div>
     );
 }
+
