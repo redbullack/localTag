@@ -16,6 +16,8 @@ Electron과 Next.js 기반의 데스크탑 애플리케이션 프로젝트입니
   - 📁 **Vault 관리**: 파일 드래그 앤 드롭 추가, `MyTaggedFiles` 폴더 용량 및 파일 개수 확인, 파일 삭제
 - **사용자 경험 고려**: 파일을 `MyTaggedFiles`로 가져올 때 중복된 파일명 감지 시 경고창을 띄워 직관적인 파일 관리를 유도합니다. (난해한 고유값(UUID) 이름 변경 최소화)
 
+<img width="1919" height="1020" alt="image" src="https://github.com/user-attachments/assets/0b1a67a7-3b80-4923-bfaa-f9544412754e" />
+
 ---
 ## 진행 및 수정 사항 (Changelog)
 
