@@ -19,6 +19,10 @@ Electron과 Next.js 기반의 데스크탑 애플리케이션 프로젝트입니
 ---
 ## 진행 및 수정 사항 (Changelog)
 
+* **2026-03-09**
+  * **작업 내용**: 기존 `.agents` 백업 자산은 유지한 채, Codex가 직접 읽는 공식 에이전트 구조를 별도로 추가. 루트 `AGENTS.md`를 신설해 공통 규칙과 skill 목록을 정의하고, `blueprint`, `doc`, `fix`, `refactor`, `ui-polish` workflow를 각각 독립 `SKILL.md`로 이식.
+  * **변경된 핵심 파일**: `AGENTS.md`, `skills/blueprint/SKILL.md`, `skills/doc/SKILL.md`, `skills/fix/SKILL.md`, `skills/refactor/SKILL.md`, `skills/ui-polish/SKILL.md`
+
 * **2026-03-08**
   * **작업 내용**: 안티그래비티 파일 리스트에서 항목을 더블클릭하거나 파일 우측의 액션 버튼(📂)을 클릭하여 로컬 OS의 기본 프로그램으로 파일을 여는 **파일 열기** 기능 구현. Main 프로세스의 `file-handler`를 통해 `shell.openPath` 호출, Renderer의 `global.d.ts`와 컴포넌트에 IPC 통신 연결 작업.
   * **변경된 핵심 파일**: `main/ipc/file-handler.ts`, `main/preload.ts`, `renderer/global.d.ts`, `renderer/app/components/file-list/file-list.tsx`
