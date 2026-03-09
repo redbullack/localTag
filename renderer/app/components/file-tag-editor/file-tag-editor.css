@@ -97,6 +97,23 @@
     border-bottom: 1px solid var(--border-subtle);
 }
 
+.file-tag-editor__file-info-title {
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.file-tag-editor__file-list {
+    margin: 8px 0 0;
+    padding-left: 18px;
+    max-height: 120px;
+    overflow-y: auto;
+}
+
+.file-tag-editor__file-list-item {
+    line-height: 1.5;
+    color: var(--text-secondary);
+}
+
 /* 섹션 레이블 */
 
 .file-tag-editor__section-label {
