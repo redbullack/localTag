@@ -256,6 +256,29 @@
     color: white;
 }
 
+.file-list__bulk-edit-btn {
+    padding: 6px 14px;
+    border: 1px solid var(--accent-primary);
+    border-radius: 6px;
+    background-color: rgba(88, 101, 242, 0.12);
+    color: var(--accent-primary);
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.file-list__bulk-edit-btn:hover {
+    background-color: var(--accent-primary);
+    color: white;
+}
+
+.file-list__bulk-edit-btn:disabled,
+.file-list__delete-selected-btn:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+}
+
 .file-list__resizer {
     position: absolute;
     top: 0;

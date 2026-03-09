@@ -430,6 +430,53 @@ export const updateFileTags = (fileId: number, tagIds: number[]): FileWithTags =
 };
 
 /**
+ * 여러 파일의 태그를 동일한 집합으로 일괄 교체합니다.
+ * @param fileIds - 태그를 교체할 파일 ID 배열
+ * @param tagIds - 새로 설정할 태그 ID 배열
+ * @returns { updatedCount: number }
+ */
+export const bulkSetFileTags = (fileIds: number[], tagIds: number[]): { updatedCount: number } => {
+    const db = getDb();
+    const uniqueFileIds = Array.from(new Set(fileIds));
+    const uniqueTagIds = Array.from(new Set(tagIds));
+
+    if (uniqueFileIds.length === 0) {
+        throw new Error('태그를 수정할 파일이 선택되지 않았습니다.');
+    }
+
+    const placeholders = uniqueFileIds.map(() => '?').join(',');
+    const existingFiles = db.prepare(`
+        SELECT id
+        FROM files
+        WHERE id IN (${placeholders})
+    `).all(...uniqueFileIds) as { id: number }[];
+
+    if (existingFiles.length !== uniqueFileIds.length) {
+        throw new Error('선택한 파일 중 일부를 찾을 수 없습니다.');
+    }
+
+    const deleteTags = db.prepare('DELETE FROM file_tags WHERE file_id = ?');
+    const insertTag = db.prepare('INSERT INTO file_tags (file_id, tag_id) VALUES (?, ?)');
+    const touchFile = db.prepare('UPDATE files SET updated_at = CURRENT_TIMESTAMP WHERE id = ?');
+
+    const transaction = db.transaction(() => {
+        for (const fileId of uniqueFileIds) {
+            deleteTags.run(fileId);
+
+            for (const tagId of uniqueTagIds) {
+                insertTag.run(fileId, tagId);
+            }
+
+            touchFile.run(fileId);
+        }
+    });
+
+    transaction();
+
+    return { updatedCount: uniqueFileIds.length };
+};
+
+/**
  * 중복 파일명을 확인합니다.
  * @param filenames - 확인할 파일명 배열
  * @returns 이미 존재하는 파일명 배열
