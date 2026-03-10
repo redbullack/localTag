@@ -55,6 +55,8 @@ export interface IElectronAPI {
     getTotalFileCount: () => Promise<IpcResponse<number>>;
     syncFiles: () => Promise<IpcResponse<{ addedCount: number; deletedCount: number; updatedCount: number }>>;
     openFile: (params: { filename: string }) => Promise<IpcResponse<void>>;
+    moveFilesToFolder: (params: { files: { id: number; filename: string }[] }) => Promise<IpcResponse<{ movedCount: number; errors: string[] }>>;
+    copyFilesToFolder: (params: { files: { id: number; filename: string }[] }) => Promise<IpcResponse<{ copiedCount: number; errors: string[] }>>;
     getPathForFile: (file: File) => string;
 }
 

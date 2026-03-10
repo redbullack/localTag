@@ -405,6 +405,109 @@ export default function Home() {
         await loadFiles();
     }, [loadFiles, selectedFileIds]);
 
+    /** 개별 파일을 사용자 선택 폴더로 이동한다. */
+    const handleMoveFile = async (file: FileWithTags) => {
+        if (typeof window === 'undefined' || !window.electronAPI) return;
+
+        const response = await window.electronAPI.moveFilesToFolder({
+            files: [{ id: file.id, filename: file.filename }],
+        });
+
+        if (!response.success) {
+            alert(response.error || '파일 이동에 실패했습니다.');
+            return;
+        }
+
+        if (response.data) {
+            if (response.data.errors.length > 0) {
+                alert(`일부 파일 이동 실패:\n${response.data.errors.join('\n')}`);
+            }
+            if (response.data.movedCount > 0) {
+                showToast({ message: `${response.data.movedCount}개 파일을 이동했습니다.`, duration: 3000 });
+                await loadFiles();
+            }
+        }
+    };
+
+    /** 개별 파일을 사용자 선택 폴더로 복사한다. */
+    const handleCopyFile = async (file: FileWithTags) => {
+        if (typeof window === 'undefined' || !window.electronAPI) return;
+
+        const response = await window.electronAPI.copyFilesToFolder({
+            files: [{ id: file.id, filename: file.filename }],
+        });
+
+        if (!response.success) {
+            alert(response.error || '파일 복사에 실패했습니다.');
+            return;
+        }
+
+        if (response.data) {
+            if (response.data.errors.length > 0) {
+                alert(`일부 파일 복사 실패:\n${response.data.errors.join('\n')}`);
+            }
+            if (response.data.copiedCount > 0) {
+                showToast({ message: `${response.data.copiedCount}개 파일을 복사했습니다.`, duration: 3000 });
+            }
+        }
+    };
+
+    /** 선택된 파일들을 사용자 선택 폴더로 이동한다. */
+    const handleMoveSelectedFiles = useCallback(async () => {
+        if (typeof window === 'undefined' || !window.electronAPI || selectedFileIds.size === 0) return;
+
+        const filesToMove = fileList
+            .filter((file) => selectedFileIds.has(file.id))
+            .map((file) => ({ id: file.id, filename: file.filename }));
+
+        if (filesToMove.length === 0) return;
+
+        const response = await window.electronAPI.moveFilesToFolder({ files: filesToMove });
+
+        if (!response.success) {
+            alert(response.error || '파일 이동에 실패했습니다.');
+            return;
+        }
+
+        if (response.data) {
+            if (response.data.errors.length > 0) {
+                alert(`일부 파일 이동 실패:\n${response.data.errors.join('\n')}`);
+            }
+            if (response.data.movedCount > 0) {
+                showToast({ message: `${response.data.movedCount}개 파일을 이동했습니다.`, duration: 3000 });
+                setSelectedFileIds(new Set());
+                await loadFiles();
+            }
+        }
+    }, [fileList, loadFiles, selectedFileIds, showToast]);
+
+    /** 선택된 파일들을 사용자 선택 폴더로 복사한다. */
+    const handleCopySelectedFiles = useCallback(async () => {
+        if (typeof window === 'undefined' || !window.electronAPI || selectedFileIds.size === 0) return;
+
+        const filesToCopy = fileList
+            .filter((file) => selectedFileIds.has(file.id))
+            .map((file) => ({ id: file.id, filename: file.filename }));
+
+        if (filesToCopy.length === 0) return;
+
+        const response = await window.electronAPI.copyFilesToFolder({ files: filesToCopy });
+
+        if (!response.success) {
+            alert(response.error || '파일 복사에 실패했습니다.');
+            return;
+        }
+
+        if (response.data) {
+            if (response.data.errors.length > 0) {
+                alert(`일부 파일 복사 실패:\n${response.data.errors.join('\n')}`);
+            }
+            if (response.data.copiedCount > 0) {
+                showToast({ message: `${response.data.copiedCount}개 파일을 복사했습니다.`, duration: 3000 });
+            }
+        }
+    }, [fileList, selectedFileIds, showToast]);
+
     /** 단일 파일 태그 편집 모달을 연다. */
     const handleOpenTagEditor = (file: FileWithTags) => {
         setTagEditorFiles([file]);
@@ -538,6 +641,10 @@ export default function Home() {
                         onRenameFile={isSyncing ? async () => { } : handleRenameFile}
                         onDeleteFile={isSyncing ? async () => { } : handleDeleteFile}
                         onDeleteSelected={isSyncing ? async () => { } : handleDeleteSelectedFiles}
+                        onMoveFile={isSyncing ? () => { } : handleMoveFile}
+                        onCopyFile={isSyncing ? () => { } : handleCopyFile}
+                        onMoveSelected={isSyncing ? () => { } : handleMoveSelectedFiles}
+                        onCopySelected={isSyncing ? () => { } : handleCopySelectedFiles}
                         onEditFileTags={handleOpenTagEditor}
                         onEditSelectedTags={handleOpenBulkTagEditor}
                         isSyncing={isSyncing}

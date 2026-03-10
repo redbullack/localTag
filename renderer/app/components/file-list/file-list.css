@@ -171,7 +171,7 @@
 
 .file-list__table-header {
     display: grid;
-    grid-template-columns: 32px minmax(150px, 1fr) var(--col-tags, 200px) var(--col-size, 80px) 90px;
+    grid-template-columns: 32px minmax(150px, 1fr) var(--col-tags, 200px) var(--col-size, 80px) 160px;
     gap: 8px;
     padding: 8px 16px;
     border-bottom: 1px solid var(--border-subtle);
@@ -274,9 +274,45 @@
 }
 
 .file-list__bulk-edit-btn:disabled,
+.file-list__move-selected-btn:disabled,
+.file-list__copy-selected-btn:disabled,
 .file-list__delete-selected-btn:disabled {
     opacity: 0.55;
     cursor: not-allowed;
+}
+
+.file-list__move-selected-btn {
+    padding: 6px 14px;
+    border: 1px solid var(--accent-warning, #f59e0b);
+    border-radius: 6px;
+    background-color: rgba(245, 158, 11, 0.1);
+    color: var(--accent-warning, #f59e0b);
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.file-list__move-selected-btn:hover {
+    background-color: var(--accent-warning, #f59e0b);
+    color: white;
+}
+
+.file-list__copy-selected-btn {
+    padding: 6px 14px;
+    border: 1px solid var(--accent-success, #22c55e);
+    border-radius: 6px;
+    background-color: rgba(34, 197, 94, 0.1);
+    color: var(--accent-success, #22c55e);
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.file-list__copy-selected-btn:hover {
+    background-color: var(--accent-success, #22c55e);
+    color: white;
 }
 
 .file-list__resizer {
