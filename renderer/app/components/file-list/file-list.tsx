@@ -3,6 +3,7 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import './file-list.css';
 import type { FileWithTags, SortOption } from '../../types';
+import TagBadge from '../tag-badge/tag-badge';
 
 interface FileListProps {
     files: FileWithTags[];
@@ -175,14 +176,11 @@ function FileRow({
             <div className="file-row__tags-cell">
                 {file.tags.length > 0 ? (
                     file.tags.map((tag) => (
-                        <span
+                        <TagBadge
                             key={tag.id}
-                            className="tag-badge"
-                            style={{ '--tag-color': tag.color || '#5865f2' } as React.CSSProperties}
-                        >
-                            <span className="tag-badge__dot" />
-                            <span className="tag-badge__name">{tag.name}</span>
-                        </span>
+                            name={tag.name}
+                            color={tag.color}
+                        />
                     ))
                 ) : (
                     <span className="file-row__no-tags">태그 없음</span>
