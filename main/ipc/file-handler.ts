@@ -1,9 +1,11 @@
 import { ipcMain, dialog, shell } from 'electron';
 import * as path from 'path';
+import * as fs from 'fs';
 import { getVaultPath } from '../lib/store';
 import {
     addFile,
     bulkSetFileTags,
+    deleteFileRecordOnly,
     getAllFiles,
     getFilesByTagIds,
     renameFile,
@@ -210,6 +212,115 @@ export const registerFileHandlers = (): void => {
             }
 
             return { success: true };
+        } catch (error: any) {
+            return { success: false, error: error.message };
+        }
+    });
+
+    ipcMain.handle('file:move-to-folder', async (_event, params: { files: { id: number; filename: string }[] }) => {
+        try {
+            const vaultPath = getVaultPath();
+            if (!vaultPath) {
+                return { success: false, error: 'Vault 경로가 설정되지 않았습니다.' };
+            }
+
+            const result = await dialog.showOpenDialog({
+                properties: ['openDirectory'],
+                title: '파일을 이동할 폴더 선택',
+            });
+
+            if (result.canceled || result.filePaths.length === 0) {
+                return { success: true, data: { movedCount: 0, errors: [] } };
+            }
+
+            const targetDir = result.filePaths[0];
+            const errors: string[] = [];
+            let movedCount = 0;
+
+            for (const file of params.files) {
+                const sourcePath = path.join(vaultPath, file.filename);
+                const targetPath = path.join(targetDir, file.filename);
+
+                try {
+                    if (fs.existsSync(targetPath)) {
+                        errors.push(`${file.filename}: 대상 폴더에 동일한 파일이 이미 존재합니다.`);
+                        continue;
+                    }
+
+                    if (!fs.existsSync(sourcePath)) {
+                        errors.push(`${file.filename}: 원본 파일을 찾을 수 없습니다.`);
+                        continue;
+                    }
+
+                    // 파일 이동 (크로스 디바이스 fallback 포함)
+                    try {
+                        fs.renameSync(sourcePath, targetPath);
+                    } catch (moveError: any) {
+                        if (moveError.code === 'EXDEV') {
+                            fs.copyFileSync(sourcePath, targetPath);
+                            fs.unlinkSync(sourcePath);
+                        } else {
+                            throw moveError;
+                        }
+                    }
+
+                    // DB 레코드 삭제 (파일은 이미 이동됨)
+                    deleteFileRecordOnly(file.id);
+                    movedCount++;
+                } catch (fileError: any) {
+                    errors.push(`${file.filename}: ${fileError.message}`);
+                }
+            }
+
+            return { success: true, data: { movedCount, errors } };
+        } catch (error: any) {
+            return { success: false, error: error.message };
+        }
+    });
+
+    ipcMain.handle('file:copy-to-folder', async (_event, params: { files: { id: number; filename: string }[] }) => {
+        try {
+            const vaultPath = getVaultPath();
+            if (!vaultPath) {
+                return { success: false, error: 'Vault 경로가 설정되지 않았습니다.' };
+            }
+
+            const result = await dialog.showOpenDialog({
+                properties: ['openDirectory'],
+                title: '파일을 복사할 폴더 선택',
+            });
+
+            if (result.canceled || result.filePaths.length === 0) {
+                return { success: true, data: { copiedCount: 0, errors: [] } };
+            }
+
+            const targetDir = result.filePaths[0];
+            const errors: string[] = [];
+            let copiedCount = 0;
+
+            for (const file of params.files) {
+                const sourcePath = path.join(vaultPath, file.filename);
+                const targetPath = path.join(targetDir, file.filename);
+
+                try {
+                    if (fs.existsSync(targetPath)) {
+                        errors.push(`${file.filename}: 대상 폴더에 동일한 파일이 이미 존재합니다.`);
+                        continue;
+                    }
+
+                    if (!fs.existsSync(sourcePath)) {
+                        errors.push(`${file.filename}: 원본 파일을 찾을 수 없습니다.`);
+                        continue;
+                    }
+
+                    fs.copyFileSync(sourcePath, targetPath);
+                    copiedCount++;
+                } catch (fileError: any) {
+                    errors.push(`${file.filename}: ${fileError.message}`);
+                }
+            }
+
+            return { success: true, data: { copiedCount, errors } };
         } catch (error: any) {
             return { success: false, error: error.message };
         }

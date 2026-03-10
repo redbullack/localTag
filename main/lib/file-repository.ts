@@ -398,6 +398,31 @@ export const deleteFile = (id: number): { success: boolean } => {
 };
 
 /**
+ * DB에서 파일 레코드만 삭제합니다 (파일시스템 작업 없음).
+ * 파일을 외부 폴더로 이동한 뒤 DB 정리 목적으로 사용합니다.
+ * ON DELETE CASCADE로 file_tags 매핑도 자동 삭제됩니다.
+ * @param id - 삭제할 파일 ID
+ * @returns { success: boolean }
+ */
+export const deleteFileRecordOnly = (id: number): { success: boolean } => {
+    const db = getDb();
+
+    db.pragma('foreign_keys = ON');
+
+    const fileRow = db.prepare(
+        'SELECT id FROM files WHERE id = ?'
+    ).get(id) as { id: number } | undefined;
+
+    if (!fileRow) {
+        throw new Error(`파일 ID ${id}를 찾을 수 없습니다.`);
+    }
+
+    const result = db.prepare('DELETE FROM files WHERE id = ?').run(id);
+
+    return { success: result.changes > 0 };
+};
+
+/**
  * 파일의 태그 매핑을 전체 교체합니다. (DELETE → INSERT 트랜잭션)
  * @param fileId - 파일 ID
  * @param tagIds - 새로 설정할 태그 ID 배열
