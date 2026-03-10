@@ -1,9 +1,10 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import './tag-form-modal.css';
 import type { Tag } from '../../types';
 import TagSearchDropdown from '../shared/tag-search-dropdown';
+import { useClickOutside } from '../../utils/use-click-outside';
 
 /**
  * TagFormModal - 태그 생성/수정 모달 컴포넌트
@@ -69,24 +70,10 @@ export default function TagFormModal({
     }, [isOpen, existingTag, defaultParentId]);
 
     // 상위 태그 드롭다운 외부 클릭 감지
-    useEffect(() => {
-        const handleClickOutside = (event: MouseEvent) => {
-            if (
-                parentDropdownContainerRef.current &&
-                !parentDropdownContainerRef.current.contains(event.target as Node)
-            ) {
-                setIsParentDropdownOpen(false);
-            }
-        };
-
-        if (isParentDropdownOpen) {
-            document.addEventListener('mousedown', handleClickOutside);
-        }
-
-        return () => {
-            document.removeEventListener('mousedown', handleClickOutside);
-        };
-    }, [isParentDropdownOpen]);
+    const handleCloseParentDropdown = useCallback(() => {
+        setIsParentDropdownOpen(false);
+    }, []);
+    useClickOutside(parentDropdownContainerRef, handleCloseParentDropdown, isParentDropdownOpen);
 
     /** 입력된 이름이 기존 태그와 중복되는지 검사 */
     const checkDuplicateName = (name: string): boolean => {

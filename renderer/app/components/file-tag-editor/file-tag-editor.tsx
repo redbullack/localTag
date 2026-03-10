@@ -1,9 +1,11 @@
 'use client';
 
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import './file-tag-editor.css';
 import type { FileWithTags, Tag } from '../../types';
 import TagSearchDropdown from '../shared/tag-search-dropdown';
+import TagBadge from '../tag-badge/tag-badge';
+import { useClickOutside } from '../../utils/use-click-outside';
 
 interface FileTagEditorProps {
     /** 모달 열림 여부 */
@@ -73,20 +75,10 @@ export default function FileTagEditor({
     }, [isDropdownOpen, isOpen, onClose]);
 
     /** 드롭다운 바깥을 클릭하면 태그 검색 UI를 닫는다. */
-    useEffect(() => {
-        if (!isDropdownOpen) return;
-
-        const handleClickOutside = (e: MouseEvent) => {
-            if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
-                setIsDropdownOpen(false);
-            }
-        };
-
-        document.addEventListener('mousedown', handleClickOutside);
-        return () => {
-            document.removeEventListener('mousedown', handleClickOutside);
-        };
-    }, [isDropdownOpen]);
+    const handleCloseDropdown = useCallback(() => {
+        setIsDropdownOpen(false);
+    }, []);
+    useClickOutside(dropdownRef, handleCloseDropdown, isDropdownOpen);
 
     /** 태그 검색 드롭다운에서 선택/해제를 토글한다. */
     const handleToggleTag = (tagId: number | null) => {
@@ -174,21 +166,12 @@ export default function FileTagEditor({
                         <span className="file-tag-editor__no-tags">선택된 태그 없음</span>
                     ) : (
                         selectedTags.map((tag) => (
-                            <span
+                            <TagBadge
                                 key={tag.id}
-                                className="tag-badge"
-                                style={{ '--tag-color': tag.color || '#5865f2' } as React.CSSProperties}
-                            >
-                                <span className="tag-badge__dot" />
-                                <span className="tag-badge__name">{tag.name}</span>
-                                <button
-                                    className="tag-badge__close"
-                                    onClick={() => handleRemoveTag(tag.id)}
-                                    aria-label={`${tag.name} 태그 제거`}
-                                >
-                                    ✕
-                                </button>
-                            </span>
+                                name={tag.name}
+                                color={tag.color}
+                                onClose={() => handleRemoveTag(tag.id)}
+                            />
                         ))
                     )}
                 </div>

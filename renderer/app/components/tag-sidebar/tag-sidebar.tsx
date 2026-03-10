@@ -4,6 +4,7 @@ import { useState } from 'react';
 import './tag-sidebar.css';
 import type { Tag, TagTreeNode } from '../../types';
 import TagSearchDropdown from '../shared/tag-search-dropdown';
+import { buildTagTree } from '../../utils/tag-tree';
 
 /**
  * TagSidebar - 좌측 사이드바에 태그 목록을 트리 형태로 표시하는 컴포넌트
@@ -24,27 +25,6 @@ interface TagSidebarProps {
     onCreateChildTag: (parentTag: Tag) => void;
     onSelectTag: (tagId: number) => void;
 }
-
-/** flat 태그 목록을 계층형 트리 구조로 변환합니다. */
-const buildTagTree = (tags: Tag[]): TagTreeNode[] => {
-    const tagMap = new Map<number, TagTreeNode>();
-    const rootNodes: TagTreeNode[] = [];
-
-    tags.forEach((tag) => {
-        tagMap.set(tag.id, { ...tag, children: [] });
-    });
-
-    tags.forEach((tag) => {
-        const treeNode = tagMap.get(tag.id)!;
-        if (tag.parentId !== null && tagMap.has(tag.parentId)) {
-            tagMap.get(tag.parentId)!.children.push(treeNode);
-        } else {
-            rootNodes.push(treeNode);
-        }
-    });
-
-    return rootNodes;
-};
 
 /** 개별 태그 트리 노드를 재귀적으로 렌더링합니다. */
 function TagTreeItem({
