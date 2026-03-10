@@ -1,9 +1,10 @@
 'use client';
 
-import { useState, useRef, useEffect, useMemo } from 'react';
+import { useState, useRef, useEffect, useMemo, useCallback } from 'react';
 import './tag-search-dropdown.css';
 import type { Tag } from '../../types';
 import { buildTagTree, flattenTree } from '../../utils/tag-tree';
+import { useClickOutside } from '../../utils/use-click-outside';
 
 export type SelectionMode = 'single' | 'multiple';
 
@@ -42,18 +43,10 @@ export default function TagSearchDropdown({
     const dropdownRef = useRef<HTMLDivElement>(null);
 
     // 컴포넌트 외부 클릭 시 드롭다운 닫기
-    useEffect(() => {
-        const handleClickOutside = (event: MouseEvent) => {
-            if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
-                setIsDropdownOpen(false);
-            }
-        };
-
-        document.addEventListener('mousedown', handleClickOutside);
-        return () => {
-            document.removeEventListener('mousedown', handleClickOutside);
-        };
+    const handleCloseDropdown = useCallback(() => {
+        setIsDropdownOpen(false);
     }, []);
+    useClickOutside(dropdownRef, handleCloseDropdown);
 
     // 컴포넌트가 마운트되거나 autoFocus 값이 변경될 때 포커스 제어
     useEffect(() => {
