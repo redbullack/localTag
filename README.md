@@ -22,6 +22,10 @@ Electron과 Next.js 기반의 데스크탑 애플리케이션 프로젝트입니
 ## 진행 및 수정 사항 (Changelog)
 
 * **2026-03-10**
+  * **작업 내용**: 파일 목록에서 원하는 파일을 사용자의 다른 로컬 개인 폴더로 "이동" 또는 "복사"하는 기능 구현. 개별 파일 액션 버튼(이동, 복사) 및 선택된 여러 파일을 한 번에 이동/복사할 수 있는 벌크 액션 버튼 추가. 파일 이동 시 Vault 내부 이동이 아닌 OS 레벨 폴더 이동을 지원하며, 이동 시에는 DB 레코드 삭제, 복사 시에는 원본 유지 처리. 파티션 등 제약 시 폴백(copy+unlink) 로직 적용. 또한 기존 "파일 열기" 버튼의 이름을 "열기"로 간결하게 변경.
+  * **변경된 핵심 파일**: `main/lib/file-repository.ts`, `main/ipc/file-handler.ts`, `main/preload.ts`, `renderer/global.d.ts`, `renderer/app/page.tsx`, `renderer/app/components/file-list/file-list.tsx`, `renderer/app/components/file-list/file-list.css`
+
+* **2026-03-10**
   * **작업 내용**: 컴포넌트/유틸리티 재사용 리팩토링. `TagBadge` 컴포넌트가 미사용 상태로 방치되고 `file-list.tsx`, `file-tag-editor.tsx`에 동일 마크업이 하드코딩되어 있던 문제를 `TagBadge` 컴포넌트 import로 교체. `tag-sidebar.tsx`에서 `utils/tag-tree.ts`의 `buildTagTree` 함수와 동일한 로직을 로컬에 중복 정의하고 있던 문제를 import로 교체. 3개 파일에서 반복되던 외부 클릭 감지 `useEffect` 패턴을 `useClickOutside` 커스텀 훅으로 추출하여 적용. 향후 재발 방지를 위해 코드 스타일 가이드(`.agents/rules/code-style-guide.md`)에 "컴포넌트 및 유틸리티 재사용" 규칙(섹션 4)을 추가.
   * **변경된 핵심 파일**: `.agents/rules/code-style-guide.md`, `renderer/app/utils/use-click-outside.ts`(신규), `renderer/app/components/tag-sidebar/tag-sidebar.tsx`, `renderer/app/components/file-list/file-list.tsx`, `renderer/app/components/file-tag-editor/file-tag-editor.tsx`, `renderer/app/components/shared/tag-search-dropdown.tsx`, `renderer/app/components/tag-form-modal/tag-form-modal.tsx`
 

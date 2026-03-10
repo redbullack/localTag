@@ -20,6 +20,10 @@ interface FileListProps {
     onRenameFile: (fileId: number, newFilename: string) => void;
     onDeleteFile: (fileId: number, skipConfirmation?: boolean) => void;
     onDeleteSelected: () => void;
+    onMoveFile: (file: FileWithTags) => void;
+    onCopyFile: (file: FileWithTags) => void;
+    onMoveSelected: () => void;
+    onCopySelected: () => void;
     onEditFileTags: (file: FileWithTags) => void;
     onEditSelectedTags: () => void;
     isSyncing?: boolean;
@@ -90,6 +94,8 @@ function FileRow({
     onToggleSelect,
     onRenameFile,
     onDeleteFile,
+    onMoveFile,
+    onCopyFile,
     onEditFileTags,
 }: {
     file: FileWithTags;
@@ -97,6 +103,8 @@ function FileRow({
     onToggleSelect: (fileId: number) => void;
     onRenameFile: (fileId: number, newFilename: string) => void;
     onDeleteFile: (fileId: number, skipConfirmation?: boolean) => void;
+    onMoveFile: (file: FileWithTags) => void;
+    onCopyFile: (file: FileWithTags) => void;
     onEditFileTags: (file: FileWithTags) => void;
 }) {
     const [isHovered, setIsHovered] = useState(false);
@@ -194,7 +202,7 @@ function FileRow({
 
             {/* 액션 버튼 */}
             <div className={`file-row__actions-cell ${isHovered ? 'file-row__actions-cell--visible' : ''}`}>
-                <button className="file-row__action-btn" onClick={handleOpenFile} title="파일 열기">
+                <button className="file-row__action-btn" onClick={handleOpenFile} title="열기">
                     📂
                 </button>
                 <button className="file-row__action-btn" onClick={() => onEditFileTags(file)} title="태그 수정">
@@ -209,6 +217,12 @@ function FileRow({
                     title="이름 변경"
                 >
                     ✎
+                </button>
+                <button className="file-row__action-btn" onClick={() => onMoveFile(file)} title="이동">
+                    📤
+                </button>
+                <button className="file-row__action-btn" onClick={() => onCopyFile(file)} title="복사">
+                    📋
                 </button>
                 <button
                     className="file-row__action-btn file-row__action-btn--danger"
@@ -237,6 +251,10 @@ export default function FileList({
     onRenameFile,
     onDeleteFile,
     onDeleteSelected,
+    onMoveFile,
+    onCopyFile,
+    onMoveSelected,
+    onCopySelected,
     onEditFileTags,
     onEditSelectedTags,
     isSyncing = false,
@@ -531,6 +549,12 @@ export default function FileList({
                             <button className="file-list__bulk-edit-btn" onClick={onEditSelectedTags} disabled={isSyncing}>
                                 태그 편집 ({selectedFileIds.size})
                             </button>
+                            <button className="file-list__move-selected-btn" onClick={onMoveSelected} disabled={isSyncing}>
+                                선택 이동 ({selectedFileIds.size})
+                            </button>
+                            <button className="file-list__copy-selected-btn" onClick={onCopySelected} disabled={isSyncing}>
+                                선택 복사 ({selectedFileIds.size})
+                            </button>
                             <button className="file-list__delete-selected-btn" onClick={onDeleteSelected} disabled={isSyncing}>
                                 선택 삭제 ({selectedFileIds.size})
                             </button>
@@ -606,6 +630,8 @@ export default function FileList({
                                 onToggleSelect={onToggleSelect}
                                 onRenameFile={onRenameFile}
                                 onDeleteFile={onDeleteFile}
+                                onMoveFile={onMoveFile}
+                                onCopyFile={onCopyFile}
                                 onEditFileTags={onEditFileTags}
                             />
                         ))}

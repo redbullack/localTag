@@ -48,5 +48,9 @@ contextBridge.exposeInMainWorld('electronAPI', {
         ipcRenderer.invoke('file:sync'),
     openFile: (params: { filename: string }) =>
         ipcRenderer.invoke('file:open', params),
+    moveFilesToFolder: (params: { files: { id: number; filename: string }[] }) =>
+        ipcRenderer.invoke('file:move-to-folder', params),
+    copyFilesToFolder: (params: { files: { id: number; filename: string }[] }) =>
+        ipcRenderer.invoke('file:copy-to-folder', params),
     getPathForFile: (file: File) => webUtils.getPathForFile(file),
 });
