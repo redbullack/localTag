@@ -3,8 +3,18 @@
 import React, { useEffect, useState } from 'react';
 import './toast.css';
 
+type ToastType = 'success' | 'error' | 'warning' | 'info';
+
+const TOAST_ICON: Record<ToastType, string> = {
+    success: '✅',
+    error: '❌',
+    warning: '⚠️',
+    info: 'ℹ️',
+};
+
 interface ToastProps {
     message: string;
+    type?: ToastType;
     duration?: number; // 자동 닫힘 시간 (ms), 0이면 자동 안 닫힘
     showConfirm?: boolean;
     showCancel?: boolean;
@@ -13,8 +23,11 @@ interface ToastProps {
     onClose?: () => void; // 완전히 사라진 후 호출됨
 }
 
+export type { ToastType };
+
 export function Toast({
     message,
+    type = 'info',
     duration = 3000,
     showConfirm = false,
     showCancel = false,
@@ -65,10 +78,11 @@ export function Toast({
 
     return (
         <div
-            className={`toast-container ${isVisible ? 'toast-visible' : ''} ${isAnimatingOut ? 'toast-hiding' : ''
+            className={`toast-container toast--${type} ${isVisible ? 'toast-visible' : ''} ${isAnimatingOut ? 'toast-hiding' : ''
                 }`}
         >
             <div className="toast-content">
+                <span className="toast-icon">{TOAST_ICON[type]}</span>
                 <span className="toast-message">{message}</span>
 
                 {(showConfirm || showCancel) && (

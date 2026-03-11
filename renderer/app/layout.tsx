@@ -1,3 +1,4 @@
+import { ConfirmProvider } from './components/shared/confirm-dialog';
 import { ToastProvider } from './components/shared/toast-provider';
 import './globals.css';
 
@@ -10,7 +11,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <html lang="en">
             <body>
                 <ToastProvider>
-                    {children}
+                    <ConfirmProvider>
+                        {children}
+                    </ConfirmProvider>
                 </ToastProvider>
             </body>
         </html>
