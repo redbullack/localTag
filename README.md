@@ -21,6 +21,10 @@ Electron과 Next.js 기반의 데스크탑 애플리케이션 프로젝트입니
 ---
 ## 진행 및 수정 사항 (Changelog)
 
+* **2026-03-11**
+  * **작업 내용**: 파일/태그 관련 모든 작업(추가, 삭제, 수정, 이동, 복사 등)에 대한 사용자 피드백 시스템을 3단계로 개선. (1) 성공 시 피드백이 없던 8개 작업(파일 추가/삭제/이름 변경, 태그 생성/수정/삭제, 파일 태그 수정)에 `showToast(success)` 추가. (2) 브라우저 네이티브 `alert()`를 타입별(success/error/warning/info) 색상·아이콘이 적용된 커스텀 Toast로, `confirm()`을 Promise 기반 커스텀 Confirm 모달(`useConfirm` 훅)로 전면 교체. (3) 모든 피드백 메시지를 `"{N}개의 {대상}이/가 {동작}되었습니다."` 형태로 통일.
+  * **변경된 핵심 파일**: `renderer/app/components/shared/confirm-dialog.tsx`(신규), `renderer/app/components/shared/confirm-dialog.css`(신규), `renderer/app/components/shared/toast.tsx`, `renderer/app/components/shared/toast.css`, `renderer/app/components/shared/toast-provider.tsx`, `renderer/app/layout.tsx`, `renderer/app/page.tsx`, `renderer/app/components/file-list/file-list.tsx`
+
 * **2026-03-10**
   * **작업 내용**: 새 태그 만들기 모달에서 상위 태그 검색 입력창을 클릭할 때 입력창이 중복 표시되던 문제를 수정. 드롭다운 위치를 입력창 위로 겹치도록 조정해 입력창이 1개만 보이도록 정리.
   * **변경된 핵심 파일**: `renderer/app/components/tag-form-modal/tag-form-modal.css`

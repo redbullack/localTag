@@ -1,0 +1,114 @@
+/* ===== Confirm Dialog 오버레이 ===== */
+
+.confirm-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 10000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: var(--modal-overlay);
+    animation: confirm-fade-in 0.15s ease;
+}
+
+@keyframes confirm-fade-in {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
+/* ===== 다이얼로그 카드 ===== */
+
+.confirm-dialog {
+    background-color: var(--modal-bg);
+    border-radius: 8px;
+    padding: 24px;
+    width: 100%;
+    max-width: 400px;
+    box-shadow: var(--shadow-elevation);
+    animation: confirm-scale-in 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes confirm-scale-in {
+    from {
+        opacity: 0;
+        transform: scale(0.95);
+    }
+
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+.confirm-dialog__title {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 8px;
+}
+
+.confirm-dialog__message {
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+    line-height: 1.6;
+    margin-bottom: 20px;
+    white-space: pre-line;
+}
+
+/* ===== 액션 버튼 영역 ===== */
+
+.confirm-dialog__actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+}
+
+.confirm-dialog__btn {
+    padding: 8px 16px;
+    border: none;
+    border-radius: 4px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.15s ease;
+}
+
+.confirm-dialog__btn:focus-visible {
+    outline: 2px solid var(--accent-primary);
+    outline-offset: 2px;
+}
+
+/* 취소 버튼 */
+.confirm-dialog__btn--cancel {
+    background-color: var(--bg-tertiary);
+    color: var(--text-secondary);
+}
+
+.confirm-dialog__btn--cancel:hover {
+    background-color: var(--bg-modifier-active);
+    color: var(--text-primary);
+}
+
+/* 확인 버튼 (기본) */
+.confirm-dialog__btn--confirm {
+    background-color: var(--accent-primary);
+    color: white;
+}
+
+.confirm-dialog__btn--confirm:hover {
+    background-color: var(--accent-primary-hover);
+}
+
+/* 확인 버튼 (위험 동작용) */
+.confirm-dialog__btn--danger {
+    background-color: var(--accent-danger);
+}
+
+.confirm-dialog__btn--danger:hover {
+    background-color: var(--accent-danger-hover);
+}

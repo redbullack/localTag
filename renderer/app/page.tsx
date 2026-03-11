@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import FileList from './components/file-list/file-list';
 import FileTagEditor from './components/file-tag-editor/file-tag-editor';
+import { useConfirm } from './components/shared/confirm-dialog';
 import { useToast } from './components/shared/toast-provider';
 import TagFormModal from './components/tag-form-modal/tag-form-modal';
 import TagSidebar from './components/tag-sidebar/tag-sidebar';
@@ -14,6 +15,7 @@ export default function Home() {
     const [isLoading, setIsLoading] = useState(true);
     const [isSyncing, setIsSyncing] = useState(false);
     const { showToast } = useToast();
+    const { showConfirm } = useConfirm();
 
     // 태그 상태
     const [tagList, setTagList] = useState<Tag[]>([]);
@@ -126,17 +128,20 @@ export default function Home() {
                     if (updatedCount > 0) messageParts.push(`${updatedCount}개 갱신`);
 
                     showToast({
+                        type: 'success',
                         message: `동기화 완료: ${messageParts.join(', ')}`,
                         duration: 4000,
                     });
                 } else if (!isSilent) {
                     showToast({
+                        type: 'info',
                         message: '모든 파일이 최신 상태입니다.',
                         duration: 3000,
                     });
                 }
             } else if (!isSilent) {
                 showToast({
+                    type: 'error',
                     message: response.error || '동기화 중 오류가 발생했습니다.',
                     duration: 4000,
                 });
@@ -216,9 +221,19 @@ export default function Home() {
             });
 
         if (!response.success) {
-            alert(response.error || (editingTag ? '태그 수정에 실패했습니다.' : '태그 생성에 실패했습니다.'));
+            showToast({
+                type: 'error',
+                message: response.error || (editingTag ? '태그 수정에 실패했습니다.' : '태그 생성에 실패했습니다.'),
+                duration: 4000,
+            });
             return;
         }
+
+        showToast({
+            type: 'success',
+            message: editingTag ? '1개의 태그가 수정되었습니다.' : '1개의 태그가 추가되었습니다.',
+            duration: 3000,
+        });
 
         handleCloseModal();
         await loadTags();
@@ -228,14 +243,29 @@ export default function Home() {
     const handleDeleteTag = async (tagId: number) => {
         if (typeof window === 'undefined' || !window.electronAPI) return;
 
-        const confirmDelete = confirm('이 태그를 삭제하시겠습니까?\n하위 태그도 함께 삭제됩니다.');
-        if (!confirmDelete) return;
+        const confirmed = await showConfirm({
+            title: '태그 삭제',
+            message: '이 태그를 삭제하시겠습니까?\n하위 태그도 함께 삭제됩니다.',
+            confirmText: '삭제',
+            danger: true,
+        });
+        if (!confirmed) return;
 
         const response = await window.electronAPI.deleteTag({ id: tagId });
         if (!response.success) {
-            alert(response.error || '태그 삭제에 실패했습니다.');
+            showToast({
+                type: 'error',
+                message: response.error || '태그 삭제에 실패했습니다.',
+                duration: 4000,
+            });
             return;
         }
+
+        showToast({
+            type: 'success',
+            message: '1개의 태그가 삭제되었습니다.',
+            duration: 3000,
+        });
 
         if (selectedTagIds.includes(tagId)) {
             setSelectedTagIds((prev) => prev.filter((id) => id !== tagId));
@@ -263,7 +293,7 @@ export default function Home() {
             .join(', ')
         : null;
 
-    const getAddFilesConfirmText = (fileCount: number) => {
+    const getAddFilesConfirmMessage = (fileCount: number) => {
         const tagDescription = selectedTagNames ? `"${selectedTagNames}" 태그로` : '태그 없이';
         return `${fileCount}개의 파일을 ${tagDescription} 저장하시겠습니까?\n\n사이드바에서 선택한 태그가 새 파일의 기본값으로 적용됩니다.`;
     };
@@ -277,14 +307,17 @@ export default function Home() {
         const selectResponse = await window.electronAPI.selectFiles();
         if (!selectResponse.success || !selectResponse.data || selectResponse.data.filePaths.length === 0) {
             if (selectResponse.error) {
-                alert(selectResponse.error);
+                showToast({ type: 'error', message: selectResponse.error, duration: 4000 });
             }
             return;
         }
 
         const filePaths = selectResponse.data.filePaths;
-        const confirmResult = confirm(getAddFilesConfirmText(filePaths.length));
-        if (!confirmResult) return;
+        const confirmed = await showConfirm({
+            title: '파일 추가',
+            message: getAddFilesConfirmMessage(filePaths.length),
+        });
+        if (!confirmed) return;
 
         const addResponse = await window.electronAPI.addFiles({
             tagIds: selectedTagIds.length > 0 ? selectedTagIds : undefined,
@@ -293,13 +326,22 @@ export default function Home() {
 
         if (!addResponse.success) {
             if (addResponse.duplicates && addResponse.duplicates.length > 0) {
-                alert(`다음 파일명이 이미 존재합니다:\n${addResponse.duplicates.join('\n')}`);
+                showToast({
+                    type: 'error',
+                    message: `다음 파일명이 이미 존재합니다: ${addResponse.duplicates.join(', ')}`,
+                    duration: 5000,
+                });
             } else if (addResponse.error) {
-                alert(addResponse.error);
+                showToast({ type: 'error', message: addResponse.error, duration: 4000 });
             }
             return;
         }
 
+        showToast({
+            type: 'success',
+            message: `${addResponse.data?.length ?? filePaths.length}개의 파일이 추가되었습니다.`,
+            duration: 3000,
+        });
         await loadFiles();
     };
 
@@ -307,8 +349,11 @@ export default function Home() {
     const handleDropFiles = async (filePaths: string[]) => {
         if (typeof window === 'undefined' || !window.electronAPI) return;
 
-        const confirmResult = confirm(getAddFilesConfirmText(filePaths.length));
-        if (!confirmResult) return;
+        const confirmed = await showConfirm({
+            title: '파일 추가',
+            message: getAddFilesConfirmMessage(filePaths.length),
+        });
+        if (!confirmed) return;
 
         const response = await window.electronAPI.addFiles({
             tagIds: selectedTagIds.length > 0 ? selectedTagIds : undefined,
@@ -317,13 +362,22 @@ export default function Home() {
 
         if (!response.success) {
             if (response.duplicates && response.duplicates.length > 0) {
-                alert(`다음 파일명이 이미 존재합니다:\n${response.duplicates.join('\n')}`);
+                showToast({
+                    type: 'error',
+                    message: `다음 파일명이 이미 존재합니다: ${response.duplicates.join(', ')}`,
+                    duration: 5000,
+                });
             } else if (response.error) {
-                alert(response.error);
+                showToast({ type: 'error', message: response.error, duration: 4000 });
             }
             return;
         }
 
+        showToast({
+            type: 'success',
+            message: `${response.data?.length ?? filePaths.length}개의 파일이 추가되었습니다.`,
+            duration: 3000,
+        });
         await loadFiles();
     };
 
@@ -333,9 +387,18 @@ export default function Home() {
 
         const response = await window.electronAPI.renameFile({ id: fileId, newFilename });
         if (response.success) {
+            showToast({
+                type: 'success',
+                message: '파일명이 수정되었습니다.',
+                duration: 3000,
+            });
             await loadFiles();
         } else {
-            alert(response.error || '파일 이름 변경에 실패했습니다.');
+            showToast({
+                type: 'error',
+                message: response.error || '파일명 수정에 실패했습니다.',
+                duration: 4000,
+            });
         }
     };
 
@@ -344,15 +407,29 @@ export default function Home() {
         if (typeof window === 'undefined' || !window.electronAPI) return;
 
         if (!skipConfirmation) {
-            const confirmDelete = confirm('이 파일을 삭제하시겠습니까?\n파일시스템에서도 제거됩니다.');
-            if (!confirmDelete) return;
+            const confirmed = await showConfirm({
+                title: '파일 삭제',
+                message: '이 파일을 삭제하시겠습니까?\n파일시스템에서도 제거됩니다.',
+                confirmText: '삭제',
+                danger: true,
+            });
+            if (!confirmed) return;
         }
 
         const response = await window.electronAPI.deleteFile({ id: fileId });
         if (response.success) {
+            showToast({
+                type: 'success',
+                message: '1개의 파일이 삭제되었습니다.',
+                duration: 3000,
+            });
             await loadFiles();
         } else {
-            alert(response.error || '파일 삭제에 실패했습니다.');
+            showToast({
+                type: 'error',
+                message: response.error || '파일 삭제에 실패했습니다.',
+                duration: 4000,
+            });
         }
     };
 
@@ -389,8 +466,13 @@ export default function Home() {
         if (typeof window === 'undefined' || !window.electronAPI || selectedFileIds.size === 0) return;
 
         const fileIds = Array.from(selectedFileIds);
-        const confirmDelete = confirm(`${fileIds.length}개의 파일을 삭제하시겠습니까?`);
-        if (!confirmDelete) return;
+        const confirmed = await showConfirm({
+            title: '파일 삭제',
+            message: `${fileIds.length}개의 파일을 삭제하시겠습니까?`,
+            confirmText: '삭제',
+            danger: true,
+        });
+        if (!confirmed) return;
 
         const results = await Promise.all(
             fileIds.map((fileId) => window.electronAPI.deleteFile({ id: fileId })),
@@ -398,12 +480,25 @@ export default function Home() {
         const failedResult = results.find((result) => !result.success);
 
         if (failedResult) {
-            alert(failedResult.error || '선택한 파일 삭제 중 오류가 발생했습니다.');
+            showToast({
+                type: 'error',
+                message: failedResult.error || '선택한 파일 삭제 중 오류가 발생했습니다.',
+                duration: 4000,
+            });
+        }
+
+        const successCount = results.filter((result) => result.success).length;
+        if (successCount > 0) {
+            showToast({
+                type: 'success',
+                message: `${successCount}개의 파일이 삭제되었습니다.`,
+                duration: 3000,
+            });
         }
 
         setSelectedFileIds(new Set());
         await loadFiles();
-    }, [loadFiles, selectedFileIds]);
+    }, [loadFiles, selectedFileIds, showConfirm, showToast]);
 
     /** 개별 파일을 사용자 선택 폴더로 이동한다. */
     const handleMoveFile = async (file: FileWithTags) => {
@@ -414,16 +509,28 @@ export default function Home() {
         });
 
         if (!response.success) {
-            alert(response.error || '파일 이동에 실패했습니다.');
+            showToast({
+                type: 'error',
+                message: response.error || '파일 이동에 실패했습니다.',
+                duration: 4000,
+            });
             return;
         }
 
         if (response.data) {
             if (response.data.errors.length > 0) {
-                alert(`일부 파일 이동 실패:\n${response.data.errors.join('\n')}`);
+                showToast({
+                    type: 'error',
+                    message: `일부 파일 이동 실패: ${response.data.errors.join(', ')}`,
+                    duration: 5000,
+                });
             }
             if (response.data.movedCount > 0) {
-                showToast({ message: `${response.data.movedCount}개 파일을 이동했습니다.`, duration: 3000 });
+                showToast({
+                    type: 'success',
+                    message: `${response.data.movedCount}개의 파일이 이동되었습니다.`,
+                    duration: 3000,
+                });
                 await loadFiles();
             }
         }
@@ -438,16 +545,28 @@ export default function Home() {
         });
 
         if (!response.success) {
-            alert(response.error || '파일 복사에 실패했습니다.');
+            showToast({
+                type: 'error',
+                message: response.error || '파일 복사에 실패했습니다.',
+                duration: 4000,
+            });
             return;
         }
 
         if (response.data) {
             if (response.data.errors.length > 0) {
-                alert(`일부 파일 복사 실패:\n${response.data.errors.join('\n')}`);
+                showToast({
+                    type: 'error',
+                    message: `일부 파일 복사 실패: ${response.data.errors.join(', ')}`,
+                    duration: 5000,
+                });
             }
             if (response.data.copiedCount > 0) {
-                showToast({ message: `${response.data.copiedCount}개 파일을 복사했습니다.`, duration: 3000 });
+                showToast({
+                    type: 'success',
+                    message: `${response.data.copiedCount}개의 파일이 복사되었습니다.`,
+                    duration: 3000,
+                });
             }
         }
     };
@@ -465,16 +584,28 @@ export default function Home() {
         const response = await window.electronAPI.moveFilesToFolder({ files: filesToMove });
 
         if (!response.success) {
-            alert(response.error || '파일 이동에 실패했습니다.');
+            showToast({
+                type: 'error',
+                message: response.error || '파일 이동에 실패했습니다.',
+                duration: 4000,
+            });
             return;
         }
 
         if (response.data) {
             if (response.data.errors.length > 0) {
-                alert(`일부 파일 이동 실패:\n${response.data.errors.join('\n')}`);
+                showToast({
+                    type: 'error',
+                    message: `일부 파일 이동 실패: ${response.data.errors.join(', ')}`,
+                    duration: 5000,
+                });
             }
             if (response.data.movedCount > 0) {
-                showToast({ message: `${response.data.movedCount}개 파일을 이동했습니다.`, duration: 3000 });
+                showToast({
+                    type: 'success',
+                    message: `${response.data.movedCount}개의 파일이 이동되었습니다.`,
+                    duration: 3000,
+                });
                 setSelectedFileIds(new Set());
                 await loadFiles();
             }
@@ -494,16 +625,28 @@ export default function Home() {
         const response = await window.electronAPI.copyFilesToFolder({ files: filesToCopy });
 
         if (!response.success) {
-            alert(response.error || '파일 복사에 실패했습니다.');
+            showToast({
+                type: 'error',
+                message: response.error || '파일 복사에 실패했습니다.',
+                duration: 4000,
+            });
             return;
         }
 
         if (response.data) {
             if (response.data.errors.length > 0) {
-                alert(`일부 파일 복사 실패:\n${response.data.errors.join('\n')}`);
+                showToast({
+                    type: 'error',
+                    message: `일부 파일 복사 실패: ${response.data.errors.join(', ')}`,
+                    duration: 5000,
+                });
             }
             if (response.data.copiedCount > 0) {
-                showToast({ message: `${response.data.copiedCount}개 파일을 복사했습니다.`, duration: 3000 });
+                showToast({
+                    type: 'success',
+                    message: `${response.data.copiedCount}개의 파일이 복사되었습니다.`,
+                    duration: 3000,
+                });
             }
         }
     }, [fileList, selectedFileIds, showToast]);
@@ -530,9 +673,19 @@ export default function Home() {
             : await window.electronAPI.bulkSetFileTags({ fileIds, tagIds });
 
         if (!response.success) {
-            alert(response.error || '태그 수정에 실패했습니다.');
+            showToast({
+                type: 'error',
+                message: response.error || '태그 수정에 실패했습니다.',
+                duration: 4000,
+            });
             return;
         }
+
+        showToast({
+            type: 'success',
+            message: `${fileIds.length}개 파일의 태그가 수정되었습니다.`,
+            duration: 3000,
+        });
 
         setTagEditorFiles(null);
         setSelectedFileIds(new Set());
@@ -673,4 +826,3 @@ export default function Home() {
         </div>
     );
 }
-
