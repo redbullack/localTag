@@ -1,10 +1,11 @@
 'use client';
 
 import React, { createContext, useContext, useState, useCallback, ReactNode } from 'react';
-import { Toast } from './toast';
+import { Toast, type ToastType } from './toast';
 
 interface ToastOptions {
     message: string;
+    type?: ToastType;
     duration?: number;
     showConfirm?: boolean;
     showCancel?: boolean;
@@ -45,6 +46,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
                     <div key={toast.id} style={{ marginBottom: index > 0 ? '10px' : '0' }}>
                         <Toast
                             message={toast.message}
+                            type={toast.type}
                             duration={toast.duration}
                             showConfirm={toast.showConfirm}
                             showCancel={toast.showCancel}

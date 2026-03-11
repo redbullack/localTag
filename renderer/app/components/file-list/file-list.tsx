@@ -4,6 +4,7 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import './file-list.css';
 import type { FileWithTags, SortOption } from '../../types';
 import TagBadge from '../tag-badge/tag-badge';
+import { useToast } from '../shared/toast-provider';
 
 interface FileListProps {
     files: FileWithTags[];
@@ -107,6 +108,7 @@ function FileRow({
     onCopyFile: (file: FileWithTags) => void;
     onEditFileTags: (file: FileWithTags) => void;
 }) {
+    const { showToast } = useToast();
     const [isHovered, setIsHovered] = useState(false);
     const [isRenaming, setIsRenaming] = useState(false);
     const [renameValue, setRenameValue] = useState(file.filename);
@@ -139,11 +141,11 @@ function FileRow({
         try {
             const result = await window.electronAPI.openFile({ filename: file.filename });
             if (!result.success) {
-                alert(`파일 열기 실패: ${result.error}`);
+                showToast({ type: 'error', message: `파일 열기 실패: ${result.error}`, duration: 4000 });
             }
         } catch (error) {
             console.error('Failed to open file:', error);
-            alert('파일 열기에 실패했습니다.');
+            showToast({ type: 'error', message: '파일 열기에 실패했습니다.', duration: 4000 });
         }
     };
 
@@ -259,6 +261,7 @@ export default function FileList({
     onEditSelectedTags,
     isSyncing = false,
 }: FileListProps) {
+    const { showToast } = useToast();
     const [isDragging, setIsDragging] = useState(false);
     const [colWidths, setColWidths] = useState({ tags: 200, size: 80 });
     const [resizingCol, setResizingCol] = useState<'name' | 'tags' | null>(null);
@@ -419,7 +422,7 @@ export default function FileList({
             if (item.kind === 'file') {
                 const entry = item.webkitGetAsEntry();
                 if (entry && entry.isDirectory) {
-                    alert('폴더는 업로드할 수 없습니다. 파일만 드래그 앤 드롭해주세요.');
+                    showToast({ type: 'warning', message: '폴더는 업로드할 수 없습니다. 파일만 드래그 앤 드롭해주세요.', duration: 4000 });
                     return;
                 }
             }
@@ -435,7 +438,7 @@ export default function FileList({
         }
 
         if (filePaths.length === 0) {
-            alert('유효한 파일 경로를 찾을 수 없습니다.');
+            showToast({ type: 'error', message: '유효한 파일 경로를 찾을 수 없습니다.', duration: 4000 });
             return;
         }
 
