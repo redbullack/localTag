@@ -39,11 +39,20 @@ export function ToastProvider({ children }: { children: ReactNode }) {
         보통 좌측 하단 토스트는 최상단 하나 혹은 쌓이는 형태로 둡니다. 
         여기서는 간단하게 화면에 렌더링하도록 맵핑합니다.
       */}
-            <div style={{ position: 'fixed', bottom: 0, left: 0, zIndex: 9999 }}>
-                {toasts.map((toast, index) => (
-                    // 멀티플 토스트를 위해 약간씩 위로 쌓이게 예외처리 (css calc 활용 가능)
-                    // 여기선 가장 단순하게 간격만 주어 쌓이게 렌더링
-                    <div key={toast.id} style={{ marginBottom: index > 0 ? '10px' : '0' }}>
+            <div 
+                style={{ 
+                    position: 'fixed', 
+                    bottom: '2rem', 
+                    left: '2rem', 
+                    zIndex: 9999,
+                    display: 'flex',
+                    flexDirection: 'column-reverse',
+                    gap: '0.75rem',
+                    pointerEvents: 'none' // 컨테이너 자체는 클릭 무시
+                }}
+            >
+                {toasts.map((toast) => (
+                    <div key={toast.id} style={{ pointerEvents: 'auto' }}>
                         <Toast
                             message={toast.message}
                             type={toast.type}
