@@ -5,6 +5,7 @@ import './tag-sidebar.css';
 import type { Tag, TagTreeNode } from '../../types';
 import TagSearchDropdown from '../shared/tag-search-dropdown';
 import { buildTagTree, type TagSortOrder } from '../../utils/tag-tree';
+import { useSidebarResize } from '../../utils/use-sidebar-resize';
 
 /**
  * TagSidebar - 좌측 사이드바에 태그 목록을 트리 형태로 표시하는 컴포넌트
@@ -31,23 +32,27 @@ function TagTreeItem({
     node,
     depth,
     selectedTagIds,
+    collapsedIds,
     onEditTag,
     onDeleteTag,
     onCreateChildTag,
     onSelectTag,
+    onToggleExpand,
 }: {
     node: TagTreeNode;
     depth: number;
     selectedTagIds: number[];
+    collapsedIds: Set<number>;
     onEditTag: (tag: Tag) => void;
     onDeleteTag: (tagId: number) => void;
     onCreateChildTag: (parentTag: Tag) => void;
     onSelectTag: (tagId: number) => void;
+    onToggleExpand: (nodeId: number) => void;
 }) {
-    const [isExpanded, setIsExpanded] = useState(true);
     const [isHovered, setIsHovered] = useState(false);
     const hasChildren = node.children.length > 0;
-
+    // collapsedIds에 없으면 기본값으로 펼쳐진 상태로 취급한다
+    const isExpanded = !collapsedIds.has(node.id);
     const isActive = selectedTagIds.includes(node.id);
 
     return (
@@ -62,7 +67,7 @@ function TagTreeItem({
                 {/* 확장/축소 토글 */}
                 <button
                     className={`tag-tree-item__toggle ${!hasChildren ? 'tag-tree-item__toggle--hidden' : ''}`}
-                    onClick={(e) => { e.stopPropagation(); setIsExpanded(!isExpanded); }}
+                    onClick={(e) => { e.stopPropagation(); onToggleExpand(node.id); }}
                     aria-label={isExpanded ? '접기' : '펼치기'}
                 >
                     <svg
@@ -138,16 +143,30 @@ function TagTreeItem({
                             node={child}
                             depth={depth + 1}
                             selectedTagIds={selectedTagIds}
+                            collapsedIds={collapsedIds}
                             onEditTag={onEditTag}
                             onDeleteTag={onDeleteTag}
                             onCreateChildTag={onCreateChildTag}
                             onSelectTag={onSelectTag}
+                            onToggleExpand={onToggleExpand}
                         />
                     ))}
                 </div>
             )}
         </div>
     );
+}
+
+function getAllIds(nodes: TagTreeNode[]): Set<number> {
+    const ids = new Set<number>();
+    const visit = (list: TagTreeNode[]) => {
+        for (const n of list) {
+            ids.add(n.id);
+            visit(n.children);
+        }
+    };
+    visit(nodes);
+    return ids;
 }
 
 const SORT_CYCLE: TagSortOrder[] = ['none', 'asc', 'desc'];
@@ -170,10 +189,28 @@ export default function TagSidebar({
     const [sortOrder, setSortOrder] = useState<TagSortOrder>('none');
     const tagTree = buildTagTree(tags, sortOrder);
 
+    // 명시적으로 접은 id만 추적한다. Set에 없는 id는 기본값으로 펼쳐진 상태로 취급한다.
+    const [collapsedIds, setCollapsedIds] = useState<Set<number>>(new Set());
+
+    const handleToggleExpand = (nodeId: number) => {
+        setCollapsedIds((prev) => {
+            const next = new Set(prev);
+            next.has(nodeId) ? next.delete(nodeId) : next.add(nodeId);
+            return next;
+        });
+    };
+
+    // 모두 접기: 모든 id를 collapsedIds에 추가
+    const handleCollapseAll = () => setCollapsedIds(getAllIds(tagTree));
+    // 모두 펼치기: collapsedIds를 비워 기본값(펼침)으로 복원
+    const handleExpandAll = () => setCollapsedIds(new Set());
+
     const cycleSortOrder = () => {
         const nextIndex = (SORT_CYCLE.indexOf(sortOrder) + 1) % SORT_CYCLE.length;
         setSortOrder(SORT_CYCLE[nextIndex]);
     };
+
+    const { isDragging, handleMouseDown } = useSidebarResize({ minWidth: 180, maxWidth: 400, defaultWidth: 260 });
 
     return (
         <aside className="tag-sidebar">
@@ -186,6 +223,19 @@ export default function TagSidebar({
                     </span>
                 </h2>
                 <div className="tag-sidebar__header-actions">
+                    <button
+                        className="tag-sidebar__collapse-btn"
+                        onClick={collapsedIds.size > 0 ? handleExpandAll : handleCollapseAll}
+                        aria-label={collapsedIds.size > 0 ? '모두 펼치기' : '모두 접기'}
+                        title={collapsedIds.size > 0 ? '모두 펼치기' : '모두 접기'}
+                    >
+                        <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                            {collapsedIds.size > 0
+                                ? <path d="M2 5L7 10L12 5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                                : <path d="M2 9L7 4L12 9" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                            }
+                        </svg>
+                    </button>
                     <button
                         className={`tag-sidebar__sort-btn ${sortOrder !== 'none' ? 'tag-sidebar__sort-btn--active' : ''}`}
                         onClick={cycleSortOrder}
@@ -242,14 +292,23 @@ export default function TagSidebar({
                             node={node}
                             depth={0}
                             selectedTagIds={selectedTagIds}
+                            collapsedIds={collapsedIds}
                             onEditTag={onEditTag}
                             onDeleteTag={onDeleteTag}
                             onCreateChildTag={onCreateChildTag}
                             onSelectTag={onSelectTag}
+                            onToggleExpand={handleToggleExpand}
                         />
                     ))
                 )}
             </div>
+
+            {/* 드래그 리사이즈 핸들 */}
+            <div
+                className={`sidebar-resize-handle ${isDragging ? 'sidebar-resize-handle--dragging' : ''}`}
+                onMouseDown={handleMouseDown}
+                aria-hidden="true"
+            />
         </aside>
     );
 }
