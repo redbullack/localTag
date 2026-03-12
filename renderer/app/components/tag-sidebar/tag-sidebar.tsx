@@ -62,7 +62,7 @@ function TagTreeItem({
                 {/* 확장/축소 토글 */}
                 <button
                     className={`tag-tree-item__toggle ${!hasChildren ? 'tag-tree-item__toggle--hidden' : ''}`}
-                    onClick={() => setIsExpanded(!isExpanded)}
+                    onClick={(e) => { e.stopPropagation(); setIsExpanded(!isExpanded); }}
                     aria-label={isExpanded ? '접기' : '펼치기'}
                 >
                     <svg
