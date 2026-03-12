@@ -21,6 +21,10 @@ Electron과 Next.js 기반의 데스크탑 애플리케이션 프로젝트입니
 ---
 ## 진행 및 수정 사항 (Changelog)
 
+* **2026-03-12**
+  * **작업 내용**: Claude Code 전용 프로젝트 설정 추가. `CLAUDE.md`에 프로젝트 아키텍처, 코드 스타일 규칙, 브랜치 정책, 서브에이전트 워크플로우를 정리. `.claude/agents/`에 `blueprint`, `doc-writer`, `bug-fixer`, `reflector`, `ui-polish` 에이전트 정의 파일을 추가. `.gitignore`에 `.mcp.json` 항목 추가.
+  * **변경된 핵심 파일**: `CLAUDE.md`, `.claude/agents/blueprint.md`, `.claude/agents/doc-writer.md`, `.claude/agents/bug-fixer.md`, `.claude/agents/reflector.md`, `.claude/agents/ui-polish.md`, `.gitignore`
+
   * **2026-03-11**
   * **작업 내용**: 사용자 피드백 시스템 개선 및 토스트 스택 기능 구현. (1) 성공 시 피드백이 없던 8개 작업에 `showToast(success)` 추가. (2) 브라우저 네이티브 `alert()`를 커스텀 Toast로, `confirm()`을 `useConfirm` 훅으로 교체. (3) 모든 피드백 메시지 형식 통일. (4) **추가 개선**: 여러 토스트가 겹치지 않고 역순(오래된 것이 위)으로 쌓이도록 레이아웃을 개선하고, 제거 시 부드러운 정렬 애니메이션 적용.
   * **변경된 핵심 파일**: `renderer/app/components/shared/confirm-dialog.tsx`, `renderer/app/components/shared/confirm-dialog.css`, `renderer/app/components/shared/toast.tsx`, `renderer/app/components/shared/toast.css`, `renderer/app/components/shared/toast-provider.tsx`, `renderer/app/layout.tsx`, `renderer/app/page.tsx`, `renderer/app/components/file-list/file-list.tsx`
