@@ -22,6 +22,10 @@ Electron과 Next.js 기반의 데스크탑 애플리케이션 프로젝트입니
 ## 진행 및 수정 사항 (Changelog)
 
 * **2026-03-12**
+  * **작업 내용**: 사이드바 드래그 리사이즈 기능 및 전체 태그 접기/펼치기 버튼 추가. (1) 사이드바 우측 경계선을 드래그하여 너비 조절 가능 (180px~400px). CSS 변수 기반으로 너비 변경을 실시간 반영. (2) 모든 태그 계층을 한번에 접거나 펼치는 버튼을 헤더에 추가. 상태 리프팅으로 각 노드별 expand 상태를 중앙 관리하되, 접힌 id만 추적하여 신규 태그 자동 펼침 보장. (3) 파일 필터링 시 태그 목록 리로드로 인한 expand 상태 초기화 버그 수정.
+  * **변경된 핵심 파일**: `renderer/app/utils/use-sidebar-resize.ts`(신규), `renderer/app/components/tag-sidebar/tag-sidebar.tsx`, `renderer/app/components/tag-sidebar/tag-sidebar.css`
+
+* **2026-03-12**
   * **작업 내용**: 태그 사이드바에 이름순 정렬 기능 추가. 헤더의 정렬 버튼을 클릭하면 기본 → 오름차순(ㄱ→ㅎ) → 내림차순(ㅎ→ㄱ) 순으로 순환. 계층 구조를 유지하며 같은 레벨의 형제 태그끼리만 정렬되고, 자식 태그는 부모를 따라 이동.
   * **변경된 핵심 파일**: `renderer/app/utils/tag-tree.ts`, `renderer/app/components/tag-sidebar/tag-sidebar.tsx`, `renderer/app/components/tag-sidebar/tag-sidebar.css`
 
