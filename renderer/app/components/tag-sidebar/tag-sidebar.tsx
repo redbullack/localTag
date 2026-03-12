@@ -4,7 +4,7 @@ import { useState } from 'react';
 import './tag-sidebar.css';
 import type { Tag, TagTreeNode } from '../../types';
 import TagSearchDropdown from '../shared/tag-search-dropdown';
-import { buildTagTree } from '../../utils/tag-tree';
+import { buildTagTree, type TagSortOrder } from '../../utils/tag-tree';
 
 /**
  * TagSidebar - 좌측 사이드바에 태그 목록을 트리 형태로 표시하는 컴포넌트
@@ -150,6 +150,13 @@ function TagTreeItem({
     );
 }
 
+const SORT_CYCLE: TagSortOrder[] = ['none', 'asc', 'desc'];
+const SORT_LABELS: Record<TagSortOrder, string> = {
+    none: '기본 순서',
+    asc: '이름 오름차순',
+    desc: '이름 내림차순',
+};
+
 export default function TagSidebar({
     tags,
     selectedTagIds,
@@ -160,7 +167,13 @@ export default function TagSidebar({
     onCreateChildTag,
     onSelectTag,
 }: TagSidebarProps) {
-    const tagTree = buildTagTree(tags);
+    const [sortOrder, setSortOrder] = useState<TagSortOrder>('none');
+    const tagTree = buildTagTree(tags, sortOrder);
+
+    const cycleSortOrder = () => {
+        const nextIndex = (SORT_CYCLE.indexOf(sortOrder) + 1) % SORT_CYCLE.length;
+        setSortOrder(SORT_CYCLE[nextIndex]);
+    };
 
     return (
         <aside className="tag-sidebar">
@@ -172,14 +185,32 @@ export default function TagSidebar({
                         ({tags.length}) 파일 ({overallFileCount})
                     </span>
                 </h2>
-                <button
-                    className="tag-sidebar__add-btn"
-                    onClick={onCreateTag}
-                    aria-label="새 태그 만들기"
-                    title="새 태그 만들기"
-                >
-                    +
-                </button>
+                <div className="tag-sidebar__header-actions">
+                    <button
+                        className={`tag-sidebar__sort-btn ${sortOrder !== 'none' ? 'tag-sidebar__sort-btn--active' : ''}`}
+                        onClick={cycleSortOrder}
+                        aria-label={`정렬: ${SORT_LABELS[sortOrder]}`}
+                        title={`정렬: ${SORT_LABELS[sortOrder]}`}
+                    >
+                        <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                            <path d="M2 4H12M4 7H10M6 10H8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+                            {sortOrder === 'desc' && (
+                                <path d="M11 9L13 11L11 13" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" transform="rotate(-90 12 11)" />
+                            )}
+                            {sortOrder === 'asc' && (
+                                <path d="M11 13L13 11L11 9" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" transform="rotate(-90 12 11)" />
+                            )}
+                        </svg>
+                    </button>
+                    <button
+                        className="tag-sidebar__add-btn"
+                        onClick={onCreateTag}
+                        aria-label="새 태그 만들기"
+                        title="새 태그 만들기"
+                    >
+                        +
+                    </button>
+                </div>
             </div>
 
             <div className="tag-sidebar__search">

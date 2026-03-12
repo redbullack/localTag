@@ -1,9 +1,29 @@
 import type { Tag, TagTreeNode } from '../types';
 
+export type TagSortOrder = 'none' | 'asc' | 'desc';
+
+/**
+ * 트리 노드 배열을 이름순으로 재귀 정렬합니다.
+ * 자식 노드는 부모를 따라다니며, 같은 레벨의 형제끼리만 정렬됩니다.
+ */
+const sortTreeNodes = (nodes: TagTreeNode[], order: TagSortOrder): TagTreeNode[] => {
+    if (order === 'none') return nodes;
+
+    const sorted = [...nodes].sort((a, b) => {
+        const cmp = a.name.localeCompare(b.name, 'ko');
+        return order === 'asc' ? cmp : -cmp;
+    });
+
+    return sorted.map((node) => ({
+        ...node,
+        children: sortTreeNodes(node.children, order),
+    }));
+};
+
 /**
  * 평면적인 태그 리스트를 계층형 트리(TagTreeNode)로 변환합니다.
  */
-export const buildTagTree = (tags: Tag[]): TagTreeNode[] => {
+export const buildTagTree = (tags: Tag[], sortOrder: TagSortOrder = 'none'): TagTreeNode[] => {
     const tagMap = new Map<number, TagTreeNode>();
     const rootNodes: TagTreeNode[] = [];
 
@@ -20,7 +40,7 @@ export const buildTagTree = (tags: Tag[]): TagTreeNode[] => {
         }
     });
 
-    return rootNodes;
+    return sortTreeNodes(rootNodes, sortOrder);
 };
 
 /**
