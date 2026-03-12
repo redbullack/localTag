@@ -22,6 +22,10 @@ Electron과 Next.js 기반의 데스크탑 애플리케이션 프로젝트입니
 ## 진행 및 수정 사항 (Changelog)
 
 * **2026-03-12**
+  * **작업 내용**: 태그 사이드바에 이름순 정렬 기능 추가. 헤더의 정렬 버튼을 클릭하면 기본 → 오름차순(ㄱ→ㅎ) → 내림차순(ㅎ→ㄱ) 순으로 순환. 계층 구조를 유지하며 같은 레벨의 형제 태그끼리만 정렬되고, 자식 태그는 부모를 따라 이동.
+  * **변경된 핵심 파일**: `renderer/app/utils/tag-tree.ts`, `renderer/app/components/tag-sidebar/tag-sidebar.tsx`, `renderer/app/components/tag-sidebar/tag-sidebar.css`
+
+* **2026-03-12**
   * **작업 내용**: Claude Code 전용 프로젝트 설정 추가. `CLAUDE.md`에 프로젝트 아키텍처, 코드 스타일 규칙, 브랜치 정책, 서브에이전트 워크플로우를 정리. `.claude/agents/`에 `blueprint`, `doc-writer`, `bug-fixer`, `reflector`, `ui-polish` 에이전트 정의 파일을 추가. `.gitignore`에 `.mcp.json` 항목 추가.
   * **변경된 핵심 파일**: `CLAUDE.md`, `.claude/agents/blueprint.md`, `.claude/agents/doc-writer.md`, `.claude/agents/bug-fixer.md`, `.claude/agents/reflector.md`, `.claude/agents/ui-polish.md`, `.gitignore`
 
