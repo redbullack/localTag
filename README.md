@@ -21,6 +21,10 @@ Electron과 Next.js 기반의 데스크탑 애플리케이션 프로젝트입니
 ---
 ## 진행 및 수정 사항 (Changelog)
 
+* **2026-03-15**
+  * **작업 내용**: 태그 사이드바에 드래그 앤 드롭 순서 변경 기능 추가. (1) "기본 정렬" 상태에서 태그를 드래그하여 같은 부모 레벨 내 원하는 위치로 순서 변경 가능. (2) 변경된 순서는 SQLite `sort_order` 컬럼에 영구 저장되어 앱 재시작 후에도 유지. (3) 새 태그는 해당 그룹 맨 끝에 자동 배치. (4) "이름 오름차순/내림차순" 정렬 모드에서 드래그 시도 시 차단 및 안내 토스트 표시. (5) 낙관적 업데이트로 드래그 즉시 UI에 반영하고 IPC 실패 시 롤백. 드래그 중 위치 표시선(accent 색상) 및 반투명 효과 등 시각 피드백 포함.
+  * **변경된 핵심 파일**: `main/lib/db.ts`, `main/lib/tag-repository.ts`, `main/ipc/tag-handler.ts`, `main/preload.ts`, `renderer/global.d.ts`, `renderer/app/utils/tag-tree.ts`, `renderer/app/page.tsx`, `renderer/app/components/tag-sidebar/tag-sidebar.tsx`, `renderer/app/components/tag-sidebar/tag-sidebar.css`
+
 * **2026-03-12**
   * **작업 내용**: 사이드바 드래그 리사이즈 기능 및 전체 태그 접기/펼치기 버튼 추가. (1) 사이드바 우측 경계선을 드래그하여 너비 조절 가능 (180px~400px). CSS 변수 기반으로 너비 변경을 실시간 반영. (2) 모든 태그 계층을 한번에 접거나 펼치는 버튼을 헤더에 추가. 상태 리프팅으로 각 노드별 expand 상태를 중앙 관리하되, 접힌 id만 추적하여 신규 태그 자동 펼침 보장. (3) 파일 필터링 시 태그 목록 리로드로 인한 expand 상태 초기화 버그 수정.
   * **변경된 핵심 파일**: `renderer/app/utils/use-sidebar-resize.ts`(신규), `renderer/app/components/tag-sidebar/tag-sidebar.tsx`, `renderer/app/components/tag-sidebar/tag-sidebar.css`

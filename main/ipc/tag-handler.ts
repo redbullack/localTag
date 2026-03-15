@@ -4,6 +4,7 @@ import {
     getAllTags,
     updateTag,
     deleteTag,
+    reorderTags,
 } from '../lib/tag-repository';
 
 /**
@@ -14,6 +15,7 @@ import {
  * - tag:get-all  | payload: 없음                          | return: Tag[]
  * - tag:update   | payload: { id, name?, color?, parentId? } | return: Tag
  * - tag:delete   | payload: { id }                        | return: { success }
+ * - tag:reorder  | payload: { parentId, orderedIds }      | return: { success }
  */
 export const registerTagHandlers = (): void => {
     ipcMain.handle('tag:create', (_event, params: { name: string; color?: string; parentId?: number }) => {
@@ -43,6 +45,15 @@ export const registerTagHandlers = (): void => {
     ipcMain.handle('tag:delete', (_event, params: { id: number }) => {
         try {
             return { success: true, data: deleteTag(params.id) };
+        } catch (error: any) {
+            return { success: false, error: error.message };
+        }
+    });
+
+    ipcMain.handle('tag:reorder', (_event, params: { parentId: number | null; orderedIds: number[] }) => {
+        try {
+            reorderTags(params);
+            return { success: true };
         } catch (error: any) {
             return { success: false, error: error.message };
         }

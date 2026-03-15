@@ -290,3 +290,20 @@
 .sidebar-resize-handle--dragging {
     background-color: var(--accent-primary);
 }
+
+/* ===== 드래그 앤 드롭 시각 피드백 ===== */
+
+/* 드래그 중인 아이템 */
+.tag-tree-item__row--dragging {
+    opacity: 0.4;
+}
+
+/* 드롭 위치 표시선 (위) */
+.tag-tree-item__row--drag-over-above {
+    box-shadow: 0 -2px 0 0 var(--accent-primary);
+}
+
+/* 드롭 위치 표시선 (아래) */
+.tag-tree-item__row--drag-over-below {
+    box-shadow: 0 2px 0 0 var(--accent-primary);
+}

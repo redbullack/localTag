@@ -59,4 +59,22 @@ const createSchema = () => {
             FOREIGN KEY (tag_id) REFERENCES tags(id) ON DELETE CASCADE
         )
     `).run();
+
+    // 마이그레이션: tags 테이블에 sort_order 컬럼 추가
+    const columns = db.prepare('PRAGMA table_info(tags)').all() as { name: string }[];
+    const hasSortOrder = columns.some((col) => col.name === 'sort_order');
+    if (!hasSortOrder) {
+        db.prepare('ALTER TABLE tags ADD COLUMN sort_order INTEGER DEFAULT 0').run();
+        // 기존 태그에 초기 sort_order 할당: 같은 parent_id 그룹 내에서 name 순으로 0, 1, 2...
+        db.prepare(`
+            UPDATE tags SET sort_order = (
+                SELECT cnt FROM (
+                    SELECT id, ROW_NUMBER() OVER (
+                        PARTITION BY COALESCE(parent_id, -1)
+                        ORDER BY name
+                    ) - 1 AS cnt FROM tags
+                ) AS sub WHERE sub.id = tags.id
+            )
+        `).run();
+    }
 };
