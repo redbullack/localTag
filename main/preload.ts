@@ -5,7 +5,7 @@ import { contextBridge, ipcRenderer, webUtils } from 'electron';
  *
  * IPC 채널 목록:
  * - Vault: get-vault-path, select-vault-path
- * - Tag:   tag:create, tag:get-all, tag:update, tag:delete
+ * - Tag:   tag:create, tag:get-all, tag:update, tag:delete, tag:reorder
  * - File:  file:add, file:get-all, file:get-by-tags, file:rename, file:delete, file:update-tags, file:bulk-set-tags, file:check-duplicate
  */
 contextBridge.exposeInMainWorld('electronAPI', {
@@ -22,6 +22,8 @@ contextBridge.exposeInMainWorld('electronAPI', {
         ipcRenderer.invoke('tag:update', params),
     deleteTag: (params: { id: number }) =>
         ipcRenderer.invoke('tag:delete', params),
+    reorderTags: (params: { parentId: number | null; orderedIds: number[] }) =>
+        ipcRenderer.invoke('tag:reorder', params),
 
     // File CRUD
     selectFiles: () =>
