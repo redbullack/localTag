@@ -41,6 +41,7 @@ export interface IElectronAPI {
     getAllTags: () => Promise<IpcResponse<Tag[]>>;
     updateTag: (params: { id: number; name?: string; color?: string; parentId?: number | null }) => Promise<IpcResponse<Tag>>;
     deleteTag: (params: { id: number }) => Promise<IpcResponse<{ success: boolean }>>;
+    reorderTags: (params: { parentId: number | null; orderedIds: number[] }) => Promise<IpcResponse<void>>;
 
     // File CRUD
     selectFiles: () => Promise<IpcResponse<{ filePaths: string[] }>>;

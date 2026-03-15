@@ -8,6 +8,7 @@ import { useToast } from './components/shared/toast-provider';
 import TagFormModal from './components/tag-form-modal/tag-form-modal';
 import TagSidebar from './components/tag-sidebar/tag-sidebar';
 import type { FileWithTags, SortOption, Tag } from './types';
+import { reorderTagListLocally } from './utils/tag-tree';
 import './components/tag-badge/tag-badge.css';
 
 export default function Home() {
@@ -283,6 +284,24 @@ export default function Home() {
                 : [...prevIds, tagId]
         ));
         setCurrentPage(1);
+    };
+
+    /** 드래그로 태그 순서를 변경한다 (낙관적 업데이트). */
+    const handleReorderTags = async (parentId: number | null, orderedIds: number[]) => {
+        if (typeof window === 'undefined' || !window.electronAPI) return;
+
+        const prevTagList = tagList;
+        setTagList(reorderTagListLocally(tagList, parentId, orderedIds));
+
+        const response = await window.electronAPI.reorderTags({ parentId, orderedIds });
+        if (!response.success) {
+            setTagList(prevTagList);
+            showToast({
+                type: 'error',
+                message: response.error || '태그 순서 변경에 실패했습니다.',
+                duration: 4000,
+            });
+        }
     };
 
     /** 현재 선택된 태그 이름을 파일 추가/헤더 표시에 사용한다. */
@@ -735,6 +754,7 @@ export default function Home() {
                 onDeleteTag={handleDeleteTag}
                 onCreateChildTag={handleOpenCreateChildModal}
                 onSelectTag={handleSelectTag}
+                onReorderTags={handleReorderTags}
             />
 
             <main className="main-content">

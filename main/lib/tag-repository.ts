@@ -38,12 +38,18 @@ export const createTag = (params: CreateTagParams): Tag => {
     const db = getDb();
     const { name, color = null, parentId = null } = params;
 
+    // 같은 parent_id 그룹 내 다음 sort_order 할당
+    const maxRow = db.prepare(
+        'SELECT COALESCE(MAX(sort_order), -1) AS maxOrder FROM tags WHERE parent_id IS ?'
+    ).get(parentId) as { maxOrder: number };
+    const sortOrder = maxRow.maxOrder + 1;
+
     const stmt = db.prepare(`
-        INSERT INTO tags (name, color, parent_id)
-        VALUES (?, ?, ?)
+        INSERT INTO tags (name, color, parent_id, sort_order)
+        VALUES (?, ?, ?, ?)
     `);
 
-    const result = stmt.run(name, color, parentId);
+    const result = stmt.run(name, color, parentId, sortOrder);
 
     return {
         id: result.lastInsertRowid as number,
@@ -64,7 +70,7 @@ export const getAllTags = (): Tag[] => {
     const tags = db.prepare(`
         SELECT id, name, parent_id AS parentId, color
         FROM tags
-        ORDER BY parent_id IS NOT NULL, parent_id, name
+        ORDER BY parent_id IS NOT NULL, parent_id, sort_order, name
     `).all() as Tag[];
 
     // 2. 모든 파일-태그 매핑 조회
@@ -170,4 +176,25 @@ export const deleteTag = (id: number): { success: boolean } => {
     const result = db.prepare('DELETE FROM tags WHERE id = ?').run(id);
 
     return { success: result.changes > 0 };
+};
+
+/**
+ * 같은 부모 아래 태그들의 정렬 순서를 변경합니다.
+ * @param params - { parentId: 부모 태그 ID (null이면 루트), orderedIds: 새 순서대로 정렬된 태그 ID 배열 }
+ */
+export const reorderTags = (params: { parentId: number | null; orderedIds: number[] }): void => {
+    const db = getDb();
+    const { parentId, orderedIds } = params;
+
+    const updateStmt = db.prepare(
+        'UPDATE tags SET sort_order = ? WHERE id = ? AND parent_id IS ?'
+    );
+
+    const transaction = db.transaction(() => {
+        orderedIds.forEach((tagId, index) => {
+            updateStmt.run(index, tagId, parentId);
+        });
+    });
+
+    transaction();
 };

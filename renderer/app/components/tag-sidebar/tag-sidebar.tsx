@@ -1,11 +1,12 @@
 'use client';
 
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import './tag-sidebar.css';
 import type { Tag, TagTreeNode } from '../../types';
 import TagSearchDropdown from '../shared/tag-search-dropdown';
 import { buildTagTree, type TagSortOrder } from '../../utils/tag-tree';
 import { useSidebarResize } from '../../utils/use-sidebar-resize';
+import { useToast } from '../shared/toast-provider';
 
 /**
  * TagSidebar - 좌측 사이드바에 태그 목록을 트리 형태로 표시하는 컴포넌트
@@ -14,6 +15,7 @@ import { useSidebarResize } from '../../utils/use-sidebar-resize';
  * @param onCreateTag - 새 태그 만들기 버튼 클릭 콜백
  * @param onEditTag - 태그 수정 버튼 클릭 콜백
  * @param onDeleteTag - 태그 삭제 버튼 클릭 콜백
+ * @param onReorderTags - 드래그로 태그 순서 변경 콜백
  */
 
 interface TagSidebarProps {
@@ -25,7 +27,22 @@ interface TagSidebarProps {
     onDeleteTag: (tagId: number) => void;
     onCreateChildTag: (parentTag: Tag) => void;
     onSelectTag: (tagId: number) => void;
+    onReorderTags: (parentId: number | null, orderedIds: number[]) => void;
 }
+
+interface DragState {
+    draggingId: number | null;
+    draggingParentId: number | null;
+    overTagId: number | null;
+    position: 'above' | 'below' | null;
+}
+
+const INITIAL_DRAG_STATE: DragState = {
+    draggingId: null,
+    draggingParentId: null,
+    overTagId: null,
+    position: null,
+};
 
 /** 개별 태그 트리 노드를 재귀적으로 렌더링합니다. */
 function TagTreeItem({
@@ -33,36 +50,83 @@ function TagTreeItem({
     depth,
     selectedTagIds,
     collapsedIds,
+    isDragEnabled,
+    dragState,
     onEditTag,
     onDeleteTag,
     onCreateChildTag,
     onSelectTag,
     onToggleExpand,
+    onDragStart,
+    onDragOver,
+    onDrop,
+    onDragEnd,
+    onBlockedDragAttempt,
 }: {
     node: TagTreeNode;
     depth: number;
     selectedTagIds: number[];
     collapsedIds: Set<number>;
+    isDragEnabled: boolean;
+    dragState: DragState;
     onEditTag: (tag: Tag) => void;
     onDeleteTag: (tagId: number) => void;
     onCreateChildTag: (parentTag: Tag) => void;
     onSelectTag: (tagId: number) => void;
     onToggleExpand: (nodeId: number) => void;
+    onDragStart: (tagId: number, parentId: number | null) => void;
+    onDragOver: (e: React.DragEvent, tagId: number, parentId: number | null) => void;
+    onDrop: (tagId: number, parentId: number | null) => void;
+    onDragEnd: () => void;
+    onBlockedDragAttempt: () => void;
 }) {
     const [isHovered, setIsHovered] = useState(false);
     const hasChildren = node.children.length > 0;
-    // collapsedIds에 없으면 기본값으로 펼쳐진 상태로 취급한다
     const isExpanded = !collapsedIds.has(node.id);
     const isActive = selectedTagIds.includes(node.id);
+    const isDragging = dragState.draggingId === node.id;
+    const isDragOver = dragState.overTagId === node.id;
+
+    const dragOverClass = isDragOver && dragState.position === 'above'
+        ? 'tag-tree-item__row--drag-over-above'
+        : isDragOver && dragState.position === 'below'
+            ? 'tag-tree-item__row--drag-over-below'
+            : '';
 
     return (
         <div className="tag-tree-item">
             <div
-                className={`tag-tree-item__row ${isActive ? 'tag-tree-item__row--active' : ''}`}
+                className={`tag-tree-item__row ${isActive ? 'tag-tree-item__row--active' : ''} ${isDragging ? 'tag-tree-item__row--dragging' : ''} ${dragOverClass}`}
                 style={{ paddingLeft: `${12 + depth * 16}px` }}
                 onClick={() => onSelectTag(node.id)}
                 onMouseEnter={() => setIsHovered(true)}
                 onMouseLeave={() => setIsHovered(false)}
+                draggable
+                onDragStart={(e) => {
+                    if (!isDragEnabled) {
+                        e.preventDefault();
+                        onBlockedDragAttempt();
+                        return;
+                    }
+                    e.dataTransfer.effectAllowed = 'move';
+                    e.dataTransfer.setData('text/plain', String(node.id));
+                    onDragStart(node.id, node.parentId);
+                }}
+                onDragOver={(e) => {
+                    e.preventDefault();
+                    if (!isDragEnabled) {
+                        e.dataTransfer.dropEffect = 'none';
+                        return;
+                    }
+                    e.dataTransfer.dropEffect = 'move';
+                    onDragOver(e, node.id, node.parentId);
+                }}
+                onDrop={(e) => {
+                    e.preventDefault();
+                    if (!isDragEnabled) return;
+                    onDrop(node.id, node.parentId);
+                }}
+                onDragEnd={onDragEnd}
             >
                 {/* 확장/축소 토글 */}
                 <button
@@ -144,11 +208,18 @@ function TagTreeItem({
                             depth={depth + 1}
                             selectedTagIds={selectedTagIds}
                             collapsedIds={collapsedIds}
+                            isDragEnabled={isDragEnabled}
+                            dragState={dragState}
                             onEditTag={onEditTag}
                             onDeleteTag={onDeleteTag}
                             onCreateChildTag={onCreateChildTag}
                             onSelectTag={onSelectTag}
                             onToggleExpand={onToggleExpand}
+                            onDragStart={onDragStart}
+                            onDragOver={onDragOver}
+                            onDrop={onDrop}
+                            onDragEnd={onDragEnd}
+                            onBlockedDragAttempt={onBlockedDragAttempt}
                         />
                     ))}
                 </div>
@@ -169,6 +240,26 @@ function getAllIds(nodes: TagTreeNode[]): Set<number> {
     return ids;
 }
 
+/** 트리에서 특정 parentId의 직계 자식 ID 목록을 순서대로 반환합니다. */
+function getSiblingIds(tree: TagTreeNode[], parentId: number | null): number[] {
+    if (parentId === null) {
+        return tree.map((n) => n.id);
+    }
+
+    const findChildren = (nodes: TagTreeNode[]): number[] | null => {
+        for (const node of nodes) {
+            if (node.id === parentId) {
+                return node.children.map((c) => c.id);
+            }
+            const found = findChildren(node.children);
+            if (found) return found;
+        }
+        return null;
+    };
+
+    return findChildren(tree) ?? [];
+}
+
 const SORT_CYCLE: TagSortOrder[] = ['none', 'asc', 'desc'];
 const SORT_LABELS: Record<TagSortOrder, string> = {
     none: '기본 순서',
@@ -185,12 +276,26 @@ export default function TagSidebar({
     onDeleteTag,
     onCreateChildTag,
     onSelectTag,
+    onReorderTags,
 }: TagSidebarProps) {
+    const { showToast } = useToast();
     const [sortOrder, setSortOrder] = useState<TagSortOrder>('none');
     const tagTree = buildTagTree(tags, sortOrder);
 
     // 명시적으로 접은 id만 추적한다. Set에 없는 id는 기본값으로 펼쳐진 상태로 취급한다.
     const [collapsedIds, setCollapsedIds] = useState<Set<number>>(new Set());
+    const [dragState, setDragState] = useState<DragState>(INITIAL_DRAG_STATE);
+    // setDragState는 비동기이므로 drop/dragOver 핸들러에서 최신값을 읽기 위해 ref로 동기화
+    const dragStateRef = useRef<DragState>(INITIAL_DRAG_STATE);
+    const updateDragState = (next: DragState) => {
+        dragStateRef.current = next;
+        setDragState(next);
+    };
+
+    // 토스트 중복 방지용 ref
+    const blockedToastShownRef = useRef(false);
+
+    const isDragEnabled = sortOrder === 'none';
 
     const handleToggleExpand = (nodeId: number) => {
         setCollapsedIds((prev) => {
@@ -210,7 +315,66 @@ export default function TagSidebar({
         setSortOrder(SORT_CYCLE[nextIndex]);
     };
 
-    const { isDragging, handleMouseDown } = useSidebarResize({ minWidth: 180, maxWidth: 400, defaultWidth: 260 });
+    // ── 드래그 앤 드롭 핸들러 ──
+
+    const handleDragStart = (tagId: number, parentId: number | null) => {
+        updateDragState({ draggingId: tagId, draggingParentId: parentId, overTagId: null, position: null });
+    };
+
+    const handleDragOver = (e: React.DragEvent, targetId: number, targetParentId: number | null) => {
+        const current = dragStateRef.current;
+        // 같은 부모 그룹 내에서만 허용
+        if (targetParentId !== current.draggingParentId) return;
+        if (targetId === current.draggingId) {
+            updateDragState({ ...current, overTagId: null, position: null });
+            return;
+        }
+
+        const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+        const midY = rect.top + rect.height / 2;
+        const position = e.clientY < midY ? 'above' : 'below';
+
+        updateDragState({ ...current, overTagId: targetId, position });
+    };
+
+    const handleDrop = (targetId: number, targetParentId: number | null) => {
+        const current = dragStateRef.current;
+        if (!current.draggingId || targetParentId !== current.draggingParentId) return;
+
+        const parentId = targetParentId;
+        const siblings = getSiblingIds(tagTree, parentId);
+
+        const fromIndex = siblings.indexOf(current.draggingId);
+        const toIndex = siblings.indexOf(targetId);
+        if (fromIndex === -1 || toIndex === -1) return;
+
+        const reordered = [...siblings];
+        reordered.splice(fromIndex, 1);
+        const insertAt = current.position === 'above'
+            ? reordered.indexOf(targetId)
+            : reordered.indexOf(targetId) + 1;
+        reordered.splice(insertAt, 0, current.draggingId);
+
+        onReorderTags(parentId, reordered);
+        updateDragState(INITIAL_DRAG_STATE);
+    };
+
+    const handleDragEnd = () => {
+        updateDragState(INITIAL_DRAG_STATE);
+        blockedToastShownRef.current = false;
+    };
+
+    const handleBlockedDragAttempt = () => {
+        if (blockedToastShownRef.current) return;
+        blockedToastShownRef.current = true;
+        showToast({
+            type: 'info',
+            message: '태그 기본 정렬 순서일 때에만 정렬 순서를 바꿀 수 있습니다.',
+            duration: 3000,
+        });
+    };
+
+    const { isDragging: isResizing, handleMouseDown } = useSidebarResize({ minWidth: 180, maxWidth: 400, defaultWidth: 260 });
 
     return (
         <aside className="tag-sidebar">
@@ -293,11 +457,18 @@ export default function TagSidebar({
                             depth={0}
                             selectedTagIds={selectedTagIds}
                             collapsedIds={collapsedIds}
+                            isDragEnabled={isDragEnabled}
+                            dragState={dragState}
                             onEditTag={onEditTag}
                             onDeleteTag={onDeleteTag}
                             onCreateChildTag={onCreateChildTag}
                             onSelectTag={onSelectTag}
                             onToggleExpand={handleToggleExpand}
+                            onDragStart={handleDragStart}
+                            onDragOver={handleDragOver}
+                            onDrop={handleDrop}
+                            onDragEnd={handleDragEnd}
+                            onBlockedDragAttempt={handleBlockedDragAttempt}
                         />
                     ))
                 )}
@@ -305,7 +476,7 @@ export default function TagSidebar({
 
             {/* 드래그 리사이즈 핸들 */}
             <div
-                className={`sidebar-resize-handle ${isDragging ? 'sidebar-resize-handle--dragging' : ''}`}
+                className={`sidebar-resize-handle ${isResizing ? 'sidebar-resize-handle--dragging' : ''}`}
                 onMouseDown={handleMouseDown}
                 aria-hidden="true"
             />

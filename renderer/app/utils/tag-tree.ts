@@ -46,6 +46,37 @@ export const buildTagTree = (tags: Tag[], sortOrder: TagSortOrder = 'none'): Tag
 /**
  * 계층형 트리를 렌더링에 적합한 depth를 포함한 평면 리스트로 다시 변환합니다.
  */
+/**
+ * 낙관적 업데이트용: 같은 parentId 그룹의 태그 순서를 orderedIds 순서로 재배치합니다.
+ */
+export const reorderTagListLocally = (
+    tags: Tag[],
+    parentId: number | null,
+    orderedIds: number[]
+): Tag[] => {
+    const siblingMap = new Map<number, Tag>();
+    for (const tag of tags) {
+        if (tag.parentId === parentId) {
+            siblingMap.set(tag.id, tag);
+        }
+    }
+
+    const reorderedSiblings = orderedIds
+        .map((id) => siblingMap.get(id))
+        .filter((t): t is Tag => t !== undefined);
+
+    const result: Tag[] = [];
+    let siblingIndex = 0;
+    for (const tag of tags) {
+        if (tag.parentId === parentId) {
+            result.push(reorderedSiblings[siblingIndex++]);
+        } else {
+            result.push(tag);
+        }
+    }
+    return result;
+};
+
 export const flattenTree = (
     nodes: TagTreeNode[],
     depth: number = 0
