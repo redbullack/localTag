@@ -149,6 +149,18 @@ function FileRow({
         }
     };
 
+    const handleShowInExplorer = async () => {
+        try {
+            const result = await window.electronAPI.showFileInExplorer({ filename: file.filename });
+            if (!result.success) {
+                showToast({ type: 'error', message: `탐색기 열기 실패: ${result.error}`, duration: 4000 });
+            }
+        } catch (error) {
+            console.error('Failed to show file in explorer:', error);
+            showToast({ type: 'error', message: '파일 탐색기를 여는 데 실패했습니다.', duration: 4000 });
+        }
+    };
+
     return (
         <div
             className={`file-row ${isSelected ? 'file-row--selected' : ''}`}
@@ -206,6 +218,9 @@ function FileRow({
             <div className={`file-row__actions-cell ${isHovered ? 'file-row__actions-cell--visible' : ''}`}>
                 <button className="file-row__action-btn" onClick={handleOpenFile} title="열기">
                     📂
+                </button>
+                <button className="file-row__action-btn" onClick={handleShowInExplorer} title="파일 탐색기에서 보기">
+                    🗂️
                 </button>
                 <button className="file-row__action-btn" onClick={() => onEditFileTags(file)} title="태그 수정">
                     🏷️

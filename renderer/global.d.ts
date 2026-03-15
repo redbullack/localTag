@@ -58,6 +58,7 @@ export interface IElectronAPI {
     getUntaggedFiles: (params?: { page?: number; limit?: number; sort?: { column: string; order: string } }) => Promise<IpcResponse<FileWithTags[]>>;
     syncFiles: () => Promise<IpcResponse<{ addedCount: number; deletedCount: number; updatedCount: number }>>;
     openFile: (params: { filename: string }) => Promise<IpcResponse<void>>;
+    showFileInExplorer: (params: { filename: string }) => Promise<IpcResponse<void>>;
     moveFilesToFolder: (params: { files: { id: number; filename: string }[] }) => Promise<IpcResponse<{ movedCount: number; errors: string[] }>>;
     copyFilesToFolder: (params: { files: { id: number; filename: string }[] }) => Promise<IpcResponse<{ copiedCount: number; errors: string[] }>>;
     getPathForFile: (file: File) => string;

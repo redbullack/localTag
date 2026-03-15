@@ -241,6 +241,21 @@ export const registerFileHandlers = (): void => {
         }
     });
 
+    ipcMain.handle('file:show-in-explorer', (_event, params: { filename: string }) => {
+        try {
+            const vaultPath = getVaultPath();
+            if (!vaultPath) {
+                return { success: false, error: 'Vault 경로가 설정되지 않았습니다.' };
+            }
+
+            const fullPath = path.join(vaultPath, params.filename);
+            shell.showItemInFolder(fullPath);
+            return { success: true };
+        } catch (error: any) {
+            return { success: false, error: error.message };
+        }
+    });
+
     ipcMain.handle('file:move-to-folder', async (_event, params: { files: { id: number; filename: string }[] }) => {
         try {
             const vaultPath = getVaultPath();
