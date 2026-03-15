@@ -11,6 +11,9 @@ import type { FileWithTags, SortOption, Tag } from './types';
 import { reorderTagListLocally } from './utils/tag-tree';
 import './components/tag-badge/tag-badge.css';
 
+/** "태그 없음" 필터를 나타내는 sentinel ID */
+const UNTAGGED_TAG_ID = -1;
+
 export default function Home() {
     const [vaultPath, setVaultPath] = useState<string | null>(null);
     const [isLoading, setIsLoading] = useState(true);
@@ -33,6 +36,7 @@ export default function Home() {
     const [currentPage, setCurrentPage] = useState(1);
     const [totalCount, setTotalCount] = useState(0);
     const [overallFileCount, setOverallFileCount] = useState(0);
+    const [untaggedFileCount, setUntaggedFileCount] = useState(0);
     const [sortOption, setSortOption] = useState<SortOption>({ column: 'updatedAt', order: 'desc' });
 
     // 파일 태그 에디터 상태
@@ -66,18 +70,34 @@ export default function Home() {
     const loadFiles = useCallback(async () => {
         if (typeof window === 'undefined' || !window.electronAPI) return;
 
-        const response = selectedTagIds.length > 0
-            ? await window.electronAPI.getFilesByTags({
-                tagIds: selectedTagIds,
-                page: currentPage,
-                limit: 50,
-                sort: sortOption,
-            })
-            : await window.electronAPI.getAllFiles({
+        const includeUntagged = selectedTagIds.includes(UNTAGGED_TAG_ID);
+        const realTagIds = selectedTagIds.filter((id) => id !== UNTAGGED_TAG_ID);
+
+        let response;
+        if (includeUntagged && realTagIds.length === 0) {
+            // "태그 없음"만 단독 선택
+            response = await window.electronAPI.getUntaggedFiles({
                 page: currentPage,
                 limit: 50,
                 sort: sortOption,
             });
+        } else if (realTagIds.length > 0) {
+            // 일반 태그 선택 (+ 태그 없음 포함 가능)
+            response = await window.electronAPI.getFilesByTags({
+                tagIds: realTagIds,
+                page: currentPage,
+                limit: 50,
+                sort: sortOption,
+                includeUntagged,
+            });
+        } else {
+            // 필터 없음 → 전체
+            response = await window.electronAPI.getAllFiles({
+                page: currentPage,
+                limit: 50,
+                sort: sortOption,
+            });
+        }
 
         if (response.success && response.data) {
             setFileList(response.data);
@@ -86,9 +106,15 @@ export default function Home() {
             }
         }
 
-        const countResponse = await window.electronAPI.getTotalFileCount();
+        const [countResponse, untaggedCountResponse] = await Promise.all([
+            window.electronAPI.getTotalFileCount(),
+            window.electronAPI.getUntaggedFileCount(),
+        ]);
         if (countResponse.success && countResponse.data !== undefined) {
             setOverallFileCount(countResponse.data);
+        }
+        if (untaggedCountResponse.success && untaggedCountResponse.data !== undefined) {
+            setUntaggedFileCount(untaggedCountResponse.data);
         }
     }, [currentPage, selectedTagIds, sortOption]);
 
@@ -307,7 +333,7 @@ export default function Home() {
     /** 현재 선택된 태그 이름을 파일 추가/헤더 표시에 사용한다. */
     const selectedTagNames = selectedTagIds.length > 0
         ? selectedTagIds
-            .map((id) => tagList.find((tag) => tag.id === id)?.name)
+            .map((id) => id === UNTAGGED_TAG_ID ? '태그 없음' : tagList.find((tag) => tag.id === id)?.name)
             .filter(Boolean)
             .join(', ')
         : null;
@@ -749,6 +775,7 @@ export default function Home() {
                 tags={tagList}
                 selectedTagIds={selectedTagIds}
                 overallFileCount={overallFileCount}
+                untaggedFileCount={untaggedFileCount}
                 onCreateTag={handleOpenCreateModal}
                 onEditTag={handleOpenEditModal}
                 onDeleteTag={handleDeleteTag}
