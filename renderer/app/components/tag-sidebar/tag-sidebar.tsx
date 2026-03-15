@@ -18,10 +18,14 @@ import { useToast } from '../shared/toast-provider';
  * @param onReorderTags - 드래그로 태그 순서 변경 콜백
  */
 
+/** "태그 없음" 필터를 나타내는 sentinel ID (page.tsx와 동일한 값 사용) */
+const UNTAGGED_TAG_ID = -1;
+
 interface TagSidebarProps {
     tags: Tag[];
     selectedTagIds: number[];
     overallFileCount: number;
+    untaggedFileCount: number;
     onCreateTag: () => void;
     onEditTag: (tag: Tag) => void;
     onDeleteTag: (tagId: number) => void;
@@ -273,6 +277,7 @@ export default function TagSidebar({
     tags,
     selectedTagIds,
     overallFileCount,
+    untaggedFileCount,
     onCreateTag,
     onEditTag,
     onDeleteTag,
@@ -451,6 +456,23 @@ export default function TagSidebar({
                     selectionMode="single"
                     searchPlaceholder="태그 검색..."
                 />
+            </div>
+
+            {/* 태그 없음 항목 */}
+            <div className="tag-sidebar__untagged-section">
+                <div
+                    className={`tag-tree-item__row tag-sidebar__untagged-row ${selectedTagIds.includes(UNTAGGED_TAG_ID) ? 'tag-tree-item__row--active' : ''}`}
+                    style={{ paddingLeft: '12px' }}
+                    onClick={() => onSelectTag(UNTAGGED_TAG_ID)}
+                >
+                    <span className="tag-tree-item__toggle tag-tree-item__toggle--hidden" aria-hidden="true" />
+                    <span className="tag-tree-item__dot tag-sidebar__untagged-dot" />
+                    <span className="tag-tree-item__name">
+                        태그 없음
+                        <span className="tag-tree-item__count">({untaggedFileCount})</span>
+                    </span>
+                </div>
+                <div className="tag-sidebar__divider" />
             </div>
 
             {/* 태그 목록 */}

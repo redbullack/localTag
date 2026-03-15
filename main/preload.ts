@@ -46,6 +46,10 @@ contextBridge.exposeInMainWorld('electronAPI', {
         ipcRenderer.invoke('file:check-duplicate', params),
     getTotalFileCount: () =>
         ipcRenderer.invoke('file:get-total-count'),
+    getUntaggedFileCount: () =>
+        ipcRenderer.invoke('file:get-untagged-count'),
+    getUntaggedFiles: (params?: { page?: number; limit?: number; sort?: { column: string; order: string } }) =>
+        ipcRenderer.invoke('file:get-untagged', params),
     syncFiles: () =>
         ipcRenderer.invoke('file:sync'),
     openFile: (params: { filename: string }) =>

@@ -22,6 +22,10 @@ Electron과 Next.js 기반의 데스크탑 애플리케이션 프로젝트입니
 ## 진행 및 수정 사항 (Changelog)
 
 * **2026-03-15**
+  * **작업 내용**: 사이드바에 "태그 없음" 가상 태그 추가. 태그가 하나도 연결되지 않은 파일만 필터링하는 기능 구현. (1) 태그 검색창과 기존 태그 목록 사이에 "태그 없음" 항목을 구분선과 함께 배치. (2) 우측에 태그 없는 파일 개수를 `(N)` 형태로 표시하되 전체 태그 카운팅에는 미포함. (3) 다른 태그와 동시 선택 시 해당 태그 파일 + 태그 없는 파일을 UNION으로 합쳐 조회. (4) Main 프로세스에 `getUntaggedFiles`, `getUntaggedFileCount` 쿼리 함수 및 IPC 채널 추가.
+  * **변경된 핵심 파일**: `main/lib/file-repository.ts`, `main/ipc/file-handler.ts`, `main/preload.ts`, `renderer/global.d.ts`, `renderer/app/page.tsx`, `renderer/app/components/tag-sidebar/tag-sidebar.tsx`, `renderer/app/components/tag-sidebar/tag-sidebar.css`
+
+* **2026-03-15**
   * **작업 내용**: 태그 사이드바 정렬 기능 확장. 기존 이름순 정렬(오름/내림차순)에 **파일 개수 기준 정렬(오름/내림차순)** 추가. (1) 정렬 버튼 클릭 시 순환: 기본 → 이름↑ → 이름↓ → 파일수↑ → 파일수↓. (2) 파일 개수 정렬 시 정렬 아이콘이 `#` 문자로 변경되어 시각적 구분. (3) 같은 파일 개수일 경우 이름순 fallback 적용. (4) 계층 구조 유지하며 같은 레벨 형제끼리만 정렬.
   * **변경된 핵심 파일**: `renderer/app/utils/tag-tree.ts`, `renderer/app/components/tag-sidebar/tag-sidebar.tsx`
 

@@ -213,11 +213,19 @@ export const getAllFiles = (page: number = 1, limit: number = 50, sort?: SortOpt
  * @param sort - 정렬 옵션
  * @returns { data: FileWithTags[], totalCount: number }
  */
-export const getFilesByTagIds = (tagIds: number[], page: number = 1, limit: number = 50, sort?: SortOption): { data: FileWithTags[], totalCount: number } => {
-    if (!tagIds || tagIds.length === 0) return { data: [], totalCount: 0 };
+export const getFilesByTagIds = (tagIds: number[], page: number = 1, limit: number = 50, sort?: SortOption, includeUntagged: boolean = false): { data: FileWithTags[], totalCount: number } => {
+    if (!tagIds || tagIds.length === 0) {
+        // 태그 ID가 없고 untagged만 요청된 경우
+        if (includeUntagged) return getUntaggedFiles(page, limit, sort);
+        return { data: [], totalCount: 0 };
+    }
 
     const db = getDb();
     const placeholders = tagIds.map(() => '?').join(',');
+
+    const untaggedCountClause = includeUntagged
+        ? `+ (SELECT COUNT(*) FROM files f2 WHERE NOT EXISTS (SELECT 1 FROM file_tags ft2 WHERE ft2.file_id = f2.id))`
+        : '';
 
     // 전체 개수 조회 쿼리 (재귀 공통 테이블 식 적용)
     const countQuery = `
@@ -227,10 +235,12 @@ export const getFilesByTagIds = (tagIds: number[], page: number = 1, limit: numb
             SELECT t.id FROM tags t
             INNER JOIN tag_tree tt ON t.parent_id = tt.id
         )
-        SELECT COUNT(DISTINCT f.id) as count
-        FROM files f
-        JOIN file_tags ft ON f.id = ft.file_id
-        WHERE ft.tag_id IN (SELECT id FROM tag_tree)
+        SELECT (
+            SELECT COUNT(DISTINCT f.id)
+            FROM files f
+            JOIN file_tags ft ON f.id = ft.file_id
+            WHERE ft.tag_id IN (SELECT id FROM tag_tree)
+        ) ${untaggedCountClause} as count
     `;
     const countRow = db.prepare(countQuery).get(...tagIds) as { count: number };
     const totalCount = countRow.count;
@@ -251,21 +261,57 @@ export const getFilesByTagIds = (tagIds: number[], page: number = 1, limit: numb
         orderBy = `${col} ${dir}`;
     }
 
-    const fileRows = db.prepare(`
-        WITH RECURSIVE tag_tree AS (
-            SELECT id FROM tags WHERE id IN (${placeholders})
-            UNION ALL
-            SELECT t.id FROM tags t
-            INNER JOIN tag_tree tt ON t.parent_id = tt.id
-        )
-        SELECT DISTINCT f.id, f.filename, f.relative_path AS relativePath,
-               f.extension, f.size, f.created_at AS createdAt, f.updated_at AS updatedAt
-        FROM files f
-        JOIN file_tags ft ON f.id = ft.file_id
-        WHERE ft.tag_id IN (SELECT id FROM tag_tree)
-        ORDER BY ${orderBy}
-        LIMIT ? OFFSET ?
-    `).all(...tagIds, limit, offset) as FileRecord[];
+    let fileRows: FileRecord[];
+
+    if (includeUntagged) {
+        // UNION을 사용하므로 서브쿼리로 래핑 후 alias된 컬럼명으로 정렬
+        const aliasOrderBy = orderBy
+            .replace('f.updated_at', 'updatedAt')
+            .replace('f.created_at', 'createdAt')
+            .replace('f.filename', 'filename')
+            .replace('f.extension', 'extension')
+            .replace('f.size', 'size');
+
+        fileRows = db.prepare(`
+            WITH RECURSIVE tag_tree AS (
+                SELECT id FROM tags WHERE id IN (${placeholders})
+                UNION ALL
+                SELECT t.id FROM tags t
+                INNER JOIN tag_tree tt ON t.parent_id = tt.id
+            )
+            SELECT * FROM (
+                SELECT DISTINCT f.id, f.filename, f.relative_path AS relativePath,
+                       f.extension, f.size, f.created_at AS createdAt, f.updated_at AS updatedAt
+                FROM files f
+                JOIN file_tags ft ON f.id = ft.file_id
+                WHERE ft.tag_id IN (SELECT id FROM tag_tree)
+                UNION
+                SELECT f.id, f.filename, f.relative_path AS relativePath,
+                       f.extension, f.size, f.created_at AS createdAt, f.updated_at AS updatedAt
+                FROM files f
+                WHERE NOT EXISTS (SELECT 1 FROM file_tags ft2 WHERE ft2.file_id = f.id)
+            )
+            ORDER BY ${aliasOrderBy}
+            LIMIT ? OFFSET ?
+        `).all(...tagIds, limit, offset) as FileRecord[];
+    } else {
+        // 기존 쿼리 그대로 사용 (서브쿼리 래핑 없음)
+        fileRows = db.prepare(`
+            WITH RECURSIVE tag_tree AS (
+                SELECT id FROM tags WHERE id IN (${placeholders})
+                UNION ALL
+                SELECT t.id FROM tags t
+                INNER JOIN tag_tree tt ON t.parent_id = tt.id
+            )
+            SELECT DISTINCT f.id, f.filename, f.relative_path AS relativePath,
+                   f.extension, f.size, f.created_at AS createdAt, f.updated_at AS updatedAt
+            FROM files f
+            JOIN file_tags ft ON f.id = ft.file_id
+            WHERE ft.tag_id IN (SELECT id FROM tag_tree)
+            ORDER BY ${orderBy}
+            LIMIT ? OFFSET ?
+        `).all(...tagIds, limit, offset) as FileRecord[];
+    }
 
     if (fileRows.length === 0) return { data: [], totalCount };
 
@@ -314,6 +360,75 @@ export const getTotalFileCount = (): { count: number } => {
     const totalCount = countRow.count;
 
     return { count: totalCount };
+};
+
+/**
+ * 태그가 하나도 연결되지 않은 파일 목록을 조회합니다.
+ * @param page - 페이지 번호
+ * @param limit - 페이지당 개수
+ * @param sort - 정렬 옵션
+ * @returns { data: FileWithTags[], totalCount: number }
+ */
+export const getUntaggedFiles = (page: number = 1, limit: number = 50, sort?: SortOption): { data: FileWithTags[], totalCount: number } => {
+    const db = getDb();
+
+    const countRow = db.prepare(`
+        SELECT COUNT(*) as count
+        FROM files f
+        WHERE NOT EXISTS (
+            SELECT 1 FROM file_tags ft WHERE ft.file_id = f.id
+        )
+    `).get() as { count: number };
+    const totalCount = countRow.count;
+
+    const offset = (page - 1) * limit;
+
+    let orderBy = 'updated_at DESC';
+    if (sort) {
+        const columnMap: Record<string, string> = {
+            filename: 'filename',
+            extension: 'extension',
+            size: 'size',
+            createdAt: 'created_at',
+            updatedAt: 'updated_at'
+        };
+        const col = columnMap[sort.column] || 'updated_at';
+        const dir = sort.order === 'asc' ? 'ASC' : 'DESC';
+        orderBy = `${col} ${dir}`;
+    }
+
+    const fileRows = db.prepare(`
+        SELECT id, filename, relative_path AS relativePath, extension, size,
+               created_at AS createdAt, updated_at AS updatedAt
+        FROM files f
+        WHERE NOT EXISTS (
+            SELECT 1 FROM file_tags ft WHERE ft.file_id = f.id
+        )
+        ORDER BY ${orderBy}
+        LIMIT ? OFFSET ?
+    `).all(limit, offset) as FileRecord[];
+
+    const data = fileRows.map((file) => ({ ...file, tags: [] }));
+
+    return { data, totalCount };
+};
+
+/**
+ * 태그가 하나도 연결되지 않은 파일의 개수만 조회합니다.
+ * @returns { count: number }
+ */
+export const getUntaggedFileCount = (): { count: number } => {
+    const db = getDb();
+
+    const countRow = db.prepare(`
+        SELECT COUNT(*) as count
+        FROM files f
+        WHERE NOT EXISTS (
+            SELECT 1 FROM file_tags ft WHERE ft.file_id = f.id
+        )
+    `).get() as { count: number };
+
+    return { count: countRow.count };
 };
 
 /**
