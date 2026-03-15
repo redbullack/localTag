@@ -260,11 +260,13 @@ function getSiblingIds(tree: TagTreeNode[], parentId: number | null): number[] {
     return findChildren(tree) ?? [];
 }
 
-const SORT_CYCLE: TagSortOrder[] = ['none', 'asc', 'desc'];
+const SORT_CYCLE: TagSortOrder[] = ['none', 'asc', 'desc', 'count-asc', 'count-desc'];
 const SORT_LABELS: Record<TagSortOrder, string> = {
     none: '기본 순서',
     asc: '이름 오름차순',
     desc: '이름 내림차순',
+    'count-asc': '파일 수 오름차순',
+    'count-desc': '파일 수 내림차순',
 };
 
 export default function TagSidebar({
@@ -407,12 +409,26 @@ export default function TagSidebar({
                         title={`정렬: ${SORT_LABELS[sortOrder]}`}
                     >
                         <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-                            <path d="M2 4H12M4 7H10M6 10H8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-                            {sortOrder === 'desc' && (
-                                <path d="M11 9L13 11L11 13" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" transform="rotate(-90 12 11)" />
-                            )}
-                            {sortOrder === 'asc' && (
-                                <path d="M11 13L13 11L11 9" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" transform="rotate(-90 12 11)" />
+                            {(sortOrder === 'count-asc' || sortOrder === 'count-desc') ? (
+                                <>
+                                    <text x="2" y="10" fontSize="9" fill="currentColor" fontWeight="bold">#</text>
+                                    {sortOrder === 'count-desc' && (
+                                        <path d="M11 9L13 11L11 13" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" transform="rotate(-90 12 11)" />
+                                    )}
+                                    {sortOrder === 'count-asc' && (
+                                        <path d="M11 13L13 11L11 9" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" transform="rotate(-90 12 11)" />
+                                    )}
+                                </>
+                            ) : (
+                                <>
+                                    <path d="M2 4H12M4 7H10M6 10H8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+                                    {sortOrder === 'desc' && (
+                                        <path d="M11 9L13 11L11 13" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" transform="rotate(-90 12 11)" />
+                                    )}
+                                    {sortOrder === 'asc' && (
+                                        <path d="M11 13L13 11L11 9" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" transform="rotate(-90 12 11)" />
+                                    )}
+                                </>
                             )}
                         </svg>
                     </button>
