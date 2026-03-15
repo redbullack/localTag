@@ -47,13 +47,15 @@ export interface IElectronAPI {
     selectFiles: () => Promise<IpcResponse<{ filePaths: string[] }>>;
     addFiles: (params?: { tagIds?: number[]; filePaths?: string[] }) => Promise<IpcResponse<FileWithTags[]>>;
     getAllFiles: (params?: { page?: number; limit?: number; sort?: { column: string; order: string } }) => Promise<IpcResponse<FileWithTags[]>>;
-    getFilesByTags: (params: { tagIds: number[]; page?: number; limit?: number; sort?: { column: string; order: string } }) => Promise<IpcResponse<FileWithTags[]>>;
+    getFilesByTags: (params: { tagIds: number[]; page?: number; limit?: number; sort?: { column: string; order: string }; includeUntagged?: boolean }) => Promise<IpcResponse<FileWithTags[]>>;
     renameFile: (params: { id: number; newFilename: string }) => Promise<IpcResponse<FileWithTags>>;
     deleteFile: (params: { id: number }) => Promise<IpcResponse<{ success: boolean }>>;
     updateFileTags: (params: { fileId: number; tagIds: number[] }) => Promise<IpcResponse<FileWithTags>>;
     bulkSetFileTags: (params: { fileIds: number[]; tagIds: number[] }) => Promise<IpcResponse<{ updatedCount: number }>>;
     checkDuplicateFilenames: (params: { filenames: string[] }) => Promise<IpcResponse<{ duplicates: string[] }>>;
     getTotalFileCount: () => Promise<IpcResponse<number>>;
+    getUntaggedFileCount: () => Promise<IpcResponse<number>>;
+    getUntaggedFiles: (params?: { page?: number; limit?: number; sort?: { column: string; order: string } }) => Promise<IpcResponse<FileWithTags[]>>;
     syncFiles: () => Promise<IpcResponse<{ addedCount: number; deletedCount: number; updatedCount: number }>>;
     openFile: (params: { filename: string }) => Promise<IpcResponse<void>>;
     moveFilesToFolder: (params: { files: { id: number; filename: string }[] }) => Promise<IpcResponse<{ movedCount: number; errors: string[] }>>;

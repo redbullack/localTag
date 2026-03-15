@@ -13,6 +13,8 @@ import {
     updateFileTags,
     checkDuplicateFilenames,
     getTotalFileCount,
+    getUntaggedFileCount,
+    getUntaggedFiles,
     syncVault,
     SortOption,
 } from '../lib/file-repository';
@@ -109,12 +111,13 @@ export const registerFileHandlers = (): void => {
         }
     });
 
-    ipcMain.handle('file:get-by-tags', (_event, params: { tagIds: number[]; page?: number; limit?: number; sort?: SortOption }) => {
+    ipcMain.handle('file:get-by-tags', (_event, params: { tagIds: number[]; page?: number; limit?: number; sort?: SortOption; includeUntagged?: boolean }) => {
         try {
             const page = params.page || 1;
             const limit = params.limit || 50;
             const sort = params.sort;
-            const result = getFilesByTagIds(params.tagIds, page, limit, sort);
+            const includeUntagged = params.includeUntagged ?? false;
+            const result = getFilesByTagIds(params.tagIds, page, limit, sort, includeUntagged);
             return { success: true, ...result };
         } catch (error: any) {
             return { success: false, error: error.message };
@@ -166,6 +169,27 @@ export const registerFileHandlers = (): void => {
         try {
             const result = getTotalFileCount();
             return { success: true, data: result.count };
+        } catch (error: any) {
+            return { success: false, error: error.message };
+        }
+    });
+
+    ipcMain.handle('file:get-untagged-count', () => {
+        try {
+            const result = getUntaggedFileCount();
+            return { success: true, data: result.count };
+        } catch (error: any) {
+            return { success: false, error: error.message };
+        }
+    });
+
+    ipcMain.handle('file:get-untagged', (_event, params?: { page?: number; limit?: number; sort?: SortOption }) => {
+        try {
+            const page = params?.page || 1;
+            const limit = params?.limit || 50;
+            const sort = params?.sort;
+            const result = getUntaggedFiles(page, limit, sort);
+            return { success: true, ...result };
         } catch (error: any) {
             return { success: false, error: error.message };
         }
