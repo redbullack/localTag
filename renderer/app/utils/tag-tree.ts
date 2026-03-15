@@ -1,6 +1,6 @@
 import type { Tag, TagTreeNode } from '../types';
 
-export type TagSortOrder = 'none' | 'asc' | 'desc';
+export type TagSortOrder = 'none' | 'asc' | 'desc' | 'count-asc' | 'count-desc';
 
 /**
  * 트리 노드 배열을 이름순으로 재귀 정렬합니다.
@@ -10,6 +10,11 @@ const sortTreeNodes = (nodes: TagTreeNode[], order: TagSortOrder): TagTreeNode[]
     if (order === 'none') return nodes;
 
     const sorted = [...nodes].sort((a, b) => {
+        if (order === 'count-asc' || order === 'count-desc') {
+            const diff = (a.fileCount || 0) - (b.fileCount || 0);
+            if (diff !== 0) return order === 'count-asc' ? diff : -diff;
+            return a.name.localeCompare(b.name, 'ko');
+        }
         const cmp = a.name.localeCompare(b.name, 'ko');
         return order === 'asc' ? cmp : -cmp;
     });

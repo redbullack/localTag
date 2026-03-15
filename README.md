@@ -22,6 +22,10 @@ Electron과 Next.js 기반의 데스크탑 애플리케이션 프로젝트입니
 ## 진행 및 수정 사항 (Changelog)
 
 * **2026-03-15**
+  * **작업 내용**: 태그 사이드바 정렬 기능 확장. 기존 이름순 정렬(오름/내림차순)에 **파일 개수 기준 정렬(오름/내림차순)** 추가. (1) 정렬 버튼 클릭 시 순환: 기본 → 이름↑ → 이름↓ → 파일수↑ → 파일수↓. (2) 파일 개수 정렬 시 정렬 아이콘이 `#` 문자로 변경되어 시각적 구분. (3) 같은 파일 개수일 경우 이름순 fallback 적용. (4) 계층 구조 유지하며 같은 레벨 형제끼리만 정렬.
+  * **변경된 핵심 파일**: `renderer/app/utils/tag-tree.ts`, `renderer/app/components/tag-sidebar/tag-sidebar.tsx`
+
+* **2026-03-15**
   * **작업 내용**: 태그 사이드바에 드래그 앤 드롭 순서 변경 기능 추가. (1) "기본 정렬" 상태에서 태그를 드래그하여 같은 부모 레벨 내 원하는 위치로 순서 변경 가능. (2) 변경된 순서는 SQLite `sort_order` 컬럼에 영구 저장되어 앱 재시작 후에도 유지. (3) 새 태그는 해당 그룹 맨 끝에 자동 배치. (4) "이름 오름차순/내림차순" 정렬 모드에서 드래그 시도 시 차단 및 안내 토스트 표시. (5) 낙관적 업데이트로 드래그 즉시 UI에 반영하고 IPC 실패 시 롤백. 드래그 중 위치 표시선(accent 색상) 및 반투명 효과 등 시각 피드백 포함.
   * **변경된 핵심 파일**: `main/lib/db.ts`, `main/lib/tag-repository.ts`, `main/ipc/tag-handler.ts`, `main/preload.ts`, `renderer/global.d.ts`, `renderer/app/utils/tag-tree.ts`, `renderer/app/page.tsx`, `renderer/app/components/tag-sidebar/tag-sidebar.tsx`, `renderer/app/components/tag-sidebar/tag-sidebar.css`
 
