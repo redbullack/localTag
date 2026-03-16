@@ -5,6 +5,8 @@ import './file-list.css';
 import type { FileWithTags, SortOption } from '../../types';
 import TagBadge from '../tag-badge/tag-badge';
 import { useToast } from '../shared/toast-provider';
+import Pagination from '../shared/pagination';
+import { formatBytes } from '../../utils/format-bytes';
 
 interface FileListProps {
     files: FileWithTags[];
@@ -30,21 +32,6 @@ interface FileListProps {
     isSyncing?: boolean;
 }
 
-/** 파일 크기를 읽기 쉬운 문자열로 변환한다. */
-const formatFileSize = (bytes: number | null): string => {
-    if (bytes === null || bytes === 0) return '0 B';
-
-    const units = ['B', 'KB', 'MB', 'GB'];
-    let unitIndex = 0;
-    let size = bytes;
-
-    while (size >= 1024 && unitIndex < units.length - 1) {
-        size /= 1024;
-        unitIndex += 1;
-    }
-
-    return `${size.toFixed(unitIndex === 0 ? 0 : 1)} ${units[unitIndex]}`;
-};
 
 /** 확장자에 따라 파일 아이콘을 반환한다. */
 const getFileIcon = (extension: string | null): string => {
@@ -211,7 +198,7 @@ function FileRow({
 
             {/* 파일 크기 */}
             <div className="file-row__size-cell">
-                {formatFileSize(file.size)}
+                {formatBytes(file.size ?? 0)}
             </div>
 
             {/* 액션 버튼 */}
@@ -462,66 +449,6 @@ export default function FileList({
 
     // ==== 페이징 로직 ====
     const limit = 50;
-    const totalPages = Math.ceil(totalCount / limit);
-    const pageGroupSize = 5;
-    const currentGroup = Math.ceil(currentPage / pageGroupSize);
-    const startPage = (currentGroup - 1) * pageGroupSize + 1;
-    const endPage = Math.min(startPage + pageGroupSize - 1, totalPages);
-    const pages = Array.from({ length: Math.max(0, endPage - startPage + 1) }, (_, index) => startPage + index);
-
-    const renderPagination = () => {
-        if (totalPages <= 1) return null;
-
-        return (
-            <div className="file-list__pagination">
-                <button
-                    className="file-list__page-btn file-list__page-btn--icon"
-                    onClick={() => onPageChange(1)}
-                    disabled={currentPage === 1}
-                    title="처음 페이지"
-                >
-                    «
-                </button>
-                <button
-                    className="file-list__page-btn file-list__page-btn--icon"
-                    onClick={() => onPageChange(Math.max(1, startPage - pageGroupSize))}
-                    disabled={currentGroup === 1}
-                    title="이전 5페이지"
-                >
-                    ‹
-                </button>
-
-                <div className="file-list__page-numbers">
-                    {pages.map((page) => (
-                        <button
-                            key={page}
-                            className={`file-list__page-btn ${page === currentPage ? 'file-list__page-btn--active' : ''}`}
-                            onClick={() => onPageChange(page)}
-                        >
-                            {page}
-                        </button>
-                    ))}
-                </div>
-
-                <button
-                    className="file-list__page-btn file-list__page-btn--icon"
-                    onClick={() => onPageChange(Math.min(totalPages, startPage + pageGroupSize))}
-                    disabled={currentGroup === Math.ceil(totalPages / pageGroupSize)}
-                    title="다음 5페이지"
-                >
-                    ›
-                </button>
-                <button
-                    className="file-list__page-btn file-list__page-btn--icon"
-                    onClick={() => onPageChange(totalPages)}
-                    disabled={currentPage === totalPages}
-                    title="마지막 페이지"
-                >
-                    »
-                </button>
-            </div>
-        );
-    };
 
     return (
         <div
@@ -658,7 +585,13 @@ export default function FileList({
             )}
 
             {/* Pagination UI */}
-            {renderPagination()}
+            <Pagination
+                currentPage={currentPage}
+                totalCount={totalCount}
+                limit={limit}
+                onPageChange={onPageChange}
+                className="file-list__pagination"
+            />
         </div>
     );
 }

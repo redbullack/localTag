@@ -5,6 +5,7 @@ import './tag-search-dropdown.css';
 import type { Tag } from '../../types';
 import { buildTagTree, flattenTree } from '../../utils/tag-tree';
 import { useClickOutside } from '../../utils/use-click-outside';
+import { DEFAULT_TAG_MUTED_COLOR } from '../../constants';
 
 export type SelectionMode = 'single' | 'multiple';
 
@@ -125,7 +126,7 @@ export default function TagSearchDropdown({
                                     <span
                                         className="tag-color-dot"
                                         style={{
-                                            backgroundColor: tag.color || '#99aab5',
+                                            backgroundColor: tag.color || DEFAULT_TAG_MUTED_COLOR,
                                         }}
                                     />
                                     {tag.name}

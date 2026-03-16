@@ -7,6 +7,7 @@ import TagSearchDropdown from '../shared/tag-search-dropdown';
 import { buildTagTree, type TagSortOrder } from '../../utils/tag-tree';
 import { useSidebarResize } from '../../utils/use-sidebar-resize';
 import { useToast } from '../shared/toast-provider';
+import { UNTAGGED_TAG_ID, DEFAULT_TAG_COLOR } from '../../constants';
 
 /**
  * TagSidebar - 좌측 사이드바에 태그 목록을 트리 형태로 표시하는 컴포넌트
@@ -17,9 +18,6 @@ import { useToast } from '../shared/toast-provider';
  * @param onDeleteTag - 태그 삭제 버튼 클릭 콜백
  * @param onReorderTags - 드래그로 태그 순서 변경 콜백
  */
-
-/** "태그 없음" 필터를 나타내는 sentinel ID (page.tsx와 동일한 값 사용) */
-const UNTAGGED_TAG_ID = -1;
 
 interface TagSidebarProps {
     tags: Tag[];
@@ -151,7 +149,7 @@ function TagTreeItem({
                 {/* 색상 도트 */}
                 <span
                     className="tag-tree-item__dot"
-                    style={{ backgroundColor: node.color || '#5865f2' }}
+                    style={{ backgroundColor: node.color || DEFAULT_TAG_COLOR }}
                 />
 
                 {/* 태그 이름 및 파일 개수 */}
