@@ -5,6 +5,7 @@ import './tag-form-modal.css';
 import type { Tag } from '../../types';
 import TagSearchDropdown from '../shared/tag-search-dropdown';
 import { useClickOutside } from '../../utils/use-click-outside';
+import { COLOR_PRESETS } from '../../constants';
 
 /**
  * TagFormModal - 태그 생성/수정 모달 컴포넌트
@@ -24,13 +25,6 @@ interface TagFormModalProps {
     allTags: Tag[];
     defaultParentId?: number | null;
 }
-
-const COLOR_PRESETS = [
-    '#5865f2', '#57f287', '#fee75c', '#eb459e', '#ed4245',
-    '#3ba55d', '#faa61a', '#3498db', '#99aab5', '#e67e22',
-    '#1abc9c', '#e91e63', '#9b59b6', '#2ecc71', '#e74c3c',
-    '#f39c12',
-];
 
 export default function TagFormModal({
     isOpen,

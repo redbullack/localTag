@@ -1,5 +1,7 @@
 'use client';
 
+import { DEFAULT_TAG_COLOR } from '../../constants';
+
 /**
  * TagBadge - 태그 이름과 색상을 표시하는 소형 뱃지 컴포넌트
  *
@@ -13,8 +15,6 @@ interface TagBadgeProps {
     color: string | null;
     onClose?: () => void;
 }
-
-const DEFAULT_TAG_COLOR = '#5865f2';
 
 export default function TagBadge({ name, color, onClose }: TagBadgeProps) {
     const tagColor = color || DEFAULT_TAG_COLOR;
