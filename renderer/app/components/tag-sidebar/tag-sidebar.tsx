@@ -333,7 +333,7 @@ export default function TagSidebar({
         // 같은 부모 그룹 내에서만 허용
         if (targetParentId !== current.draggingParentId) return;
         if (targetId === current.draggingId) {
-            updateDragState({ ...current, overTagId: null, position: null });
+            updateDragState({ ...current, overTagId: null });
             return;
         }
 
@@ -347,6 +347,10 @@ export default function TagSidebar({
     const handleDrop = (targetId: number, targetParentId: number | null) => {
         const current = dragStateRef.current;
         if (!current.draggingId || targetParentId !== current.draggingParentId) return;
+        if (targetId === current.draggingId || !current.overTagId) {
+            updateDragState(INITIAL_DRAG_STATE);
+            return;
+        }
 
         const parentId = targetParentId;
         const siblings = getSiblingIds(tagTree, parentId);
