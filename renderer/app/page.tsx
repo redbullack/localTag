@@ -7,6 +7,7 @@ import { useConfirm } from './components/shared/confirm-dialog';
 import { useToast } from './components/shared/toast-provider';
 import TagFormModal from './components/tag-form-modal/tag-form-modal';
 import TagSidebar from './components/tag-sidebar/tag-sidebar';
+import VaultInfo from './components/vault-info/vault-info';
 import type { FileWithTags, SortOption, Tag } from './types';
 import { reorderTagListLocally } from './utils/tag-tree';
 import './components/tag-badge/tag-badge.css';
@@ -41,6 +42,10 @@ export default function Home() {
 
     // 파일 태그 에디터 상태
     const [tagEditorFiles, setTagEditorFiles] = useState<FileWithTags[] | null>(null);
+
+    // VaultInfo 용량 정보 갱신 트리거
+    const [storageRefreshTrigger, setStorageRefreshTrigger] = useState(0);
+    const triggerStorageRefresh = useCallback(() => setStorageRefreshTrigger((c) => c + 1), []);
 
     /** 최초 진입 시 Vault 경로를 확인한다. */
     useEffect(() => {
@@ -116,7 +121,9 @@ export default function Home() {
         if (untaggedCountResponse.success && untaggedCountResponse.data !== undefined) {
             setUntaggedFileCount(untaggedCountResponse.data);
         }
-    }, [currentPage, selectedTagIds, sortOption]);
+
+        triggerStorageRefresh();
+    }, [currentPage, selectedTagIds, sortOption, triggerStorageRefresh]);
 
     /** Vault가 준비되면 태그와 파일을 함께 로드한다. */
     useEffect(() => {
@@ -804,27 +811,13 @@ export default function Home() {
                 </div>
 
                 <div className="main-content__body">
-                    <div
-                        className="vault-info"
-                        style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}
-                    >
-                        <div>
-                            <span className="vault-info__label">Vault 경로</span>
-                            <code className="vault-info__path">{vaultPath}</code>
-                            <div style={{ fontSize: '0.8rem', color: 'var(--text-danger, #f87171)', marginTop: '4px', fontWeight: 500 }}>
-                                ⚠️ 주의: 원본 폴더(MyTaggedFiles)에서 파일을 수동으로 이동하거나 삭제하지 마세요.
-                            </div>
-                        </div>
-                        <button
-                            className="sync-button"
-                            data-tooltip="원본 폴더와 DB를 비교하여 파일 추가, 삭제, 메타데이터 변경 사항을 최신 상태로 맞춥니다."
-                            onClick={() => handleSync(false)}
-                            disabled={isSyncing}
-                        >
-                            <span className={isSyncing ? 'spin-animation' : ''}>🔄</span>
-                            {isSyncing ? '동기화 중...' : '동기화'}
-                        </button>
-                    </div>
+                    <VaultInfo
+                        vaultPath={vaultPath}
+                        isSyncing={isSyncing}
+                        onSync={() => handleSync(false)}
+                        onVaultRelocated={(newPath) => setVaultPath(newPath)}
+                        refreshTrigger={storageRefreshTrigger}
+                    />
 
                     <FileList
                         files={fileList}
