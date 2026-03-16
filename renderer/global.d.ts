@@ -31,10 +31,29 @@ export interface FileWithTags extends FileRecord {
     tags: Tag[];
 }
 
+/** 저장 용량 정보 */
+export interface StorageInfo {
+    vaultSize: number;
+    vaultFileCount: number;
+    driveTotal: number;
+    driveFree: number;
+    driveUsed: number;
+}
+
+/** Vault 이동 진행률 */
+export interface RelocateProgress {
+    current: number;
+    total: number;
+    currentFile: string;
+}
+
 export interface IElectronAPI {
     // Vault
     getVaultPath: () => Promise<string | null>;
     selectVaultPath: () => Promise<string | null>;
+    getStorageInfo: () => Promise<IpcResponse<StorageInfo>>;
+    relocateVault: () => Promise<IpcResponse<{ newVaultPath: string; movedFileCount: number }>>;
+    onVaultRelocateProgress: (callback: (progress: RelocateProgress) => void) => () => void;
 
     // Tag CRUD
     createTag: (params: { name: string; color?: string; parentId?: number }) => Promise<IpcResponse<Tag>>;

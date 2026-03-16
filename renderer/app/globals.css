@@ -256,30 +256,7 @@ body {
     flex: 1;
 }
 
-/* ===== Vault 정보 ===== */
-
-.vault-info {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    padding: 12px 16px;
-    border-radius: 6px;
-    background-color: var(--bg-secondary);
-    border: 1px solid var(--border-subtle);
-}
-
-.vault-info__label {
-    font-size: 12px;
-    font-weight: 600;
-    color: var(--text-muted);
-    white-space: nowrap;
-}
-
-.vault-info__path {
-    font-size: 13px;
-    color: var(--accent-success);
-    word-break: break-all;
-}
+/* ===== Vault 정보: vault-info 스타일은 components/vault-info/vault-info.css로 이전 ===== */
 
 .sync-button {
     display: flex;
