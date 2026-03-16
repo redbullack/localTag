@@ -21,6 +21,10 @@ Electron과 Next.js 기반의 데스크탑 애플리케이션 프로젝트입니
 ---
 ## 진행 및 수정 사항 (Changelog)
 
+* **2026-03-16**
+  * **작업 내용**: 태그 드래그 앤 드롭 버그 수정. 하위 태그가 펼쳐진 태그를 드래그할 때 자식 영역을 경유하면서 `position` 상태가 리셋되어 드롭이 동작하지 않던 문제 해결. `handleDragOver`에서 자기 자신 위 hover 시 `overTagId`만 `null`로 설정하고 `position`은 유지하도록 수정하고, `handleDrop`에서 유효성 판단을 `position` 대신 `overTagId` 기준으로 변경하여 드롭이 정상 동작하도록 개선.
+  * **변경된 핵심 파일**: `renderer/app/components/tag-sidebar/tag-sidebar.tsx`
+
 * **2026-03-15**
   * **작업 내용**: 파일 목록 FileRow에 "파일 탐색기에서 보기" 기능 추가. 새로운 🗂️ 버튼을 클릭하면 Windows 파일 탐색기가 열리면서 MyTaggedFiles 폴더 내의 해당 파일이 선택(Focus)된 상태로 표시됩니다. Electron의 `shell.showItemInFolder()` API를 활용하여 구현하였습니다.
   * **변경된 핵심 파일**: `main/ipc/file-handler.ts`, `main/preload.ts`, `renderer/global.d.ts`, `renderer/app/components/file-list/file-list.tsx`
