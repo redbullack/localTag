@@ -22,6 +22,10 @@ Electron과 Next.js 기반의 데스크탑 애플리케이션 프로젝트입니
 ## 진행 및 수정 사항 (Changelog)
 
 * **2026-03-16**
+  * **작업 내용**: 코드 중복 제거 및 재사용 최적화. (1) **공유 상수 파일**: `constants.ts` 생성으로 `UNTAGGED_TAG_ID`, `DEFAULT_TAG_COLOR`, `DEFAULT_TAG_MUTED_COLOR`, `COLOR_PRESETS`를 5개 파일에서 중앙 관리. (2) **ORDER BY 빌더**: `file-repository.ts` 내 3곳 반복 쿼리 로직을 `buildOrderByClause()` 헬퍼로 통합. (3) **파일 전송 유틸**: `page.tsx`의 6개 함수 중복 토스트 처리를 `file-transfer.ts`로 추출. (4) **Pagination 컴포넌트**: 62줄 인라인 페이지네이션 로직을 `shared/pagination.tsx`로 분리하여 재사용 가능하게 개선.
+  * **변경된 핵심 파일**: `renderer/app/constants.ts`(신규), `renderer/app/utils/file-transfer.ts`(신규), `renderer/app/components/shared/pagination.tsx`(신규), `renderer/app/components/shared/pagination.css`(신규), `main/lib/file-repository.ts`, `renderer/app/page.tsx`, `renderer/app/components/file-list/file-list.tsx`, `renderer/app/components/tag-badge/tag-badge.tsx`, `renderer/app/components/tag-sidebar/tag-sidebar.tsx`, `renderer/app/components/tag-form-modal/tag-form-modal.tsx`, `renderer/app/components/shared/tag-search-dropdown.tsx`
+
+* **2026-03-16**
   * **작업 내용**: Vault 위치 변경 및 저장 용량 표시 기능 추가. (1) **Vault 위치 변경**: 새로운 "위치 변경" 버튼으로 MyTaggedFiles 폴더를 다른 드라이브/경로로 이동. 2단계 커밋 방식(전체 복사 → 원본 삭제)으로 안전성 보장. 이동 중 진행률과 현재 파일명 실시간 표시. (2) **저장 용량 정보**: vault-info 영역을 2행 compact 레이아웃으로 재구성. 1행: 경로 + 버튼, 2행: Vault 크기/파일 수 + 드라이브 용량/사용률 + 프로그레스 바. 용량 정보는 파일 변경 시마다 이벤트 기반으로 자동 갱신. (3) **컴포넌트 분리**: 기존 page.tsx의 vault-info 인라인 코드를 `<VaultInfo />` 컴포넌트로 추출하여 코드 정리.
   * **변경된 핵심 파일**: `main/ipc/vault-handler.ts`(신규), `main/main.ts`, `main/preload.ts`, `renderer/global.d.ts`, `renderer/app/utils/format-bytes.ts`(신규), `renderer/app/components/vault-info/vault-info.tsx`(신규), `renderer/app/components/vault-info/vault-info.css`(신규), `renderer/app/page.tsx`, `renderer/app/globals.css`
 

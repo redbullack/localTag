@@ -10,10 +10,9 @@ import TagSidebar from './components/tag-sidebar/tag-sidebar';
 import VaultInfo from './components/vault-info/vault-info';
 import type { FileWithTags, SortOption, Tag } from './types';
 import { reorderTagListLocally } from './utils/tag-tree';
+import { UNTAGGED_TAG_ID } from './constants';
+import { handleAddFilesResponse, handleFileTransferResponse } from './utils/file-transfer';
 import './components/tag-badge/tag-badge.css';
-
-/** "태그 없음" 필터를 나타내는 sentinel ID */
-const UNTAGGED_TAG_ID = -1;
 
 export default function Home() {
     const [vaultPath, setVaultPath] = useState<string | null>(null);
@@ -376,25 +375,9 @@ export default function Home() {
             filePaths,
         });
 
-        if (!addResponse.success) {
-            if (addResponse.duplicates && addResponse.duplicates.length > 0) {
-                showToast({
-                    type: 'error',
-                    message: `다음 파일명이 이미 존재합니다: ${addResponse.duplicates.join(', ')}`,
-                    duration: 5000,
-                });
-            } else if (addResponse.error) {
-                showToast({ type: 'error', message: addResponse.error, duration: 4000 });
-            }
-            return;
+        if (handleAddFilesResponse(addResponse, filePaths, showToast)) {
+            await loadFiles();
         }
-
-        showToast({
-            type: 'success',
-            message: `${addResponse.data?.length ?? filePaths.length}개의 파일이 추가되었습니다.`,
-            duration: 3000,
-        });
-        await loadFiles();
     };
 
     /** 드래그 앤 드롭으로 전달된 파일 목록을 추가한다. */
@@ -412,25 +395,9 @@ export default function Home() {
             filePaths,
         });
 
-        if (!response.success) {
-            if (response.duplicates && response.duplicates.length > 0) {
-                showToast({
-                    type: 'error',
-                    message: `다음 파일명이 이미 존재합니다: ${response.duplicates.join(', ')}`,
-                    duration: 5000,
-                });
-            } else if (response.error) {
-                showToast({ type: 'error', message: response.error, duration: 4000 });
-            }
-            return;
+        if (handleAddFilesResponse(response, filePaths, showToast)) {
+            await loadFiles();
         }
-
-        showToast({
-            type: 'success',
-            message: `${response.data?.length ?? filePaths.length}개의 파일이 추가되었습니다.`,
-            duration: 3000,
-        });
-        await loadFiles();
     };
 
     /** 개별 파일 이름을 변경한다. */
@@ -560,31 +527,8 @@ export default function Home() {
             files: [{ id: file.id, filename: file.filename }],
         });
 
-        if (!response.success) {
-            showToast({
-                type: 'error',
-                message: response.error || '파일 이동에 실패했습니다.',
-                duration: 4000,
-            });
-            return;
-        }
-
-        if (response.data) {
-            if (response.data.errors.length > 0) {
-                showToast({
-                    type: 'error',
-                    message: `일부 파일 이동 실패: ${response.data.errors.join(', ')}`,
-                    duration: 5000,
-                });
-            }
-            if (response.data.movedCount > 0) {
-                showToast({
-                    type: 'success',
-                    message: `${response.data.movedCount}개의 파일이 이동되었습니다.`,
-                    duration: 3000,
-                });
-                await loadFiles();
-            }
+        if (handleFileTransferResponse(response, 'move', showToast)) {
+            await loadFiles();
         }
     };
 
@@ -596,31 +540,7 @@ export default function Home() {
             files: [{ id: file.id, filename: file.filename }],
         });
 
-        if (!response.success) {
-            showToast({
-                type: 'error',
-                message: response.error || '파일 복사에 실패했습니다.',
-                duration: 4000,
-            });
-            return;
-        }
-
-        if (response.data) {
-            if (response.data.errors.length > 0) {
-                showToast({
-                    type: 'error',
-                    message: `일부 파일 복사 실패: ${response.data.errors.join(', ')}`,
-                    duration: 5000,
-                });
-            }
-            if (response.data.copiedCount > 0) {
-                showToast({
-                    type: 'success',
-                    message: `${response.data.copiedCount}개의 파일이 복사되었습니다.`,
-                    duration: 3000,
-                });
-            }
-        }
+        handleFileTransferResponse(response, 'copy', showToast);
     };
 
     /** 선택된 파일들을 사용자 선택 폴더로 이동한다. */
@@ -635,32 +555,9 @@ export default function Home() {
 
         const response = await window.electronAPI.moveFilesToFolder({ files: filesToMove });
 
-        if (!response.success) {
-            showToast({
-                type: 'error',
-                message: response.error || '파일 이동에 실패했습니다.',
-                duration: 4000,
-            });
-            return;
-        }
-
-        if (response.data) {
-            if (response.data.errors.length > 0) {
-                showToast({
-                    type: 'error',
-                    message: `일부 파일 이동 실패: ${response.data.errors.join(', ')}`,
-                    duration: 5000,
-                });
-            }
-            if (response.data.movedCount > 0) {
-                showToast({
-                    type: 'success',
-                    message: `${response.data.movedCount}개의 파일이 이동되었습니다.`,
-                    duration: 3000,
-                });
-                setSelectedFileIds(new Set());
-                await loadFiles();
-            }
+        if (handleFileTransferResponse(response, 'move', showToast)) {
+            setSelectedFileIds(new Set());
+            await loadFiles();
         }
     }, [fileList, loadFiles, selectedFileIds, showToast]);
 
@@ -676,31 +573,7 @@ export default function Home() {
 
         const response = await window.electronAPI.copyFilesToFolder({ files: filesToCopy });
 
-        if (!response.success) {
-            showToast({
-                type: 'error',
-                message: response.error || '파일 복사에 실패했습니다.',
-                duration: 4000,
-            });
-            return;
-        }
-
-        if (response.data) {
-            if (response.data.errors.length > 0) {
-                showToast({
-                    type: 'error',
-                    message: `일부 파일 복사 실패: ${response.data.errors.join(', ')}`,
-                    duration: 5000,
-                });
-            }
-            if (response.data.copiedCount > 0) {
-                showToast({
-                    type: 'success',
-                    message: `${response.data.copiedCount}개의 파일이 복사되었습니다.`,
-                    duration: 3000,
-                });
-            }
-        }
+        handleFileTransferResponse(response, 'copy', showToast);
     }, [fileList, selectedFileIds, showToast]);
 
     /** 단일 파일 태그 편집 모달을 연다. */
