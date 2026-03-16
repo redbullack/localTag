@@ -4,7 +4,7 @@ import { contextBridge, ipcRenderer, webUtils } from 'electron';
  * Electron Main ↔ Renderer 간 안전한 통신을 위한 Context Bridge
  *
  * IPC 채널 목록:
- * - Vault: get-vault-path, select-vault-path
+ * - Vault: get-vault-path, select-vault-path, vault:get-storage-info, vault:relocate
  * - Tag:   tag:create, tag:get-all, tag:update, tag:delete, tag:reorder
  * - File:  file:add, file:get-all, file:get-by-tags, file:rename, file:delete, file:update-tags, file:bulk-set-tags, file:check-duplicate
  */
@@ -12,6 +12,13 @@ contextBridge.exposeInMainWorld('electronAPI', {
     // Vault 관련
     getVaultPath: () => ipcRenderer.invoke('get-vault-path'),
     selectVaultPath: () => ipcRenderer.invoke('select-vault-path'),
+    getStorageInfo: () => ipcRenderer.invoke('vault:get-storage-info'),
+    relocateVault: () => ipcRenderer.invoke('vault:relocate'),
+    onVaultRelocateProgress: (callback: (progress: { current: number; total: number; currentFile: string }) => void) => {
+        const handler = (_event: Electron.IpcRendererEvent, progress: { current: number; total: number; currentFile: string }) => callback(progress);
+        ipcRenderer.on('vault:relocate-progress', handler);
+        return () => { ipcRenderer.removeListener('vault:relocate-progress', handler); };
+    },
 
     // Tag CRUD
     createTag: (params: { name: string; color?: string; parentId?: number }) =>

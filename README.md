@@ -22,6 +22,10 @@ Electron과 Next.js 기반의 데스크탑 애플리케이션 프로젝트입니
 ## 진행 및 수정 사항 (Changelog)
 
 * **2026-03-16**
+  * **작업 내용**: Vault 위치 변경 및 저장 용량 표시 기능 추가. (1) **Vault 위치 변경**: 새로운 "위치 변경" 버튼으로 MyTaggedFiles 폴더를 다른 드라이브/경로로 이동. 2단계 커밋 방식(전체 복사 → 원본 삭제)으로 안전성 보장. 이동 중 진행률과 현재 파일명 실시간 표시. (2) **저장 용량 정보**: vault-info 영역을 2행 compact 레이아웃으로 재구성. 1행: 경로 + 버튼, 2행: Vault 크기/파일 수 + 드라이브 용량/사용률 + 프로그레스 바. 용량 정보는 파일 변경 시마다 이벤트 기반으로 자동 갱신. (3) **컴포넌트 분리**: 기존 page.tsx의 vault-info 인라인 코드를 `<VaultInfo />` 컴포넌트로 추출하여 코드 정리.
+  * **변경된 핵심 파일**: `main/ipc/vault-handler.ts`(신규), `main/main.ts`, `main/preload.ts`, `renderer/global.d.ts`, `renderer/app/utils/format-bytes.ts`(신규), `renderer/app/components/vault-info/vault-info.tsx`(신규), `renderer/app/components/vault-info/vault-info.css`(신규), `renderer/app/page.tsx`, `renderer/app/globals.css`
+
+* **2026-03-16**
   * **작업 내용**: 태그 드래그 앤 드롭 버그 수정. 하위 태그가 펼쳐진 태그를 드래그할 때 자식 영역을 경유하면서 `position` 상태가 리셋되어 드롭이 동작하지 않던 문제 해결. `handleDragOver`에서 자기 자신 위 hover 시 `overTagId`만 `null`로 설정하고 `position`은 유지하도록 수정하고, `handleDrop`에서 유효성 판단을 `position` 대신 `overTagId` 기준으로 변경하여 드롭이 정상 동작하도록 개선.
   * **변경된 핵심 파일**: `renderer/app/components/tag-sidebar/tag-sidebar.tsx`
 
