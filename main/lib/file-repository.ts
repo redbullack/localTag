@@ -151,20 +151,7 @@ export const getAllFiles = (page: number = 1, limit: number = 50, sort?: SortOpt
     const totalCount = countRow.count;
 
     const offset = (page - 1) * limit;
-
-    let orderBy = 'updated_at DESC';
-    if (sort) {
-        const columnMap: Record<string, string> = {
-            filename: 'filename',
-            extension: 'extension',
-            size: 'size',
-            createdAt: 'created_at',
-            updatedAt: 'updated_at'
-        };
-        const col = columnMap[sort.column] || 'updated_at';
-        const dir = sort.order === 'asc' ? 'ASC' : 'DESC';
-        orderBy = `${col} ${dir}`;
-    }
+    const orderBy = buildOrderByClause(sort);
 
     const fileRows = db.prepare(`
         SELECT id, filename, relative_path AS relativePath, extension, size,
@@ -246,20 +233,7 @@ export const getFilesByTagIds = (tagIds: number[], page: number = 1, limit: numb
     const totalCount = countRow.count;
 
     const offset = (page - 1) * limit;
-
-    let orderBy = 'f.updated_at DESC';
-    if (sort) {
-        const columnMap: Record<string, string> = {
-            filename: 'f.filename',
-            extension: 'f.extension',
-            size: 'f.size',
-            createdAt: 'f.created_at',
-            updatedAt: 'f.updated_at'
-        };
-        const col = columnMap[sort.column] || 'f.updated_at';
-        const dir = sort.order === 'asc' ? 'ASC' : 'DESC';
-        orderBy = `${col} ${dir}`;
-    }
+    const orderBy = buildOrderByClause(sort, 'f');
 
     let fileRows: FileRecord[];
 
@@ -382,20 +356,7 @@ export const getUntaggedFiles = (page: number = 1, limit: number = 50, sort?: So
     const totalCount = countRow.count;
 
     const offset = (page - 1) * limit;
-
-    let orderBy = 'updated_at DESC';
-    if (sort) {
-        const columnMap: Record<string, string> = {
-            filename: 'filename',
-            extension: 'extension',
-            size: 'size',
-            createdAt: 'created_at',
-            updatedAt: 'updated_at'
-        };
-        const col = columnMap[sort.column] || 'updated_at';
-        const dir = sort.order === 'asc' ? 'ASC' : 'DESC';
-        orderBy = `${col} ${dir}`;
-    }
+    const orderBy = buildOrderByClause(sort);
 
     const fileRows = db.prepare(`
         SELECT id, filename, relative_path AS relativePath, extension, size,
@@ -732,7 +693,7 @@ export const syncVault = (): { addedCount: number; deletedCount: number; updated
     }
 };
 
-// ─── 내부 헬퍼 ───────────────────────────────────────
+// ─── 내부 헬퍼 ───────────────────────────────────────────────────────────────────────────
 
 /** ID로 단일 파일 + 태그 정보를 조회합니다. */
 const getFileWithTagsById = (fileId: number): FileWithTags => {
@@ -753,4 +714,29 @@ const getFileWithTagsById = (fileId: number): FileWithTags => {
     `).all(fileId) as { id: number; name: string; color: string | null }[];
 
     return { ...fileRow, tags };
+};
+
+/**
+ * SortOption을 SQL의 ORDER BY 절로 변환합니다.
+ * @param sort - SortOption 객체 (없으면 기본값 'updated_at DESC')
+ * @param columnPrefix - 테이블 alias 접두사 (e.g. 'f' for 'f.updated_at')
+ * @returns ORDER BY 절 문자열 (e.g. 'updated_at DESC' or 'f.updated_at DESC')
+ */
+const buildOrderByClause = (sort?: SortOption, columnPrefix?: string): string => {
+    const prefix = columnPrefix ? `${columnPrefix}.` : '';
+    const columnMap: Record<string, string> = {
+        filename: `${prefix}filename`,
+        extension: `${prefix}extension`,
+        size: `${prefix}size`,
+        createdAt: `${prefix}created_at`,
+        updatedAt: `${prefix}updated_at`
+    };
+
+    if (!sort) {
+        return `${prefix}updated_at DESC`;
+    }
+
+    const col = columnMap[sort.column] || `${prefix}updated_at`;
+    const dir = sort.order === 'asc' ? 'ASC' : 'DESC';
+    return `${col} ${dir}`;
 };
