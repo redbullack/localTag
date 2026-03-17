@@ -14,11 +14,8 @@ function getSystemTheme(): 'light' | 'dark' {
 function applyThemeToDOM(mode: ThemeMode) {
     if (typeof document === 'undefined') return;
 
-    if (mode === 'light' || mode === 'dark') {
-        document.documentElement.setAttribute('data-theme', mode);
-    } else {
-        document.documentElement.removeAttribute('data-theme');
-    }
+    const resolved = mode === 'system' ? getSystemTheme() : mode;
+    document.documentElement.setAttribute('data-theme', resolved);
 }
 
 function getStoredTheme(): ThemeMode {
