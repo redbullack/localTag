@@ -24,6 +24,9 @@
     --accent-danger: #da373c;
     --accent-danger-hover: #a12d31;
     --accent-success: #23a55a;
+    --accent-warning: #f59e0b;
+
+    --color-dot-border: rgba(255, 255, 255, 0.15);
 
     --sidebar-width: 260px;
 
@@ -53,6 +56,9 @@
     --accent-danger: #da373c;
     --accent-danger-hover: #a12d31;
     --accent-success: #23a55a;
+    --accent-warning: #f59e0b;
+
+    --color-dot-border: rgba(0, 0, 0, 0.15);
 
     --modal-overlay: rgba(0, 0, 0, 0.5);
     --modal-bg: #ffffff;
@@ -81,6 +87,9 @@
         --accent-danger: #da373c;
         --accent-danger-hover: #a12d31;
         --accent-success: #23a55a;
+        --accent-warning: #f59e0b;
+
+        --color-dot-border: rgba(0, 0, 0, 0.15);
 
         --modal-overlay: rgba(0, 0, 0, 0.5);
         --modal-bg: #ffffff;

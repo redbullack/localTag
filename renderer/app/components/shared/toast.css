@@ -65,7 +65,7 @@
 }
 
 .toast--warning .toast-content {
-  border-left: 3px solid #faa61a;
+  border-left: 3px solid var(--accent-warning);
 }
 
 .toast--info .toast-content {
