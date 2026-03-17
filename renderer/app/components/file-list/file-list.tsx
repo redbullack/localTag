@@ -7,6 +7,7 @@ import TagBadge from '../tag-badge/tag-badge';
 import { useToast } from '../shared/toast-provider';
 import Pagination from '../shared/pagination';
 import { formatBytes } from '../../utils/format-bytes';
+import { getFileIcon } from '../../utils/get-file-icon';
 
 interface FileListProps {
     files: FileWithTags[];
@@ -32,48 +33,6 @@ interface FileListProps {
     isSyncing?: boolean;
 }
 
-
-/** 확장자에 따라 파일 아이콘을 반환한다. */
-const getFileIcon = (extension: string | null): string => {
-    if (!extension) return '📄';
-
-    const iconMap: Record<string, string> = {
-        pdf: '📕',
-        doc: '📘',
-        docx: '📘',
-        txt: '📝',
-        xls: '📗',
-        xlsx: '📗',
-        csv: '📗',
-        ppt: '📙',
-        pptx: '📙',
-        jpg: '🖼️',
-        jpeg: '🖼️',
-        png: '🖼️',
-        gif: '🖼️',
-        svg: '🖼️',
-        webp: '🖼️',
-        mp3: '🎵',
-        wav: '🎵',
-        flac: '🎵',
-        mp4: '🎬',
-        avi: '🎬',
-        mkv: '🎬',
-        mov: '🎬',
-        zip: '📦',
-        rar: '📦',
-        '7z': '📦',
-        js: '💛',
-        ts: '💙',
-        py: '🐍',
-        java: '☕',
-        html: '🌐',
-        css: '🎨',
-        json: '📋',
-    };
-
-    return iconMap[extension.toLowerCase()] || '📄';
-};
 
 /** 개별 파일 행 컴포넌트 */
 function FileRow({
