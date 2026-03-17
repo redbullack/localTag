@@ -132,7 +132,7 @@
 }
 
 .vault-info__capacity-fill[data-warn] {
-    background-color: var(--accent-danger, #f87171);
+    background-color: var(--accent-danger);
 }
 
 /* ── 이동 중 UI ── */
