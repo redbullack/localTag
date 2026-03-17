@@ -21,6 +21,10 @@ Electron과 Next.js 기반의 데스크탑 애플리케이션 프로젝트입니
 ---
 ## 진행 및 수정 사항 (Changelog)
 
+* **2026-03-17**
+  * **작업 내용**: Vault 동기화 시 하위 폴더 감지 경고 추가. 사용자가 Vault 폴더에 수동으로 폴더를 생성한 경우, 동기화 실행 시 감지된 폴더 수를 warning 토스트로 알려 Vault가 파일만 관리함을 안내한다. silent 동기화(포커스 복귀 시 자동 실행) 포함 모든 동기화 경로에서 동작.
+  * **변경된 핵심 파일**: `main/lib/file-repository.ts`, `main/ipc/file-handler.ts`, `renderer/global.d.ts`, `renderer/app/page.tsx`
+
 * **2026-03-16**
   * **작업 내용**: 코드 중복 제거 및 재사용 최적화. (1) **공유 상수 파일**: `constants.ts` 생성으로 `UNTAGGED_TAG_ID`, `DEFAULT_TAG_COLOR`, `DEFAULT_TAG_MUTED_COLOR`, `COLOR_PRESETS`를 5개 파일에서 중앙 관리. (2) **ORDER BY 빌더**: `file-repository.ts` 내 3곳 반복 쿼리 로직을 `buildOrderByClause()` 헬퍼로 통합. (3) **파일 전송 유틸**: `page.tsx`의 6개 함수 중복 토스트 처리를 `file-transfer.ts`로 추출. (4) **Pagination 컴포넌트**: 62줄 인라인 페이지네이션 로직을 `shared/pagination.tsx`로 분리하여 재사용 가능하게 개선.
   * **변경된 핵심 파일**: `renderer/app/constants.ts`(신규), `renderer/app/utils/file-transfer.ts`(신규), `renderer/app/components/shared/pagination.tsx`(신규), `renderer/app/components/shared/pagination.css`(신규), `main/lib/file-repository.ts`, `renderer/app/page.tsx`, `renderer/app/components/file-list/file-list.tsx`, `renderer/app/components/tag-badge/tag-badge.tsx`, `renderer/app/components/tag-sidebar/tag-sidebar.tsx`, `renderer/app/components/tag-form-modal/tag-form-modal.tsx`, `renderer/app/components/shared/tag-search-dropdown.tsx`

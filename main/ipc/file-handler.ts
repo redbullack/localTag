@@ -211,7 +211,8 @@ export const registerFileHandlers = (): void => {
                 data: {
                     addedCount: result.addedCount,
                     deletedCount: result.deletedCount,
-                    updatedCount: result.updatedCount
+                    updatedCount: result.updatedCount,
+                    detectedFolderCount: result.detectedFolderCount
                 }
             };
         } catch (error: any) {
