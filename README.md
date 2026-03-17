@@ -22,6 +22,10 @@ Electron과 Next.js 기반의 데스크탑 애플리케이션 프로젝트입니
 ## 진행 및 수정 사항 (Changelog)
 
 * **2026-03-17**
+  * **작업 내용**: `getFileIcon` 함수를 `file-list.tsx`에서 `utils/get-file-icon.ts`로 분리하여 컴포넌트 가독성 향상
+  * **변경된 핵심 파일**: `renderer/app/utils/get-file-icon.ts`, `renderer/app/components/file-list/file-list.tsx`
+
+* **2026-03-17**
   * **작업 내용**: Vault 동기화 시 하위 폴더 감지 경고 추가. 사용자가 Vault 폴더에 수동으로 폴더를 생성한 경우, 동기화 실행 시 감지된 폴더 수를 warning 토스트로 알려 Vault가 파일만 관리함을 안내한다. silent 동기화(포커스 복귀 시 자동 실행) 포함 모든 동기화 경로에서 동작.
   * **변경된 핵심 파일**: `main/lib/file-repository.ts`, `main/ipc/file-handler.ts`, `renderer/global.d.ts`, `renderer/app/page.tsx`
 
