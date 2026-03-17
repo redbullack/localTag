@@ -5,14 +5,14 @@
     gap: 8px;
     margin-top: 20px;
     padding: 16px 0;
-    border-top: 1px solid var(--border-color);
+    border-top: 1px solid var(--border-subtle);
 }
 
 .pagination__btn {
     min-width: 36px;
     height: 36px;
     padding: 0 8px;
-    border: 1px solid var(--border-color);
+    border: 1px solid var(--border-subtle);
     background-color: var(--bg-secondary);
     color: var(--text-primary);
     border-radius: 4px;
@@ -23,8 +23,8 @@
 }
 
 .pagination__btn:hover:not(:disabled) {
-    background-color: var(--bg-hover);
-    border-color: var(--accent-color);
+    background-color: var(--bg-modifier-hover);
+    border-color: var(--accent-primary);
 }
 
 .pagination__btn:active:not(:disabled) {
@@ -32,9 +32,9 @@
 }
 
 .pagination__btn--active {
-    background-color: var(--accent-color);
+    background-color: var(--accent-primary);
     color: white;
-    border-color: var(--accent-color);
+    border-color: var(--accent-primary);
 }
 
 .pagination__btn:disabled {
