@@ -4,7 +4,8 @@
 /* ===== 테마 CSS 변수 ===== */
 
 /* 다크 모드 (기본) */
-:root {
+:root,
+[data-theme="dark"] {
     --bg-primary: #1e1f22;
     --bg-secondary: #2b2d31;
     --bg-tertiary: #313338;
@@ -32,9 +33,36 @@
     --shadow-elevation: 0 8px 16px rgba(0, 0, 0, 0.24);
 }
 
-/* 라이트 모드 */
+/* 라이트 모드 (명시적 선택) */
+[data-theme="light"] {
+    --bg-primary: #ffffff;
+    --bg-secondary: #f2f3f5;
+    --bg-tertiary: #e3e5e8;
+    --bg-modifier-hover: rgba(116, 127, 141, 0.12);
+    --bg-modifier-active: rgba(116, 127, 141, 0.24);
+
+    --text-primary: #313338;
+    --text-secondary: #4e5058;
+    --text-muted: #6d6f78;
+
+    --border-subtle: #e1e1e4;
+    --border-strong: #c4c9ce;
+
+    --accent-primary: #5865f2;
+    --accent-primary-hover: #4752c4;
+    --accent-danger: #da373c;
+    --accent-danger-hover: #a12d31;
+    --accent-success: #23a55a;
+
+    --modal-overlay: rgba(0, 0, 0, 0.5);
+    --modal-bg: #ffffff;
+
+    --shadow-elevation: 0 8px 16px rgba(0, 0, 0, 0.12);
+}
+
+/* System 모드: data-theme 미설정 시 OS 설정 따름 */
 @media (prefers-color-scheme: light) {
-    :root {
+    :root:not([data-theme="dark"]):not([data-theme="light"]) {
         --bg-primary: #ffffff;
         --bg-secondary: #f2f3f5;
         --bg-tertiary: #e3e5e8;

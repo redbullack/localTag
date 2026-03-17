@@ -22,6 +22,10 @@ Electron과 Next.js 기반의 데스크탑 애플리케이션 프로젝트입니
 ## 진행 및 수정 사항 (Changelog)
 
 * **2026-03-17**
+  * **작업 내용**: 다크/라이트/시스템 테마 수동 전환 기능 추가. 메인 콘텐츠 헤더 우측에 3단 토글 버튼(☀️ 라이트 / 🖥️ 시스템 / 🌙 다크)을 배치. 선택한 테마를 localStorage에 저장하여 앱 재시작 시에도 유지. `data-theme` 속성 기반으로 CSS 변수 구조를 리팩토링하여 기존 모든 컴포넌트에서 테마 전환이 자동 적용. FOUC 방지를 위한 인라인 스크립트 추가. 아울러 `pagination.css`의 미정의 CSS 변수 3개를 기존 변수로 매핑하여 수정.
+  * **변경된 핵심 파일**: `renderer/app/utils/use-theme.ts`(신규), `renderer/app/components/shared/theme-provider.tsx`(신규), `renderer/app/components/shared/theme-toggle.tsx`(신규), `renderer/app/components/shared/theme-toggle.css`(신규), `renderer/app/globals.css`, `renderer/app/components/shared/pagination.css`, `renderer/app/layout.tsx`, `renderer/app/page.tsx`
+
+* **2026-03-17**
   * **작업 내용**: `getFileIcon` 함수를 `file-list.tsx`에서 `utils/get-file-icon.ts`로 분리하여 컴포넌트 가독성 향상
   * **변경된 핵심 파일**: `renderer/app/utils/get-file-icon.ts`, `renderer/app/components/file-list/file-list.tsx`
 

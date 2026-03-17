@@ -6,6 +6,7 @@ import FileTagEditor from './components/file-tag-editor/file-tag-editor';
 import { useConfirm } from './components/shared/confirm-dialog';
 import { useToast } from './components/shared/toast-provider';
 import TagFormModal from './components/tag-form-modal/tag-form-modal';
+import ThemeToggle from './components/shared/theme-toggle';
 import TagSidebar from './components/tag-sidebar/tag-sidebar';
 import VaultInfo from './components/vault-info/vault-info';
 import type { FileWithTags, SortOption, Tag } from './types';
@@ -688,6 +689,9 @@ export default function Home() {
                         <h1 className="main-content__title">
                             {selectedTagNames ? selectedTagNames : '전체 파일'}
                         </h1>
+                    </div>
+                    <div className="main-content__header-right">
+                        <ThemeToggle />
                     </div>
                 </div>
 
