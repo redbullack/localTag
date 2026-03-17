@@ -593,23 +593,27 @@ export const checkDuplicateFilenames = (filenames: string[]): string[] => {
 
 /**
  * Vault(디렉토리)와 DB 파일 목록을 비교하여 동기화합니다.
- * @returns { addedCount: number; deletedCount: number; updatedCount: number }
+ * @returns { addedCount, deletedCount, updatedCount, detectedFolderCount, success }
  */
-export const syncVault = (): { addedCount: number; deletedCount: number; updatedCount: number; success: boolean, error?: string } => {
+export const syncVault = (): { addedCount: number; deletedCount: number; updatedCount: number; detectedFolderCount: number; success: boolean, error?: string } => {
     try {
         const db = getDb();
         const vaultPath = getVaultPathOrThrow();
 
         if (!fs.existsSync(vaultPath)) {
-            return { addedCount: 0, deletedCount: 0, updatedCount: 0, success: true };
+            return { addedCount: 0, deletedCount: 0, updatedCount: 0, detectedFolderCount: 0, success: true };
         }
 
         // 1. 물리적 파일 목록 읽기
         const filesInDir = fs.readdirSync(vaultPath, { withFileTypes: true });
 
-        // 2. 물리적 파일 정보를 Map으로 구성
+        // 2. 물리적 파일 정보를 Map으로 구성 + 폴더 감지
+        let detectedFolderCount = 0;
         const physicalFiles = new Map<string, { size: number, extension: string | null }>();
         for (const dirent of filesInDir) {
+            if (dirent.isDirectory() && !dirent.name.startsWith('.')) {
+                detectedFolderCount++;
+            }
             if (dirent.isFile() && !isIgnoredFile(dirent.name)) {
                 const filePath = path.join(vaultPath, dirent.name);
                 try {
@@ -687,9 +691,9 @@ export const syncVault = (): { addedCount: number; deletedCount: number; updated
             transaction();
         }
 
-        return { addedCount, deletedCount, updatedCount, success: true };
+        return { addedCount, deletedCount, updatedCount, detectedFolderCount, success: true };
     } catch (error: any) {
-        return { addedCount: 0, deletedCount: 0, updatedCount: 0, success: false, error: error.message };
+        return { addedCount: 0, deletedCount: 0, updatedCount: 0, detectedFolderCount: 0, success: false, error: error.message };
     }
 };
 
