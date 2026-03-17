@@ -154,7 +154,7 @@ export default function VaultInfo({
                 <div className="vault-info__actions">
                     <button
                         className="vault-info__action-btn"
-                        data-tooltip="⚠️ 원본 폴더(MyTaggedFiles)에서 파일을 수동으로 이동하거나 삭제하지 마세요."
+                        data-tooltip="⚠️ Vault 폴더(MyTaggedFiles)에서 파일을 수동으로 이동하거나 삭제하지 마세요."
                         onClick={handleRelocate}
                         disabled={isDisabled}
                     >
@@ -162,7 +162,7 @@ export default function VaultInfo({
                     </button>
                     <button
                         className="sync-button"
-                        data-tooltip="원본 폴더와 DB를 비교하여 파일 추가, 삭제, 메타데이터 변경 사항을 최신 상태로 맞춥니다."
+                        data-tooltip="Vault 폴더와 DB를 비교하여 파일 추가, 삭제, 메타데이터 변경 사항을 최신 상태로 맞춥니다."
                         onClick={onSync}
                         disabled={isDisabled}
                     >

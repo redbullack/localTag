@@ -148,7 +148,7 @@ export default function Home() {
             const response = await window.electronAPI.syncFiles();
 
             if (response.success && response.data) {
-                const { addedCount, deletedCount, updatedCount } = response.data;
+                const { addedCount, deletedCount, updatedCount, detectedFolderCount } = response.data;
                 const totalChanges = addedCount + deletedCount + updatedCount;
 
                 if (totalChanges > 0) {
@@ -170,6 +170,14 @@ export default function Home() {
                         type: 'info',
                         message: '모든 파일이 최신 상태입니다.',
                         duration: 3000,
+                    });
+                }
+
+                if (detectedFolderCount > 0) {
+                    showToast({
+                        type: 'warning',
+                        message: `Vault 내 ${detectedFolderCount}개의 폴더가 감지되었습니다. Vault는 파일만 관리합니다.`,
+                        duration: 5000,
                     });
                 }
             } else if (!isSilent) {
