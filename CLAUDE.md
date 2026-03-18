@@ -37,10 +37,11 @@ localTag/
 │   │   ├── types.ts       # 공유 타입 정의
 │   │   ├── components/    # UI 컴포넌트 (kebab-case 폴더)
 │   │   │   ├── file-list/
-│   │   │   ├── tag-sidebar/
-│   │   │   ├── tag-form-modal/
 │   │   │   ├── file-tag-editor/
-│   │   │   └── shared/    # Toast, ConfirmDialog, TagSearchDropdown, TagBadge
+│   │   │   ├── tag-form-modal/
+│   │   │   ├── tag-sidebar/
+│   │   │   ├── vault-info/
+│   │   │   └── shared/    # Toast, ConfirmDialog, TagSearchDropdown, TagBadge, ThemeToggle, Pagination
 │   │   └── utils/         # 유틸 함수 및 커스텀 훅
 │   └── global.d.ts        # window.electronAPI 타입 선언
 ├── CLAUDE.md              # Claude Code 전용 가이드 (이 파일)

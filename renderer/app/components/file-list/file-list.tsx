@@ -3,7 +3,7 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import './file-list.css';
 import type { FileWithTags, SortOption } from '../../types';
-import TagBadge from '../tag-badge/tag-badge';
+import TagBadge from '../shared/tag-badge';
 import { useToast } from '../shared/toast-provider';
 import Pagination from '../shared/pagination';
 import { formatBytes } from '../../utils/format-bytes';

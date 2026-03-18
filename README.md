@@ -21,6 +21,10 @@ Electron과 Next.js 기반의 데스크탑 애플리케이션 프로젝트입니
 ---
 ## 진행 및 수정 사항 (Changelog)
 
+* **2026-03-18**
+  * **작업 내용**: 컴포넌트 폴더 구조 정리. (1) `tag-badge/`를 `shared/`로 이동 — 여러 컴포넌트(`file-list`, `file-tag-editor`)에서 공용으로 사용되므로 범용 공유 컴포넌트로 재분류. (2) 빈 `progress-modal/` 폴더 삭제. (3) 관련 import 경로 3곳 수정. (4) `CLAUDE.md` Architecture 섹션 최신화(`vault-info/` 추가, `tag-badge/`·`progress-modal/` 제거 반영, `shared/` 설명 보강).
+  * **변경된 핵심 파일**: `renderer/app/components/shared/tag-badge.tsx`(이동), `renderer/app/components/shared/tag-badge.css`(이동), `renderer/app/components/file-list/file-list.tsx`, `renderer/app/components/file-tag-editor/file-tag-editor.tsx`, `renderer/app/page.tsx`, `CLAUDE.md`
+
 * **2026-03-17**
   * **작업 내용**: 테마 시스템 개선. (1) **FOUC 해결**: 초기화 스크립트(`THEME_INIT_SCRIPT`)가 system 모드일 때 `matchMedia`로 OS 테마를 즉시 감지하여 `data-theme`을 설정하도록 수정, 다크 플래시 제거. (2) **applyThemeToDOM 일관성**: system 모드일 때도 항상 resolved 값으로 `data-theme`을 설정하여 초기화 스크립트와 동작을 통일. (3) **하드코딩 색상 변수화**: `--accent-warning`, `--color-dot-border` CSS 변수를 `globals.css`에 추가하고, `toast.css`의 `#faa61a`, `tag-form-modal.css`·`tag-search-dropdown.css`의 `rgba(255,255,255,0.15)`, `vault-info.css`의 불일치 fallback을 모두 CSS 변수로 교체.
   * **변경된 핵심 파일**: `renderer/app/layout.tsx`, `renderer/app/utils/use-theme.ts`, `renderer/app/globals.css`, `renderer/app/components/shared/toast.css`, `renderer/app/components/tag-form-modal/tag-form-modal.css`, `renderer/app/components/shared/tag-search-dropdown.css`, `renderer/app/components/vault-info/vault-info.css`
