@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from 'react';
 import FileList from './components/file-list/file-list';
 import FileTagEditor from './components/file-tag-editor/file-tag-editor';
 import { useConfirm } from './components/shared/confirm-dialog';
+import { useLoadingOverlay } from './components/shared/loading-overlay';
 import { useToast } from './components/shared/toast-provider';
 import TagFormModal from './components/tag-form-modal/tag-form-modal';
 import ThemeToggle from './components/shared/theme-toggle';
@@ -21,6 +22,7 @@ export default function Home() {
     const [isSyncing, setIsSyncing] = useState(false);
     const { showToast } = useToast();
     const { showConfirm } = useConfirm();
+    const { showLoading, updateProgress, hideLoading } = useLoadingOverlay();
 
     // 태그 상태
     const [tagList, setTagList] = useState<Tag[]>([]);
@@ -145,6 +147,9 @@ export default function Home() {
         if (typeof window === 'undefined' || !window.electronAPI || !vaultPath || isSyncing) return;
 
         setIsSyncing(true);
+        if (!isSilent) {
+            showLoading({ operationType: 'sync', description: '동기화 중...' });
+        }
         try {
             const response = await window.electronAPI.syncFiles();
 
@@ -192,8 +197,26 @@ export default function Home() {
             console.error('Sync error:', error);
         } finally {
             setIsSyncing(false);
+            hideLoading();
         }
-    }, [isSyncing, loadFiles, loadTags, showToast, vaultPath]);
+    }, [hideLoading, isSyncing, loadFiles, loadTags, showLoading, showToast, vaultPath]);
+
+    /** Main → Renderer 파일 작업 진행률 이벤트를 구독한다. */
+    useEffect(() => {
+        if (typeof window === 'undefined' || !window.electronAPI) return;
+
+        const cleanup = window.electronAPI.onFileOperationProgress((progress) => {
+            updateProgress({
+                currentFile: progress.currentFile,
+                currentIndex: progress.currentIndex,
+                totalCount: progress.totalCount,
+                bytesTransferred: progress.bytesTransferred,
+                totalBytes: progress.totalBytes,
+            });
+        });
+
+        return cleanup;
+    }, [updateProgress]);
 
     /** 앱이 다시 포커스를 얻으면 조용히 동기화한다. */
     useEffect(() => {
@@ -379,13 +402,18 @@ export default function Home() {
         });
         if (!confirmed) return;
 
-        const addResponse = await window.electronAPI.addFiles({
-            tagIds: selectedTagIds.length > 0 ? selectedTagIds : undefined,
-            filePaths,
-        });
+        showLoading({ operationType: 'add', description: '파일 추가 중...' });
+        try {
+            const addResponse = await window.electronAPI.addFiles({
+                tagIds: selectedTagIds.length > 0 ? selectedTagIds : undefined,
+                filePaths,
+            });
 
-        if (handleAddFilesResponse(addResponse, filePaths, showToast)) {
-            await loadFiles();
+            if (handleAddFilesResponse(addResponse, filePaths, showToast)) {
+                await loadFiles();
+            }
+        } finally {
+            hideLoading();
         }
     };
 
@@ -399,13 +427,18 @@ export default function Home() {
         });
         if (!confirmed) return;
 
-        const response = await window.electronAPI.addFiles({
-            tagIds: selectedTagIds.length > 0 ? selectedTagIds : undefined,
-            filePaths,
-        });
+        showLoading({ operationType: 'add', description: '파일 추가 중...' });
+        try {
+            const response = await window.electronAPI.addFiles({
+                tagIds: selectedTagIds.length > 0 ? selectedTagIds : undefined,
+                filePaths,
+            });
 
-        if (handleAddFilesResponse(response, filePaths, showToast)) {
-            await loadFiles();
+            if (handleAddFilesResponse(response, filePaths, showToast)) {
+                await loadFiles();
+            }
+        } finally {
+            hideLoading();
         }
     };
 
@@ -502,42 +535,46 @@ export default function Home() {
         });
         if (!confirmed) return;
 
-        const results = await Promise.all(
-            fileIds.map((fileId) => window.electronAPI.deleteFile({ id: fileId })),
-        );
-        const failedResult = results.find((result) => !result.success);
+        showLoading({ operationType: 'delete', description: '파일 삭제 중...' });
+        try {
+            const response = await window.electronAPI.deleteFilesBatch({ ids: fileIds });
 
-        if (failedResult) {
-            showToast({
-                type: 'error',
-                message: failedResult.error || '선택한 파일 삭제 중 오류가 발생했습니다.',
-                duration: 4000,
-            });
+            if (response.success && response.data) {
+                showToast({
+                    type: 'success',
+                    message: `${response.data.deletedCount}개의 파일이 삭제되었습니다.`,
+                    duration: 3000,
+                });
+            } else {
+                showToast({
+                    type: 'error',
+                    message: response.error || '선택한 파일 삭제 중 오류가 발생했습니다.',
+                    duration: 4000,
+                });
+            }
+
+            setSelectedFileIds(new Set());
+            await loadFiles();
+        } finally {
+            hideLoading();
         }
-
-        const successCount = results.filter((result) => result.success).length;
-        if (successCount > 0) {
-            showToast({
-                type: 'success',
-                message: `${successCount}개의 파일이 삭제되었습니다.`,
-                duration: 3000,
-            });
-        }
-
-        setSelectedFileIds(new Set());
-        await loadFiles();
-    }, [loadFiles, selectedFileIds, showConfirm, showToast]);
+    }, [hideLoading, loadFiles, selectedFileIds, showConfirm, showLoading, showToast]);
 
     /** 개별 파일을 사용자 선택 폴더로 이동한다. */
     const handleMoveFile = async (file: FileWithTags) => {
         if (typeof window === 'undefined' || !window.electronAPI) return;
 
-        const response = await window.electronAPI.moveFilesToFolder({
-            files: [{ id: file.id, filename: file.filename }],
-        });
+        showLoading({ operationType: 'move', description: '파일 이동 중...' });
+        try {
+            const response = await window.electronAPI.moveFilesToFolder({
+                files: [{ id: file.id, filename: file.filename }],
+            });
 
-        if (handleFileTransferResponse(response, 'move', showToast)) {
-            await loadFiles();
+            if (handleFileTransferResponse(response, 'move', showToast)) {
+                await loadFiles();
+            }
+        } finally {
+            hideLoading();
         }
     };
 
@@ -545,11 +582,16 @@ export default function Home() {
     const handleCopyFile = async (file: FileWithTags) => {
         if (typeof window === 'undefined' || !window.electronAPI) return;
 
-        const response = await window.electronAPI.copyFilesToFolder({
-            files: [{ id: file.id, filename: file.filename }],
-        });
+        showLoading({ operationType: 'copy', description: '파일 복사 중...' });
+        try {
+            const response = await window.electronAPI.copyFilesToFolder({
+                files: [{ id: file.id, filename: file.filename }],
+            });
 
-        handleFileTransferResponse(response, 'copy', showToast);
+            handleFileTransferResponse(response, 'copy', showToast);
+        } finally {
+            hideLoading();
+        }
     };
 
     /** 선택된 파일들을 사용자 선택 폴더로 이동한다. */
@@ -562,13 +604,18 @@ export default function Home() {
 
         if (filesToMove.length === 0) return;
 
-        const response = await window.electronAPI.moveFilesToFolder({ files: filesToMove });
+        showLoading({ operationType: 'move', description: '파일 이동 중...' });
+        try {
+            const response = await window.electronAPI.moveFilesToFolder({ files: filesToMove });
 
-        if (handleFileTransferResponse(response, 'move', showToast)) {
-            setSelectedFileIds(new Set());
-            await loadFiles();
+            if (handleFileTransferResponse(response, 'move', showToast)) {
+                setSelectedFileIds(new Set());
+                await loadFiles();
+            }
+        } finally {
+            hideLoading();
         }
-    }, [fileList, loadFiles, selectedFileIds, showToast]);
+    }, [fileList, hideLoading, loadFiles, selectedFileIds, showLoading, showToast]);
 
     /** 선택된 파일들을 사용자 선택 폴더로 복사한다. */
     const handleCopySelectedFiles = useCallback(async () => {
@@ -580,10 +627,15 @@ export default function Home() {
 
         if (filesToCopy.length === 0) return;
 
-        const response = await window.electronAPI.copyFilesToFolder({ files: filesToCopy });
+        showLoading({ operationType: 'copy', description: '파일 복사 중...' });
+        try {
+            const response = await window.electronAPI.copyFilesToFolder({ files: filesToCopy });
 
-        handleFileTransferResponse(response, 'copy', showToast);
-    }, [fileList, selectedFileIds, showToast]);
+            handleFileTransferResponse(response, 'copy', showToast);
+        } finally {
+            hideLoading();
+        }
+    }, [fileList, hideLoading, selectedFileIds, showLoading, showToast]);
 
     /** 단일 파일 태그 편집 모달을 연다. */
     const handleOpenTagEditor = (file: FileWithTags) => {
