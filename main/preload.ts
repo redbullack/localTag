@@ -19,6 +19,11 @@ contextBridge.exposeInMainWorld('electronAPI', {
         ipcRenderer.on('vault:relocate-progress', handler);
         return () => { ipcRenderer.removeListener('vault:relocate-progress', handler); };
     },
+    onFileOperationProgress: (callback: (progress: { operationType: string; currentFile?: string; currentIndex: number; totalCount: number; bytesTransferred?: number; totalBytes?: number }) => void) => {
+        const handler = (_event: Electron.IpcRendererEvent, progress: { operationType: string; currentFile?: string; currentIndex: number; totalCount: number; bytesTransferred?: number; totalBytes?: number }) => callback(progress);
+        ipcRenderer.on('file:operation-progress', handler);
+        return () => { ipcRenderer.removeListener('file:operation-progress', handler); };
+    },
 
     // Tag CRUD
     createTag: (params: { name: string; color?: string; parentId?: number }) =>
@@ -45,6 +50,8 @@ contextBridge.exposeInMainWorld('electronAPI', {
         ipcRenderer.invoke('file:rename', params),
     deleteFile: (params: { id: number }) =>
         ipcRenderer.invoke('file:delete', params),
+    deleteFilesBatch: (params: { ids: number[] }) =>
+        ipcRenderer.invoke('file:delete-batch', params),
     updateFileTags: (params: { fileId: number; tagIds: number[] }) =>
         ipcRenderer.invoke('file:update-tags', params),
     bulkSetFileTags: (params: { fileIds: number[]; tagIds: number[] }) =>

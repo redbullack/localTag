@@ -1,0 +1,120 @@
+/* ── LoadingOverlay ─────────────────────────────────── */
+
+.loading-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 10001;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: var(--loading-overlay-bg);
+    animation: loadingFadeIn 0.15s ease;
+}
+
+@keyframes loadingFadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+.loading-overlay__card {
+    background-color: var(--loading-card-bg);
+    border: 1px solid var(--border-subtle);
+    border-radius: 12px;
+    box-shadow: var(--shadow-elevation);
+    padding: 28px 32px;
+    min-width: 360px;
+    max-width: 480px;
+    animation: loadingSlideUp 0.2s ease;
+}
+
+@keyframes loadingSlideUp {
+    from {
+        transform: translateY(12px);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+.loading-overlay__header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 16px;
+}
+
+.loading-overlay__spinner {
+    width: 20px;
+    height: 20px;
+    border: 2.5px solid var(--loading-progress-track);
+    border-top-color: var(--loading-progress-fill);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+}
+
+.loading-overlay__title {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--loading-text-primary);
+    margin: 0;
+}
+
+.loading-overlay__current-file {
+    font-size: 12px;
+    color: var(--loading-text-secondary);
+    margin-bottom: 12px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* 전체 진행률 바 */
+.loading-overlay__progress-bar {
+    height: 6px;
+    border-radius: 3px;
+    background-color: var(--loading-progress-track);
+    overflow: hidden;
+    margin-bottom: 8px;
+}
+
+.loading-overlay__progress-fill {
+    height: 100%;
+    border-radius: 3px;
+    background-color: var(--loading-progress-fill);
+    transition: width 0.15s ease;
+}
+
+/* 불확정 진행률 바 애니메이션 */
+.loading-overlay__progress-fill--indeterminate {
+    width: 40% !important;
+    animation: indeterminate 1.2s ease-in-out infinite;
+}
+
+@keyframes indeterminate {
+    0% { transform: translateX(-100%); }
+    100% { transform: translateX(350%); }
+}
+
+/* 바이트 진행률 바 (개별 파일) */
+.loading-overlay__byte-progress-bar {
+    height: 4px;
+    border-radius: 2px;
+    background-color: var(--loading-progress-track);
+    overflow: hidden;
+    margin-bottom: 8px;
+}
+
+.loading-overlay__byte-progress-fill {
+    height: 100%;
+    border-radius: 2px;
+    background-color: var(--accent-success);
+    transition: width 0.1s ease;
+}
+
+.loading-overlay__detail {
+    font-size: 12px;
+    color: var(--loading-text-secondary);
+    text-align: right;
+}

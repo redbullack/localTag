@@ -22,6 +22,10 @@ Electron과 Next.js 기반의 데스크탑 애플리케이션 프로젝트입니
 ## 진행 및 수정 사항 (Changelog)
 
 * **2026-03-18**
+  * **작업 내용**: 파일 작업(추가/삭제/이동/복사/동기화) 시 실시간 진행률 오버레이 추가. (1) 스트림 기반 파일 복사(`file-copy-stream.ts`)로 대용량 파일 바이트 단위 진행률 지원. (2) Main→Renderer IPC 진행률 이벤트(`file:operation-progress`) 도입. (3) `LoadingOverlay` 공유 컴포넌트 및 `useDelayedLoading` 훅으로 짧은 작업 시 깜빡임 방지. (4) 일괄 삭제 IPC(`file:delete-batch`) 추가로 기존 `Promise.all` 병렬 삭제를 순차 진행률 방식으로 개선. (5) Light/Dark/System 테마 CSS 변수 동시 적용.
+  * **변경된 핵심 파일**: `main/lib/file-copy-stream.ts`(신규), `main/ipc/file-handler.ts`, `main/lib/file-repository.ts`, `main/preload.ts`, `renderer/app/components/shared/loading-overlay.tsx`(신규), `renderer/app/components/shared/loading-overlay.css`(신규), `renderer/app/utils/use-delayed-loading.ts`(신규), `renderer/app/page.tsx`, `renderer/app/globals.css`, `renderer/app/layout.tsx`, `renderer/global.d.ts`
+
+* **2026-03-18**
   * **작업 내용**: 컴포넌트 폴더 구조 정리. (1) `tag-badge/`를 `shared/`로 이동 — 여러 컴포넌트(`file-list`, `file-tag-editor`)에서 공용으로 사용되므로 범용 공유 컴포넌트로 재분류. (2) 빈 `progress-modal/` 폴더 삭제. (3) 관련 import 경로 3곳 수정. (4) `CLAUDE.md` Architecture 섹션 최신화(`vault-info/` 추가, `tag-badge/`·`progress-modal/` 제거 반영, `shared/` 설명 보강).
   * **변경된 핵심 파일**: `renderer/app/components/shared/tag-badge.tsx`(이동), `renderer/app/components/shared/tag-badge.css`(이동), `renderer/app/components/file-list/file-list.tsx`, `renderer/app/components/file-tag-editor/file-tag-editor.tsx`, `renderer/app/page.tsx`, `CLAUDE.md`
 

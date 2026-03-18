@@ -34,6 +34,13 @@
     --modal-bg: #313338;
 
     --shadow-elevation: 0 8px 16px rgba(0, 0, 0, 0.24);
+
+    --loading-overlay-bg: rgba(0, 0, 0, 0.6);
+    --loading-card-bg: var(--modal-bg);
+    --loading-progress-track: var(--bg-tertiary);
+    --loading-progress-fill: var(--accent-primary);
+    --loading-text-primary: var(--text-primary);
+    --loading-text-secondary: var(--text-secondary);
 }
 
 /* 라이트 모드 (명시적 선택) */
@@ -64,6 +71,13 @@
     --modal-bg: #ffffff;
 
     --shadow-elevation: 0 8px 16px rgba(0, 0, 0, 0.12);
+
+    --loading-overlay-bg: rgba(0, 0, 0, 0.4);
+    --loading-card-bg: var(--modal-bg);
+    --loading-progress-track: var(--bg-tertiary);
+    --loading-progress-fill: var(--accent-primary);
+    --loading-text-primary: var(--text-primary);
+    --loading-text-secondary: var(--text-secondary);
 }
 
 /* System 모드: data-theme 미설정 시 OS 설정 따름 */
@@ -95,6 +109,13 @@
         --modal-bg: #ffffff;
 
         --shadow-elevation: 0 8px 16px rgba(0, 0, 0, 0.12);
+
+        --loading-overlay-bg: rgba(0, 0, 0, 0.4);
+        --loading-card-bg: var(--modal-bg);
+        --loading-progress-track: var(--bg-tertiary);
+        --loading-progress-fill: var(--accent-primary);
+        --loading-text-primary: var(--text-primary);
+        --loading-text-secondary: var(--text-secondary);
     }
 }
 

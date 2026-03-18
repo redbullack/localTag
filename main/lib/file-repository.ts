@@ -2,6 +2,7 @@ import { getDb } from './db';
 import { getVaultPath } from './store';
 import * as fs from 'fs';
 import * as path from 'path';
+import { copyFileWithProgress, CopyProgressCallback } from './file-copy-stream';
 
 /**
  * File 데이터 인터페이스
@@ -39,6 +40,7 @@ export interface FileWithTags extends FileRecord {
 interface AddFileParams {
     sourcePath: string;
     tagIds?: number[];
+    onProgress?: CopyProgressCallback;
 }
 
 // ─── 유틸리티 ────────────────────────────────────────
@@ -71,10 +73,10 @@ const getVaultPathOrThrow = (): string => {
  * @returns 생성된 FileWithTags 객체
  * @throws 동일 파일명이 이미 존재할 경우 에러
  */
-export const addFile = (params: AddFileParams): FileWithTags => {
+export const addFile = async (params: AddFileParams): Promise<FileWithTags> => {
     const db = getDb();
     const vaultPath = getVaultPathOrThrow();
-    const { sourcePath, tagIds = [] } = params;
+    const { sourcePath, tagIds = [], onProgress } = params;
 
     const filename = path.basename(sourcePath);
     const extension = path.extname(sourcePath).slice(1) || null;
@@ -95,12 +97,12 @@ export const addFile = (params: AddFileParams): FileWithTags => {
         throw new Error(`원본 파일을 찾을 수 없습니다: ${sourcePath}`);
     }
 
-    // Vault로 파일 이동 (실패 시 복사 후 원본 삭제 fallback)
+    // Vault로 파일 이동 (실패 시 스트림 복사 후 원본 삭제 fallback)
     try {
         fs.renameSync(sourcePath, destinationPath);
     } catch (error: any) {
         if (error.code === 'EXDEV') {
-            fs.copyFileSync(sourcePath, destinationPath);
+            await copyFileWithProgress(sourcePath, destinationPath, onProgress);
             fs.unlinkSync(sourcePath);
         } else {
             throw new Error(`파일 이동 실패: ${error.message}`);
