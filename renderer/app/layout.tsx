@@ -1,4 +1,5 @@
 import { ConfirmProvider } from './components/shared/confirm-dialog';
+import { LoadingOverlayProvider } from './components/shared/loading-overlay';
 import { ThemeProvider } from './components/shared/theme-provider';
 import { ToastProvider } from './components/shared/toast-provider';
 import './globals.css';
@@ -19,7 +20,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                 <ThemeProvider>
                     <ToastProvider>
                         <ConfirmProvider>
-                            {children}
+                            <LoadingOverlayProvider>
+                                {children}
+                            </LoadingOverlayProvider>
                         </ConfirmProvider>
                     </ToastProvider>
                 </ThemeProvider>

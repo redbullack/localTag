@@ -1,4 +1,4 @@
-import { ipcMain, dialog, shell } from 'electron';
+import { ipcMain, dialog, shell, BrowserWindow } from 'electron';
 import * as path from 'path';
 import * as fs from 'fs';
 import { getVaultPath } from '../lib/store';
@@ -18,9 +18,26 @@ import {
     syncVault,
     SortOption,
 } from '../lib/file-repository';
+import { copyFileWithProgress } from '../lib/file-copy-stream';
 
 // 동기화 중복 실행 방지 플래그
 let isSyncing = false;
+
+/** 진행률 전송용 BrowserWindow를 가져온다. 포커스가 없어도 동작하도록 fallback 처리. */
+const getMainWindow = (): BrowserWindow | null =>
+    BrowserWindow.getFocusedWindow() ?? BrowserWindow.getAllWindows()[0] ?? null;
+
+/** Main → Renderer로 파일 작업 진행률을 전송한다. */
+const sendProgress = (progress: {
+    operationType: 'add' | 'delete' | 'move' | 'copy' | 'sync';
+    currentFile?: string;
+    currentIndex: number;
+    totalCount: number;
+    bytesTransferred?: number;
+    totalBytes?: number;
+}) => {
+    getMainWindow()?.webContents.send('file:operation-progress', progress);
+};
 
 /**
  * 파일 관련 IPC 핸들러를 등록합니다.
@@ -89,9 +106,34 @@ export const registerFileHandlers = (): void => {
                 };
             }
 
-            const addedFiles = filePathsToProcess.map((sourcePath) =>
-                addFile({ sourcePath, tagIds: params?.tagIds })
-            );
+            const totalCount = filePathsToProcess.length;
+            const addedFiles = [];
+
+            for (let i = 0; i < totalCount; i++) {
+                const sourcePath = filePathsToProcess[i];
+                sendProgress({
+                    operationType: 'add',
+                    currentFile: path.basename(sourcePath),
+                    currentIndex: i + 1,
+                    totalCount,
+                });
+
+                const file = await addFile({
+                    sourcePath,
+                    tagIds: params?.tagIds,
+                    onProgress: (bytesTransferred, totalBytes) => {
+                        sendProgress({
+                            operationType: 'add',
+                            currentFile: path.basename(sourcePath),
+                            currentIndex: i + 1,
+                            totalCount,
+                            bytesTransferred,
+                            totalBytes,
+                        });
+                    },
+                });
+                addedFiles.push(file);
+            }
 
             return { success: true, data: addedFiles };
         } catch (error: any) {
@@ -201,6 +243,7 @@ export const registerFileHandlers = (): void => {
         }
 
         isSyncing = true;
+        sendProgress({ operationType: 'sync', currentIndex: 0, totalCount: 0 });
         try {
             const result = syncVault();
             if (!result.success) {
@@ -219,6 +262,27 @@ export const registerFileHandlers = (): void => {
             return { success: false, error: error.message };
         } finally {
             isSyncing = false;
+        }
+    });
+
+    ipcMain.handle('file:delete-batch', async (_event, params: { ids: number[] }) => {
+        try {
+            const totalCount = params.ids.length;
+            let deletedCount = 0;
+
+            for (let i = 0; i < totalCount; i++) {
+                sendProgress({
+                    operationType: 'delete',
+                    currentIndex: i + 1,
+                    totalCount,
+                });
+                deleteFile(params.ids[i]);
+                deletedCount++;
+            }
+
+            return { success: true, data: { deletedCount } };
+        } catch (error: any) {
+            return { success: false, error: error.message };
         }
     });
 
@@ -276,10 +340,19 @@ export const registerFileHandlers = (): void => {
             const targetDir = result.filePaths[0];
             const errors: string[] = [];
             let movedCount = 0;
+            const totalCount = params.files.length;
 
-            for (const file of params.files) {
+            for (let i = 0; i < totalCount; i++) {
+                const file = params.files[i];
                 const sourcePath = path.join(vaultPath, file.filename);
                 const targetPath = path.join(targetDir, file.filename);
+
+                sendProgress({
+                    operationType: 'move',
+                    currentFile: file.filename,
+                    currentIndex: i + 1,
+                    totalCount,
+                });
 
                 try {
                     if (fs.existsSync(targetPath)) {
@@ -292,12 +365,21 @@ export const registerFileHandlers = (): void => {
                         continue;
                     }
 
-                    // 파일 이동 (크로스 디바이스 fallback 포함)
+                    // 파일 이동 (크로스 디바이스 fallback: 스트림 복사)
                     try {
                         fs.renameSync(sourcePath, targetPath);
                     } catch (moveError: any) {
                         if (moveError.code === 'EXDEV') {
-                            fs.copyFileSync(sourcePath, targetPath);
+                            await copyFileWithProgress(sourcePath, targetPath, (bytesTransferred, totalBytes) => {
+                                sendProgress({
+                                    operationType: 'move',
+                                    currentFile: file.filename,
+                                    currentIndex: i + 1,
+                                    totalCount,
+                                    bytesTransferred,
+                                    totalBytes,
+                                });
+                            });
                             fs.unlinkSync(sourcePath);
                         } else {
                             throw moveError;
@@ -337,10 +419,19 @@ export const registerFileHandlers = (): void => {
             const targetDir = result.filePaths[0];
             const errors: string[] = [];
             let copiedCount = 0;
+            const totalCount = params.files.length;
 
-            for (const file of params.files) {
+            for (let i = 0; i < totalCount; i++) {
+                const file = params.files[i];
                 const sourcePath = path.join(vaultPath, file.filename);
                 const targetPath = path.join(targetDir, file.filename);
+
+                sendProgress({
+                    operationType: 'copy',
+                    currentFile: file.filename,
+                    currentIndex: i + 1,
+                    totalCount,
+                });
 
                 try {
                     if (fs.existsSync(targetPath)) {
@@ -353,7 +444,16 @@ export const registerFileHandlers = (): void => {
                         continue;
                     }
 
-                    fs.copyFileSync(sourcePath, targetPath);
+                    await copyFileWithProgress(sourcePath, targetPath, (bytesTransferred, totalBytes) => {
+                        sendProgress({
+                            operationType: 'copy',
+                            currentFile: file.filename,
+                            currentIndex: i + 1,
+                            totalCount,
+                            bytesTransferred,
+                            totalBytes,
+                        });
+                    });
                     copiedCount++;
                 } catch (fileError: any) {
                     errors.push(`${file.filename}: ${fileError.message}`);
