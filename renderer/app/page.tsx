@@ -13,7 +13,7 @@ import type { FileWithTags, SortOption, Tag } from './types';
 import { reorderTagListLocally } from './utils/tag-tree';
 import { UNTAGGED_TAG_ID } from './constants';
 import { handleAddFilesResponse, handleFileTransferResponse } from './utils/file-transfer';
-import './components/tag-badge/tag-badge.css';
+import './components/shared/tag-badge.css';
 
 export default function Home() {
     const [vaultPath, setVaultPath] = useState<string | null>(null);
