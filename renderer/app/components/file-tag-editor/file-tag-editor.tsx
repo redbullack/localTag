@@ -4,7 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import './file-tag-editor.css';
 import type { FileWithTags, Tag } from '../../types';
 import TagSearchDropdown from '../shared/tag-search-dropdown';
-import TagBadge from '../tag-badge/tag-badge';
+import TagBadge from '../shared/tag-badge';
 import { useClickOutside } from '../../utils/use-click-outside';
 
 interface FileTagEditorProps {
