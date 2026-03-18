@@ -47,6 +47,16 @@ export interface RelocateProgress {
     currentFile: string;
 }
 
+/** 파일 작업 진행률 */
+export interface FileOperationProgress {
+    operationType: 'add' | 'delete' | 'move' | 'copy' | 'sync';
+    currentFile?: string;
+    currentIndex: number;
+    totalCount: number;
+    bytesTransferred?: number;
+    totalBytes?: number;
+}
+
 export interface IElectronAPI {
     // Vault
     getVaultPath: () => Promise<string | null>;
@@ -54,6 +64,7 @@ export interface IElectronAPI {
     getStorageInfo: () => Promise<IpcResponse<StorageInfo>>;
     relocateVault: () => Promise<IpcResponse<{ newVaultPath: string; movedFileCount: number }>>;
     onVaultRelocateProgress: (callback: (progress: RelocateProgress) => void) => () => void;
+    onFileOperationProgress: (callback: (progress: FileOperationProgress) => void) => () => void;
 
     // Tag CRUD
     createTag: (params: { name: string; color?: string; parentId?: number }) => Promise<IpcResponse<Tag>>;
@@ -69,6 +80,7 @@ export interface IElectronAPI {
     getFilesByTags: (params: { tagIds: number[]; page?: number; limit?: number; sort?: { column: string; order: string }; includeUntagged?: boolean }) => Promise<IpcResponse<FileWithTags[]>>;
     renameFile: (params: { id: number; newFilename: string }) => Promise<IpcResponse<FileWithTags>>;
     deleteFile: (params: { id: number }) => Promise<IpcResponse<{ success: boolean }>>;
+    deleteFilesBatch: (params: { ids: number[] }) => Promise<IpcResponse<{ deletedCount: number }>>;
     updateFileTags: (params: { fileId: number; tagIds: number[] }) => Promise<IpcResponse<FileWithTags>>;
     bulkSetFileTags: (params: { fileIds: number[]; tagIds: number[] }) => Promise<IpcResponse<{ updatedCount: number }>>;
     checkDuplicateFilenames: (params: { filenames: string[] }) => Promise<IpcResponse<{ duplicates: string[] }>>;
