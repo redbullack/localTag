@@ -21,6 +21,10 @@ Electron과 Next.js 기반의 데스크탑 애플리케이션 프로젝트입니
 ---
 ## 진행 및 수정 사항 (Changelog)
 
+* **2026-03-19**
+  * **작업 내용**: 테마 설정 저장소를 localStorage에서 electron-store로 마이그레이션. (1) `electron-store` 기반 범용 설정 구조(`AppSettings`) 도입 — 향후 언어·정렬 방식 등 설정 추가 시 `AppSettings` 인터페이스 확장만으로 대응 가능. (2) preload.ts에서 electron-store 설정값을 동기적으로 읽어 `window.__initialSettings`로 주입, FOUC 없이 올바른 테마가 즉시 적용. (3) `config:get-settings`, `config:get`, `config:set` IPC 채널 추가. (4) 기존 localStorage에 저장된 테마 값은 최초 실행 시 자동으로 electron-store로 이관 후 삭제.
+  * **변경된 핵심 파일**: `main/lib/store.ts`, `main/ipc/config-handler.ts`(신규), `main/main.ts`, `main/preload.ts`, `renderer/global.d.ts`, `renderer/app/layout.tsx`, `renderer/app/utils/use-theme.ts`
+
 * **2026-03-18**
   * **작업 내용**: 파일 작업(추가/삭제/이동/복사/동기화) 시 실시간 진행률 오버레이 추가. (1) 스트림 기반 파일 복사(`file-copy-stream.ts`)로 대용량 파일 바이트 단위 진행률 지원. (2) Main→Renderer IPC 진행률 이벤트(`file:operation-progress`) 도입. (3) `LoadingOverlay` 공유 컴포넌트 및 `useDelayedLoading` 훅으로 짧은 작업 시 깜빡임 방지. (4) 일괄 삭제 IPC(`file:delete-batch`) 추가로 기존 `Promise.all` 병렬 삭제를 순차 진행률 방식으로 개선. (5) Light/Dark/System 테마 CSS 변수 동시 적용.
   * **변경된 핵심 파일**: `main/lib/file-copy-stream.ts`(신규), `main/ipc/file-handler.ts`, `main/lib/file-repository.ts`, `main/preload.ts`, `renderer/app/components/shared/loading-overlay.tsx`(신규), `renderer/app/components/shared/loading-overlay.css`(신규), `renderer/app/utils/use-delayed-loading.ts`(신규), `renderer/app/page.tsx`, `renderer/app/globals.css`, `renderer/app/layout.tsx`, `renderer/global.d.ts`
