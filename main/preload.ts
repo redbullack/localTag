@@ -1,12 +1,23 @@
 import { contextBridge, ipcRenderer, webUtils } from 'electron';
 
+// Main 프로세스에서 additionalArguments로 전달한 초기 테마 값을 읽음
+// sandbox 모드에서는 fs/path 등 Node.js 모듈 접근 불가하므로 process.argv 활용
+function readInitialSettings(): { theme: string } {
+    const themeArg = process.argv.find(arg => arg.startsWith('--initial-theme='));
+    const theme = themeArg ? themeArg.split('=')[1] : 'system';
+    return { theme };
+}
+
+const initialSettings = readInitialSettings();
+
 /**
  * Electron Main ↔ Renderer 간 안전한 통신을 위한 Context Bridge
  *
  * IPC 채널 목록:
- * - Vault: get-vault-path, select-vault-path, vault:get-storage-info, vault:relocate
- * - Tag:   tag:create, tag:get-all, tag:update, tag:delete, tag:reorder
- * - File:  file:add, file:get-all, file:get-by-tags, file:rename, file:delete, file:update-tags, file:bulk-set-tags, file:check-duplicate
+ * - Vault:  get-vault-path, select-vault-path, vault:get-storage-info, vault:relocate
+ * - Tag:    tag:create, tag:get-all, tag:update, tag:delete, tag:reorder
+ * - File:   file:add, file:get-all, file:get-by-tags, file:rename, file:delete, file:update-tags, file:bulk-set-tags, file:check-duplicate
+ * - Config: config:get-settings, config:get, config:set
  */
 contextBridge.exposeInMainWorld('electronAPI', {
     // Vault 관련
@@ -75,4 +86,12 @@ contextBridge.exposeInMainWorld('electronAPI', {
     copyFilesToFolder: (params: { files: { id: number; filename: string }[] }) =>
         ipcRenderer.invoke('file:copy-to-folder', params),
     getPathForFile: (file: File) => webUtils.getPathForFile(file),
+
+    // Config
+    getSettings: () => ipcRenderer.invoke('config:get-settings'),
+    getConfig: (params: { key: string }) => ipcRenderer.invoke('config:get', params),
+    setConfig: (params: { key: string; value: any }) => ipcRenderer.invoke('config:set', params),
 });
+
+// 동기적 초기 설정값 — layout.tsx 인라인 스크립트에서 FOUC 방지용으로 참조
+contextBridge.exposeInMainWorld('__initialSettings', initialSettings);

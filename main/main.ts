@@ -1,16 +1,20 @@
 import { app, BrowserWindow, ipcMain, dialog } from 'electron';
 import * as path from 'path';
 import * as fs from 'fs';
-import { getVaultPath, setVaultPath } from './lib/store';
+import { getVaultPath, setVaultPath, getSettings } from './lib/store';
 import { initDb } from './lib/db';
 import { registerTagHandlers } from './ipc/tag-handler';
 import { registerFileHandlers } from './ipc/file-handler';
 import { registerVaultHandlers } from './ipc/vault-handler';
+import { registerConfigHandlers } from './ipc/config-handler';
 
 const VAULT_FOLDER_NAME = 'MyTaggedFiles';
 const isDev = process.env.NODE_ENV === 'development';
 
 function createWindow() {
+    // preload에서 FOUC 방지를 위해 테마 설정값을 동기적으로 전달
+    const currentTheme = getSettings().theme || 'system';
+
     const win = new BrowserWindow({
         width: 1200,
         height: 800,
@@ -18,6 +22,7 @@ function createWindow() {
             preload: path.join(__dirname, 'preload.js'),
             nodeIntegration: false,
             contextIsolation: true,
+            additionalArguments: [`--initial-theme=${currentTheme}`],
         },
     });
 
@@ -38,6 +43,7 @@ app.whenReady().then(() => {
     registerTagHandlers();
     registerFileHandlers();
     registerVaultHandlers();
+    registerConfigHandlers();
 
     ipcMain.handle('get-vault-path', () => {
         return getVaultPath();
