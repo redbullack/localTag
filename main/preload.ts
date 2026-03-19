@@ -53,9 +53,9 @@ contextBridge.exposeInMainWorld('electronAPI', {
         ipcRenderer.invoke('file:select'),
     addFiles: (params?: { tagIds?: number[]; filePaths?: string[] }) =>
         ipcRenderer.invoke('file:add', params),
-    getAllFiles: (params?: { page?: number; limit?: number; sort?: { column: string; order: string } }) =>
+    getAllFiles: (params?: { page?: number; limit?: number; sort?: { column: string; order: string }; searchKeyword?: string }) =>
         ipcRenderer.invoke('file:get-all', params),
-    getFilesByTags: (params: { tagIds: number[]; page?: number; limit?: number; sort?: { column: string; order: string } }) =>
+    getFilesByTags: (params: { tagIds: number[]; page?: number; limit?: number; sort?: { column: string; order: string }; includeUntagged?: boolean; searchKeyword?: string }) =>
         ipcRenderer.invoke('file:get-by-tags', params),
     renameFile: (params: { id: number; newFilename: string }) =>
         ipcRenderer.invoke('file:rename', params),
@@ -73,7 +73,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
         ipcRenderer.invoke('file:get-total-count'),
     getUntaggedFileCount: () =>
         ipcRenderer.invoke('file:get-untagged-count'),
-    getUntaggedFiles: (params?: { page?: number; limit?: number; sort?: { column: string; order: string } }) =>
+    getUntaggedFiles: (params?: { page?: number; limit?: number; sort?: { column: string; order: string }; searchKeyword?: string }) =>
         ipcRenderer.invoke('file:get-untagged', params),
     syncFiles: () =>
         ipcRenderer.invoke('file:sync'),

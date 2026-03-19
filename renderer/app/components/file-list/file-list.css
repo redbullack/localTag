@@ -32,12 +32,53 @@
 .file-list__header-left {
     display: flex;
     align-items: center;
+    flex-shrink: 0;
+}
+
+.file-list__header-center {
+    flex: 1;
+    display: flex;
+    justify-content: center;
+    padding: 0 16px;
+    max-width: 320px;
 }
 
 .file-list__header-right {
     display: flex;
     align-items: center;
     gap: 12px;
+    flex-shrink: 0;
+}
+
+.file-list__search-input {
+    width: 100%;
+    padding: 6px 12px;
+    border: 1px solid var(--border-subtle);
+    border-radius: 6px;
+    background-color: var(--bg-primary);
+    color: var(--text-primary);
+    font-size: 13px;
+    outline: none;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.file-list__search-input::placeholder {
+    color: var(--text-muted);
+}
+
+.file-list__search-input:hover {
+    border-color: var(--border-strong);
+}
+
+.file-list__search-input:focus {
+    border-color: var(--accent-primary);
+    box-shadow: 0 0 0 2px rgba(88, 101, 242, 0.15);
+}
+
+.file-list__search-input:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    background-color: var(--bg-tertiary);
 }
 
 .file-list__sort-wrapper {

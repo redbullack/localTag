@@ -31,6 +31,8 @@ interface FileListProps {
     onEditFileTags: (file: FileWithTags) => void;
     onEditSelectedTags: () => void;
     isSyncing?: boolean;
+    searchKeyword: string;
+    onSearchChange: (keyword: string) => void;
 }
 
 
@@ -221,6 +223,8 @@ export default function FileList({
     onEditFileTags,
     onEditSelectedTags,
     isSyncing = false,
+    searchKeyword,
+    onSearchChange,
 }: FileListProps) {
     const { showToast } = useToast();
     const [isDragging, setIsDragging] = useState(false);
@@ -424,6 +428,16 @@ export default function FileList({
                         <span className="file-list__count">{files.length}</span>
                     </h3>
                 </div>
+                <div className="file-list__header-center">
+                    <input
+                        type="search"
+                        className="file-list__search-input"
+                        value={searchKeyword}
+                        onChange={(e) => onSearchChange(e.target.value)}
+                        placeholder="파일명 검색..."
+                        disabled={isSyncing}
+                    />
+                </div>
                 <div className="file-list__header-right">
                     <div className="file-list__sort-wrapper">
                         <select
@@ -481,10 +495,14 @@ export default function FileList({
             {/* 파일 목록 */}
             {files.length === 0 ? (
                 <div className="file-list__empty">
-                    <p className="file-list__empty-text">아직 파일이 없습니다.</p>
-                    <button className="file-list__empty-btn" onClick={onAddFiles}>
-                        + 첫 파일 추가하기
-                    </button>
+                    <p className="file-list__empty-text">
+                        {searchKeyword ? '검색 결과가 없습니다.' : '아직 파일이 없습니다.'}
+                    </p>
+                    {!searchKeyword && (
+                        <button className="file-list__empty-btn" onClick={onAddFiles}>
+                            + 첫 파일 추가하기
+                        </button>
+                    )}
                 </div>
             ) : (
                 <div

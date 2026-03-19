@@ -13,6 +13,7 @@ import VaultInfo from './components/vault-info/vault-info';
 import type { FileWithTags, SortOption, Tag } from './types';
 import { reorderTagListLocally } from './utils/tag-tree';
 import { UNTAGGED_TAG_ID } from './constants';
+import { useDebounce } from './utils/use-debounce';
 import { handleAddFilesResponse, handleFileTransferResponse } from './utils/file-transfer';
 import './components/shared/tag-badge.css';
 
@@ -34,6 +35,10 @@ export default function Home() {
     const [fileList, setFileList] = useState<FileWithTags[]>([]);
     const [selectedTagIds, setSelectedTagIds] = useState<number[]>([]);
     const [selectedFileIds, setSelectedFileIds] = useState<Set<number>>(new Set());
+
+    // 검색 상태
+    const [searchKeyword, setSearchKeyword] = useState('');
+    const debouncedSearchKeyword = useDebounce(searchKeyword, 300);
 
     // 페이징/정렬 상태
     const [currentPage, setCurrentPage] = useState(1);
@@ -79,6 +84,7 @@ export default function Home() {
 
         const includeUntagged = selectedTagIds.includes(UNTAGGED_TAG_ID);
         const realTagIds = selectedTagIds.filter((id) => id !== UNTAGGED_TAG_ID);
+        const keyword = debouncedSearchKeyword || undefined;
 
         let response;
         if (includeUntagged && realTagIds.length === 0) {
@@ -87,6 +93,7 @@ export default function Home() {
                 page: currentPage,
                 limit: 50,
                 sort: sortOption,
+                searchKeyword: keyword,
             });
         } else if (realTagIds.length > 0) {
             // 일반 태그 선택 (+ 태그 없음 포함 가능)
@@ -96,6 +103,7 @@ export default function Home() {
                 limit: 50,
                 sort: sortOption,
                 includeUntagged,
+                searchKeyword: keyword,
             });
         } else {
             // 필터 없음 → 전체
@@ -103,6 +111,7 @@ export default function Home() {
                 page: currentPage,
                 limit: 50,
                 sort: sortOption,
+                searchKeyword: keyword,
             });
         }
 
@@ -125,7 +134,7 @@ export default function Home() {
         }
 
         triggerStorageRefresh();
-    }, [currentPage, selectedTagIds, sortOption, triggerStorageRefresh]);
+    }, [currentPage, debouncedSearchKeyword, selectedTagIds, sortOption, triggerStorageRefresh]);
 
     /** Vault가 준비되면 태그와 파일을 함께 로드한다. */
     useEffect(() => {
@@ -139,6 +148,11 @@ export default function Home() {
     useEffect(() => {
         setSelectedFileIds(new Set());
     }, [fileList]);
+
+    /** 검색어가 변경되면 첫 페이지로 리셋한다. */
+    useEffect(() => {
+        setCurrentPage(1);
+    }, [debouncedSearchKeyword]);
 
     // ── Vault 동기화 (Sync) ──
 
@@ -778,6 +792,8 @@ export default function Home() {
                         onEditFileTags={handleOpenTagEditor}
                         onEditSelectedTags={handleOpenBulkTagEditor}
                         isSyncing={isSyncing}
+                        searchKeyword={searchKeyword}
+                        onSearchChange={setSearchKeyword}
                     />
                 </div>
             </main>

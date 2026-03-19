@@ -145,23 +145,27 @@ export const addFile = async (params: AddFileParams): Promise<FileWithTags> => {
  * @param sort - 정렬 옵션
  * @returns { data: FileWithTags[], totalCount: number }
  */
-export const getAllFiles = (page: number = 1, limit: number = 50, sort?: SortOption): { data: FileWithTags[], totalCount: number } => {
+export const getAllFiles = (page: number = 1, limit: number = 50, sort?: SortOption, searchKeyword?: string): { data: FileWithTags[], totalCount: number } => {
     const db = getDb();
 
-    // 전체 개수 조회
-    const countRow = db.prepare('SELECT COUNT(*) as count FROM files').get() as { count: number };
+    const { clause: likeClause, param: likeParam } = buildLikeCondition(searchKeyword);
+    const countParams = likeParam ? [likeParam] : [];
+
+    const countRow = db.prepare(`SELECT COUNT(*) as count FROM files WHERE 1=1 ${likeClause}`).get(...countParams) as { count: number };
     const totalCount = countRow.count;
 
     const offset = (page - 1) * limit;
     const orderBy = buildOrderByClause(sort);
+    const queryParams = likeParam ? [likeParam, limit, offset] : [limit, offset];
 
     const fileRows = db.prepare(`
         SELECT id, filename, relative_path AS relativePath, extension, size,
                created_at AS createdAt, updated_at AS updatedAt
         FROM files
+        WHERE 1=1 ${likeClause}
         ORDER BY ${orderBy}
         LIMIT ? OFFSET ?
-    `).all(limit, offset) as FileRecord[];
+    `).all(...queryParams) as FileRecord[];
 
     if (fileRows.length === 0) return { data: [], totalCount };
 
@@ -202,18 +206,20 @@ export const getAllFiles = (page: number = 1, limit: number = 50, sort?: SortOpt
  * @param sort - 정렬 옵션
  * @returns { data: FileWithTags[], totalCount: number }
  */
-export const getFilesByTagIds = (tagIds: number[], page: number = 1, limit: number = 50, sort?: SortOption, includeUntagged: boolean = false): { data: FileWithTags[], totalCount: number } => {
+export const getFilesByTagIds = (tagIds: number[], page: number = 1, limit: number = 50, sort?: SortOption, includeUntagged: boolean = false, searchKeyword?: string): { data: FileWithTags[], totalCount: number } => {
     if (!tagIds || tagIds.length === 0) {
         // 태그 ID가 없고 untagged만 요청된 경우
-        if (includeUntagged) return getUntaggedFiles(page, limit, sort);
+        if (includeUntagged) return getUntaggedFiles(page, limit, sort, searchKeyword);
         return { data: [], totalCount: 0 };
     }
 
     const db = getDb();
     const placeholders = tagIds.map(() => '?').join(',');
 
+    const { clause: likeClause, param: likeParam } = buildLikeCondition(searchKeyword, 'f.filename');
+
     const untaggedCountClause = includeUntagged
-        ? `+ (SELECT COUNT(*) FROM files f2 WHERE NOT EXISTS (SELECT 1 FROM file_tags ft2 WHERE ft2.file_id = f2.id))`
+        ? `+ (SELECT COUNT(*) FROM files f2 WHERE NOT EXISTS (SELECT 1 FROM file_tags ft2 WHERE ft2.file_id = f2.id) ${likeParam ? `AND f2.filename LIKE ? ESCAPE '\\'` : ''})`
         : '';
 
     // 전체 개수 조회 쿼리 (재귀 공통 테이블 식 적용)
@@ -228,10 +234,16 @@ export const getFilesByTagIds = (tagIds: number[], page: number = 1, limit: numb
             SELECT COUNT(DISTINCT f.id)
             FROM files f
             JOIN file_tags ft ON f.id = ft.file_id
-            WHERE ft.tag_id IN (SELECT id FROM tag_tree)
+            WHERE ft.tag_id IN (SELECT id FROM tag_tree) ${likeClause}
         ) ${untaggedCountClause} as count
     `;
-    const countRow = db.prepare(countQuery).get(...tagIds) as { count: number };
+
+    // tagIds + likeParam(tagged) + likeParam(untagged, includeUntagged인 경우)
+    const countBindings: (number | string)[] = [...tagIds];
+    if (likeParam) countBindings.push(likeParam);
+    if (includeUntagged && likeParam) countBindings.push(likeParam);
+
+    const countRow = db.prepare(countQuery).get(...countBindings) as { count: number };
     const totalCount = countRow.count;
 
     const offset = (page - 1) * limit;
@@ -248,6 +260,14 @@ export const getFilesByTagIds = (tagIds: number[], page: number = 1, limit: numb
             .replace('f.extension', 'extension')
             .replace('f.size', 'size');
 
+        const untaggedLikeClause = likeParam ? `AND f.filename LIKE ? ESCAPE '\\' ` : '';
+
+        // tagIds + likeParam(tagged) + likeParam(untagged) + limit + offset
+        const queryBindings: (number | string)[] = [...tagIds];
+        if (likeParam) queryBindings.push(likeParam);
+        if (likeParam) queryBindings.push(likeParam);
+        queryBindings.push(limit, offset);
+
         fileRows = db.prepare(`
             WITH RECURSIVE tag_tree AS (
                 SELECT id FROM tags WHERE id IN (${placeholders})
@@ -260,18 +280,22 @@ export const getFilesByTagIds = (tagIds: number[], page: number = 1, limit: numb
                        f.extension, f.size, f.created_at AS createdAt, f.updated_at AS updatedAt
                 FROM files f
                 JOIN file_tags ft ON f.id = ft.file_id
-                WHERE ft.tag_id IN (SELECT id FROM tag_tree)
+                WHERE ft.tag_id IN (SELECT id FROM tag_tree) ${likeClause}
                 UNION
                 SELECT f.id, f.filename, f.relative_path AS relativePath,
                        f.extension, f.size, f.created_at AS createdAt, f.updated_at AS updatedAt
                 FROM files f
-                WHERE NOT EXISTS (SELECT 1 FROM file_tags ft2 WHERE ft2.file_id = f.id)
+                WHERE NOT EXISTS (SELECT 1 FROM file_tags ft2 WHERE ft2.file_id = f.id) ${untaggedLikeClause}
             )
             ORDER BY ${aliasOrderBy}
             LIMIT ? OFFSET ?
-        `).all(...tagIds, limit, offset) as FileRecord[];
+        `).all(...queryBindings) as FileRecord[];
     } else {
-        // 기존 쿼리 그대로 사용 (서브쿼리 래핑 없음)
+        // tagIds + likeParam + limit + offset
+        const queryBindings: (number | string)[] = [...tagIds];
+        if (likeParam) queryBindings.push(likeParam);
+        queryBindings.push(limit, offset);
+
         fileRows = db.prepare(`
             WITH RECURSIVE tag_tree AS (
                 SELECT id FROM tags WHERE id IN (${placeholders})
@@ -283,10 +307,10 @@ export const getFilesByTagIds = (tagIds: number[], page: number = 1, limit: numb
                    f.extension, f.size, f.created_at AS createdAt, f.updated_at AS updatedAt
             FROM files f
             JOIN file_tags ft ON f.id = ft.file_id
-            WHERE ft.tag_id IN (SELECT id FROM tag_tree)
+            WHERE ft.tag_id IN (SELECT id FROM tag_tree) ${likeClause}
             ORDER BY ${orderBy}
             LIMIT ? OFFSET ?
-        `).all(...tagIds, limit, offset) as FileRecord[];
+        `).all(...queryBindings) as FileRecord[];
     }
 
     if (fileRows.length === 0) return { data: [], totalCount };
@@ -345,20 +369,24 @@ export const getTotalFileCount = (): { count: number } => {
  * @param sort - 정렬 옵션
  * @returns { data: FileWithTags[], totalCount: number }
  */
-export const getUntaggedFiles = (page: number = 1, limit: number = 50, sort?: SortOption): { data: FileWithTags[], totalCount: number } => {
+export const getUntaggedFiles = (page: number = 1, limit: number = 50, sort?: SortOption, searchKeyword?: string): { data: FileWithTags[], totalCount: number } => {
     const db = getDb();
+
+    const { clause: likeClause, param: likeParam } = buildLikeCondition(searchKeyword, 'f.filename');
+    const countParams = likeParam ? [likeParam] : [];
 
     const countRow = db.prepare(`
         SELECT COUNT(*) as count
         FROM files f
         WHERE NOT EXISTS (
             SELECT 1 FROM file_tags ft WHERE ft.file_id = f.id
-        )
-    `).get() as { count: number };
+        ) ${likeClause}
+    `).get(...countParams) as { count: number };
     const totalCount = countRow.count;
 
     const offset = (page - 1) * limit;
     const orderBy = buildOrderByClause(sort);
+    const queryParams = likeParam ? [likeParam, limit, offset] : [limit, offset];
 
     const fileRows = db.prepare(`
         SELECT id, filename, relative_path AS relativePath, extension, size,
@@ -366,10 +394,10 @@ export const getUntaggedFiles = (page: number = 1, limit: number = 50, sort?: So
         FROM files f
         WHERE NOT EXISTS (
             SELECT 1 FROM file_tags ft WHERE ft.file_id = f.id
-        )
+        ) ${likeClause}
         ORDER BY ${orderBy}
         LIMIT ? OFFSET ?
-    `).all(limit, offset) as FileRecord[];
+    `).all(...queryParams) as FileRecord[];
 
     const data = fileRows.map((file) => ({ ...file, tags: [] }));
 
@@ -700,6 +728,23 @@ export const syncVault = (): { addedCount: number; deletedCount: number; updated
 };
 
 // ─── 내부 헬퍼 ───────────────────────────────────────────────────────────────────────────
+
+/**
+ * searchKeyword로부터 SQL LIKE 조건 절과 바인딩 파라미터를 생성합니다.
+ * @param searchKeyword - 검색어 (없거나 공백이면 조건 없음)
+ * @param columnExpr - LIKE를 적용할 컬럼 표현식 (e.g. 'filename' 또는 'f.filename')
+ * @returns clause: WHERE절에 붙일 문자열, param: 바인딩 값 또는 null
+ */
+const buildLikeCondition = (searchKeyword?: string, columnExpr = 'filename'): { clause: string; param: string | null } => {
+    const trimmed = searchKeyword?.trim();
+    if (!trimmed) return { clause: '', param: null };
+
+    const escaped = trimmed.replace(/%/g, '\\%').replace(/_/g, '\\_');
+    return {
+        clause: `AND ${columnExpr} LIKE ? ESCAPE '\\'`,
+        param: `%${escaped}%`,
+    };
+};
 
 /** ID로 단일 파일 + 태그 정보를 조회합니다. */
 const getFileWithTagsById = (fileId: number): FileWithTags => {
