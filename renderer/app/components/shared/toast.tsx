@@ -83,7 +83,7 @@ export function Toast({
         >
             <div className="toast-content">
                 <span className="toast-icon">{TOAST_ICON[type]}</span>
-                <span className="toast-message">{message}</span>
+                <span className="toast-message" style={{ whiteSpace: 'pre-line' }}>{message}</span>
 
                 {(showConfirm || showCancel) && (
                     <div className="toast-actions">
