@@ -76,8 +76,8 @@ export interface IElectronAPI {
     // File CRUD
     selectFiles: () => Promise<IpcResponse<{ filePaths: string[] }>>;
     addFiles: (params?: { tagIds?: number[]; filePaths?: string[] }) => Promise<IpcResponse<FileWithTags[]>>;
-    getAllFiles: (params?: { page?: number; limit?: number; sort?: { column: string; order: string } }) => Promise<IpcResponse<FileWithTags[]>>;
-    getFilesByTags: (params: { tagIds: number[]; page?: number; limit?: number; sort?: { column: string; order: string }; includeUntagged?: boolean }) => Promise<IpcResponse<FileWithTags[]>>;
+    getAllFiles: (params?: { page?: number; limit?: number; sort?: { column: string; order: string }; searchKeyword?: string }) => Promise<IpcResponse<FileWithTags[]>>;
+    getFilesByTags: (params: { tagIds: number[]; page?: number; limit?: number; sort?: { column: string; order: string }; includeUntagged?: boolean; searchKeyword?: string }) => Promise<IpcResponse<FileWithTags[]>>;
     renameFile: (params: { id: number; newFilename: string }) => Promise<IpcResponse<FileWithTags>>;
     deleteFile: (params: { id: number }) => Promise<IpcResponse<{ success: boolean }>>;
     deleteFilesBatch: (params: { ids: number[] }) => Promise<IpcResponse<{ deletedCount: number }>>;
@@ -86,7 +86,7 @@ export interface IElectronAPI {
     checkDuplicateFilenames: (params: { filenames: string[] }) => Promise<IpcResponse<{ duplicates: string[] }>>;
     getTotalFileCount: () => Promise<IpcResponse<number>>;
     getUntaggedFileCount: () => Promise<IpcResponse<number>>;
-    getUntaggedFiles: (params?: { page?: number; limit?: number; sort?: { column: string; order: string } }) => Promise<IpcResponse<FileWithTags[]>>;
+    getUntaggedFiles: (params?: { page?: number; limit?: number; sort?: { column: string; order: string }; searchKeyword?: string }) => Promise<IpcResponse<FileWithTags[]>>;
     syncFiles: () => Promise<IpcResponse<{ addedCount: number; deletedCount: number; updatedCount: number; detectedFolderCount: number }>>;
     openFile: (params: { filename: string }) => Promise<IpcResponse<void>>;
     showFileInExplorer: (params: { filename: string }) => Promise<IpcResponse<void>>;
