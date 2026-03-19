@@ -4,8 +4,6 @@ import { useCallback, useEffect, useState } from 'react';
 
 export type ThemeMode = 'light' | 'dark' | 'system';
 
-const STORAGE_KEY = 'theme';
-
 function getSystemTheme(): 'light' | 'dark' {
     if (typeof window === 'undefined') return 'dark';
     return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
@@ -18,12 +16,13 @@ function applyThemeToDOM(mode: ThemeMode) {
     document.documentElement.setAttribute('data-theme', resolved);
 }
 
-function getStoredTheme(): ThemeMode {
+function getInitialTheme(): ThemeMode {
     if (typeof window === 'undefined') return 'system';
 
-    const stored = localStorage.getItem(STORAGE_KEY);
-    if (stored === 'light' || stored === 'dark' || stored === 'system') {
-        return stored;
+    // preload에서 동기 주입된 초기 설정값 사용
+    const initial = window.__initialSettings;
+    if (initial?.theme === 'light' || initial?.theme === 'dark' || initial?.theme === 'system') {
+        return initial.theme;
     }
 
     return 'system';
@@ -36,17 +35,28 @@ export interface UseThemeReturn {
 }
 
 export function useTheme(): UseThemeReturn {
-    const [themeMode, setThemeModeState] = useState<ThemeMode>(getStoredTheme);
+    const [themeMode, setThemeModeState] = useState<ThemeMode>(getInitialTheme);
     const [resolvedTheme, setResolvedTheme] = useState<'light' | 'dark'>(() => {
-        const stored = getStoredTheme();
+        const stored = getInitialTheme();
         return stored === 'system' ? getSystemTheme() : stored;
     });
 
     const setThemeMode = useCallback((mode: ThemeMode) => {
         setThemeModeState(mode);
-        localStorage.setItem(STORAGE_KEY, mode);
         applyThemeToDOM(mode);
         setResolvedTheme(mode === 'system' ? getSystemTheme() : mode);
+
+        // electron-store에 비동기 저장
+        window.electronAPI.setConfig({ key: 'theme', value: mode });
+    }, []);
+
+    // 기존 localStorage 값이 있으면 electron-store로 일회성 마이그레이션
+    useEffect(() => {
+        const legacy = localStorage.getItem('theme');
+        if (legacy === 'light' || legacy === 'dark' || legacy === 'system') {
+            window.electronAPI.setConfig({ key: 'theme', value: legacy });
+            localStorage.removeItem('theme');
+        }
     }, []);
 
     useEffect(() => {
