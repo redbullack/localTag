@@ -22,7 +22,7 @@ Electron과 Next.js 기반의 데스크탑 애플리케이션 프로젝트입니
 ## 진행 및 수정 사항 (Changelog)
 
 * **2026-03-19**
-  * **작업 내용**: 테마 설정 저장소를 localStorage에서 electron-store로 마이그레이션. (1) `electron-store` 기반 범용 설정 구조(`AppSettings`) 도입 — 향후 언어·정렬 방식 등 설정 추가 시 `AppSettings` 인터페이스 확장만으로 대응 가능. (2) preload.ts에서 electron-store 설정값을 동기적으로 읽어 `window.__initialSettings`로 주입, FOUC 없이 올바른 테마가 즉시 적용. (3) `config:get-settings`, `config:get`, `config:set` IPC 채널 추가. (4) 기존 localStorage에 저장된 테마 값은 최초 실행 시 자동으로 electron-store로 이관 후 삭제.
+  * **작업 내용**: 테마 설정 저장소를 localStorage에서 electron-store로 마이그레이션. (1) `electron-store` 기반 범용 설정 구조(`AppSettings`) 도입 — 향후 언어·정렬 방식 등 설정 추가 시 `AppSettings` 인터페이스 확장만으로 대응 가능. (2) Main 프로세스에서 `BrowserWindow` 생성 시 `additionalArguments`로 테마 값을 전달하고, preload에서 `process.argv`로 읽어 `window.__initialSettings`에 주입 — sandbox 환경 호환 + FOUC 방지. (3) `config:get-settings`, `config:get`, `config:set` IPC 채널 추가. (4) 기존 localStorage에 저장된 테마 값은 최초 실행 시 자동으로 electron-store로 이관 후 삭제.
   * **변경된 핵심 파일**: `main/lib/store.ts`, `main/ipc/config-handler.ts`(신규), `main/main.ts`, `main/preload.ts`, `renderer/global.d.ts`, `renderer/app/layout.tsx`, `renderer/app/utils/use-theme.ts`
 
 * **2026-03-18**
