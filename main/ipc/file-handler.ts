@@ -141,25 +141,27 @@ export const registerFileHandlers = (): void => {
         }
     });
 
-    ipcMain.handle('file:get-all', (_event, params?: { page?: number; limit?: number; sort?: SortOption }) => {
+    ipcMain.handle('file:get-all', (_event, params?: { page?: number; limit?: number; sort?: SortOption; searchKeyword?: string }) => {
         try {
             const page = params?.page || 1;
             const limit = params?.limit || 50;
             const sort = params?.sort;
-            const result = getAllFiles(page, limit, sort);
+            const searchKeyword = params?.searchKeyword;
+            const result = getAllFiles(page, limit, sort, searchKeyword);
             return { success: true, ...result }; // { success: true, data, totalCount }
         } catch (error: any) {
             return { success: false, error: error.message };
         }
     });
 
-    ipcMain.handle('file:get-by-tags', (_event, params: { tagIds: number[]; page?: number; limit?: number; sort?: SortOption; includeUntagged?: boolean }) => {
+    ipcMain.handle('file:get-by-tags', (_event, params: { tagIds: number[]; page?: number; limit?: number; sort?: SortOption; includeUntagged?: boolean; searchKeyword?: string }) => {
         try {
             const page = params.page || 1;
             const limit = params.limit || 50;
             const sort = params.sort;
             const includeUntagged = params.includeUntagged ?? false;
-            const result = getFilesByTagIds(params.tagIds, page, limit, sort, includeUntagged);
+            const searchKeyword = params.searchKeyword;
+            const result = getFilesByTagIds(params.tagIds, page, limit, sort, includeUntagged, searchKeyword);
             return { success: true, ...result };
         } catch (error: any) {
             return { success: false, error: error.message };
@@ -225,12 +227,13 @@ export const registerFileHandlers = (): void => {
         }
     });
 
-    ipcMain.handle('file:get-untagged', (_event, params?: { page?: number; limit?: number; sort?: SortOption }) => {
+    ipcMain.handle('file:get-untagged', (_event, params?: { page?: number; limit?: number; sort?: SortOption; searchKeyword?: string }) => {
         try {
             const page = params?.page || 1;
             const limit = params?.limit || 50;
             const sort = params?.sort;
-            const result = getUntaggedFiles(page, limit, sort);
+            const searchKeyword = params?.searchKeyword;
+            const result = getUntaggedFiles(page, limit, sort, searchKeyword);
             return { success: true, ...result };
         } catch (error: any) {
             return { success: false, error: error.message };

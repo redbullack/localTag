@@ -22,6 +22,10 @@ Electron과 Next.js 기반의 데스크탑 애플리케이션 프로젝트입니
 ## 진행 및 수정 사항 (Changelog)
 
 * **2026-03-19**
+  * **작업 내용**: 파일 검색 기능 구현. (1) **debounce 실시간 검색**: 검색창에 타이핑 시 300ms 지연 후 자동으로 결과 반영. 빈 검색어는 전체 목록 표시. (2) **DB 검색**: 파일명을 LIKE '%keyword%' 형태로 조회. SQL 와일드카드(%, _) 이스케이프 처리로 특수문자 포함 검색 안전성 보장. (3) **세 쿼리 함수 확장**: `getAllFiles`, `getFilesByTagIds`, `getUntaggedFiles`에 `searchKeyword` 파라미터 추가. 각 함수는 기존 필터(태그·페이징·정렬)와 독립적으로 검색 조건 적용. (4) **UI 배치**: 파일 목록 헤더에 `file-list__header-center` 영역 추가, 검색창 배치. 빈 상태 텍스트를 검색 여부에 따라 동적 변경. (5) **CSS 테마 대응**: Light/Dark/System 모드에서 CSS 변수 기반으로 자동 적용. 포커스/hover 시 accent 색상 강조.
+  * **변경된 핵심 파일**: `main/lib/file-repository.ts`, `main/ipc/file-handler.ts`, `main/preload.ts`, `renderer/global.d.ts`, `renderer/app/utils/use-debounce.ts`(신규), `renderer/app/page.tsx`, `renderer/app/components/file-list/file-list.tsx`, `renderer/app/components/file-list/file-list.css`
+
+* **2026-03-19**
   * **작업 내용**: 파일 이동/복사 실패 토스트 메시지 UX 개선. 여러 파일이 동시에 실패할 때 `errors.join(', ')`으로 모든 메시지를 한 줄에 이어붙이던 방식을 개선. (1) `groupErrorsByReason()` — 이유별 그룹핑, (2) `formatErrorGroups()` — 3개 미만은 파일명 나열, 3개 이상은 `"N개 파일 — 이유"` 요약으로 출력. Toast 컴포넌트에 `whiteSpace: pre-line` 추가로 `\n` 줄바꿈 렌더링 지원. 파일 추가 중복 메시지도 동일 임계값 처리 적용. 실패 수에 따라 토스트 표시 시간 자동 연장(5000ms → 7000ms).
   * **변경된 핵심 파일**: `renderer/app/utils/file-transfer.ts`, `renderer/app/components/shared/toast.tsx`, `renderer/app/components/shared/toast.css`
 
