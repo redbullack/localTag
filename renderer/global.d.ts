@@ -93,10 +93,23 @@ export interface IElectronAPI {
     moveFilesToFolder: (params: { files: { id: number; filename: string }[] }) => Promise<IpcResponse<{ movedCount: number; errors: string[] }>>;
     copyFilesToFolder: (params: { files: { id: number; filename: string }[] }) => Promise<IpcResponse<{ copiedCount: number; errors: string[] }>>;
     getPathForFile: (file: File) => string;
+
+    // Config
+    getSettings: () => Promise<IpcResponse<AppSettings>>;
+    getConfig: (params: { key: string }) => Promise<IpcResponse<any>>;
+    setConfig: (params: { key: string; value: any }) => Promise<IpcResponse<null>>;
+}
+
+/** 앱 설정 타입 */
+export type ThemeMode = 'light' | 'dark' | 'system';
+
+export interface AppSettings {
+    theme: ThemeMode;
 }
 
 declare global {
     interface Window {
         electronAPI: IElectronAPI;
+        __initialSettings: AppSettings;
     }
 }
