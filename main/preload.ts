@@ -4,9 +4,10 @@ import { contextBridge, ipcRenderer, webUtils } from 'electron';
  * Electron Main ↔ Renderer 간 안전한 통신을 위한 Context Bridge
  *
  * IPC 채널 목록:
- * - Vault: get-vault-path, select-vault-path, vault:get-storage-info, vault:relocate
- * - Tag:   tag:create, tag:get-all, tag:update, tag:delete, tag:reorder
- * - File:  file:add, file:get-all, file:get-by-tags, file:rename, file:delete, file:update-tags, file:bulk-set-tags, file:check-duplicate
+ * - Vault:  get-vault-path, select-vault-path, vault:get-storage-info, vault:relocate
+ * - Config: config:get-theme, config:set-theme
+ * - Tag:    tag:create, tag:get-all, tag:update, tag:delete, tag:reorder
+ * - File:   file:add, file:get-all, file:get-by-tags, file:rename, file:delete, file:update-tags, file:bulk-set-tags, file:check-duplicate
  */
 contextBridge.exposeInMainWorld('electronAPI', {
     // Vault 관련
@@ -24,6 +25,10 @@ contextBridge.exposeInMainWorld('electronAPI', {
         ipcRenderer.on('file:operation-progress', handler);
         return () => { ipcRenderer.removeListener('file:operation-progress', handler); };
     },
+
+    // Config
+    getTheme: () => ipcRenderer.invoke('config:get-theme'),
+    setTheme: (theme: string) => ipcRenderer.invoke('config:set-theme', theme),
 
     // Tag CRUD
     createTag: (params: { name: string; color?: string; parentId?: number }) =>

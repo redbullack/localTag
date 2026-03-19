@@ -1,7 +1,7 @@
 import { app, BrowserWindow, ipcMain, dialog } from 'electron';
 import * as path from 'path';
 import * as fs from 'fs';
-import { getVaultPath, setVaultPath } from './lib/store';
+import { getVaultPath, setVaultPath, getTheme, setTheme } from './lib/store';
 import { initDb } from './lib/db';
 import { registerTagHandlers } from './ipc/tag-handler';
 import { registerFileHandlers } from './ipc/file-handler';
@@ -41,6 +41,18 @@ app.whenReady().then(() => {
 
     ipcMain.handle('get-vault-path', () => {
         return getVaultPath();
+    });
+
+    ipcMain.handle('config:get-theme', () => {
+        return getTheme();
+    });
+
+    ipcMain.handle('config:set-theme', (_event, theme: string) => {
+        if (theme === 'light' || theme === 'dark' || theme === 'system') {
+            setTheme(theme);
+            return { success: true };
+        }
+        return { success: false, error: 'Invalid theme value' };
     });
 
     ipcMain.handle('select-vault-path', async () => {

@@ -66,6 +66,10 @@ export interface IElectronAPI {
     onVaultRelocateProgress: (callback: (progress: RelocateProgress) => void) => () => void;
     onFileOperationProgress: (callback: (progress: FileOperationProgress) => void) => () => void;
 
+    // Config
+    getTheme: () => Promise<'light' | 'dark' | 'system'>;
+    setTheme: (theme: 'light' | 'dark' | 'system') => Promise<{ success: boolean; error?: string }>;
+
     // Tag CRUD
     createTag: (params: { name: string; color?: string; parentId?: number }) => Promise<IpcResponse<Tag>>;
     getAllTags: () => Promise<IpcResponse<Tag[]>>;
