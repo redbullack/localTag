@@ -1,9 +1,26 @@
 import { contextBridge, ipcRenderer, webUtils } from 'electron';
-import Store from 'electron-store';
+import * as fs from 'fs';
+import * as path from 'path';
 
 // preload 시점에 동기적으로 설정값을 읽어 FOUC 방지에 활용
-const store = new Store({ defaults: { settings: { theme: 'system' } } });
-const initialSettings = store.get('settings') as { theme: string };
+// electron-store는 preload에서 app 모듈 접근이 불가하므로 config.json을 직접 읽음
+function readInitialSettings(): { theme: string } {
+    const defaultSettings = { theme: 'system' };
+    try {
+        const userDataPath = process.env.APPDATA
+            || (process.platform === 'darwin'
+                ? path.join(process.env.HOME || '', 'Library', 'Application Support')
+                : path.join(process.env.HOME || '', '.config'));
+        const configPath = path.join(userDataPath, 'localtag', 'config.json');
+        const raw = fs.readFileSync(configPath, 'utf-8');
+        const config = JSON.parse(raw);
+        return config?.settings ?? defaultSettings;
+    } catch {
+        return defaultSettings;
+    }
+}
+
+const initialSettings = readInitialSettings();
 
 /**
  * Electron Main ↔ Renderer 간 안전한 통신을 위한 Context Bridge
