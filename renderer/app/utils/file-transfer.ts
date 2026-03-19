@@ -4,6 +4,37 @@
  * page.tsx의 파일 처리 로직 중복을 제거하기 위해 분리한 모듈입니다.
  */
 
+const FILE_GROUP_THRESHOLD = 3;
+
+/** "파일명: 이유" 형식의 errors 배열을 이유별로 그룹핑한다. */
+function groupErrorsByReason(errors: string[]): Array<{ reason: string; filenames: string[] }> {
+    const reasonMap = new Map<string, string[]>();
+    for (const entry of errors) {
+        const colonIndex = entry.indexOf(': ');
+        if (colonIndex === -1) {
+            const key = '알 수 없는 오류';
+            reasonMap.set(key, [...(reasonMap.get(key) ?? []), entry]);
+            continue;
+        }
+        const filename = entry.slice(0, colonIndex);
+        const reason = entry.slice(colonIndex + 2);
+        reasonMap.set(reason, [...(reasonMap.get(reason) ?? []), filename]);
+    }
+    return Array.from(reasonMap.entries()).map(([reason, filenames]) => ({ reason, filenames }));
+}
+
+/** 그룹핑된 에러를 사람이 읽기 쉬운 문자열로 변환한다. 3개 이상이면 개수로 요약. */
+function formatErrorGroups(groups: Array<{ reason: string; filenames: string[] }>): string {
+    return groups
+        .map(({ reason, filenames }) => {
+            if (filenames.length >= FILE_GROUP_THRESHOLD) {
+                return `${filenames.length}개 파일 — ${reason}`;
+            }
+            return `${filenames.join(', ')} — ${reason}`;
+        })
+        .join('\n');
+}
+
 export interface ShowToastFn {
     (options: { type: 'success' | 'error'; message: string; duration?: number }): void;
 }
@@ -41,10 +72,13 @@ export function handleAddFilesResponse(
 ): boolean {
     if (!response.success) {
         if (response.duplicates && response.duplicates.length > 0) {
+            const duplicateMessage = response.duplicates.length >= FILE_GROUP_THRESHOLD
+                ? `${response.duplicates.length}개 파일이 이미 존재합니다.`
+                : `다음 파일명이 이미 존재합니다: ${response.duplicates.join(', ')}`;
             showToast({
                 type: 'error',
-                message: `다음 파일명이 이미 존재합니다: ${response.duplicates.join(', ')}`,
-                duration: 5000,
+                message: duplicateMessage,
+                duration: response.duplicates.length >= FILE_GROUP_THRESHOLD ? 7000 : 5000,
             });
         } else if (response.error) {
             showToast({ type: 'error', message: response.error, duration: 4000 });
@@ -95,10 +129,12 @@ export function handleFileTransferResponse(
     // 부분 실패
     if (errors.length > 0) {
         const actionName = mode === 'move' ? '이동' : '복사';
+        const groups = groupErrorsByReason(errors);
+        const formattedMessage = formatErrorGroups(groups);
         showToast({
             type: 'error',
-            message: `일부 파일 ${actionName} 실패: ${errors.join(', ')}`,
-            duration: 5000,
+            message: `일부 파일 ${actionName} 실패 (${errors.length}개):\n${formattedMessage}`,
+            duration: errors.length >= FILE_GROUP_THRESHOLD ? 7000 : 5000,
         });
     }
 
