@@ -1,23 +1,11 @@
 import { contextBridge, ipcRenderer, webUtils } from 'electron';
-import * as fs from 'fs';
-import * as path from 'path';
 
-// preload 시점에 동기적으로 설정값을 읽어 FOUC 방지에 활용
-// electron-store는 preload에서 app 모듈 접근이 불가하므로 config.json을 직접 읽음
+// Main 프로세스에서 additionalArguments로 전달한 초기 테마 값을 읽음
+// sandbox 모드에서는 fs/path 등 Node.js 모듈 접근 불가하므로 process.argv 활용
 function readInitialSettings(): { theme: string } {
-    const defaultSettings = { theme: 'system' };
-    try {
-        const userDataPath = process.env.APPDATA
-            || (process.platform === 'darwin'
-                ? path.join(process.env.HOME || '', 'Library', 'Application Support')
-                : path.join(process.env.HOME || '', '.config'));
-        const configPath = path.join(userDataPath, 'localtag', 'config.json');
-        const raw = fs.readFileSync(configPath, 'utf-8');
-        const config = JSON.parse(raw);
-        return config?.settings ?? defaultSettings;
-    } catch {
-        return defaultSettings;
-    }
+    const themeArg = process.argv.find(arg => arg.startsWith('--initial-theme='));
+    const theme = themeArg ? themeArg.split('=')[1] : 'system';
+    return { theme };
 }
 
 const initialSettings = readInitialSettings();
