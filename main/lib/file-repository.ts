@@ -97,13 +97,16 @@ export const addFile = async (params: AddFileParams): Promise<FileWithTags> => {
         throw new Error(`원본 파일을 찾을 수 없습니다: ${sourcePath}`);
     }
 
-    // Vault로 파일 이동 (실패 시 스트림 복사 후 원본 삭제 fallback)
+    // Vault로 파일 이동 (실패 시 스트림 복사 fallback, 원본 삭제는 DB INSERT 후)
+    let shouldDeleteSource = false;
+
     try {
         fs.renameSync(sourcePath, destinationPath);
+        // renameSync 성공 = 원본이 이미 이동됨, 삭제 불필요
     } catch (error: any) {
         if (error.code === 'EXDEV') {
             await copyFileWithProgress(sourcePath, destinationPath, onProgress);
-            fs.unlinkSync(sourcePath);
+            shouldDeleteSource = true;
         } else {
             throw new Error(`파일 이동 실패: ${error.message}`);
         }
@@ -122,18 +125,33 @@ export const addFile = async (params: AddFileParams): Promise<FileWithTags> => {
         INSERT INTO file_tags (file_id, tag_id) VALUES (?, ?)
     `);
 
-    const transaction = db.transaction(() => {
-        const result = insertFile.run(relativePath, relativePath, extension, fileStats.size);
-        const fileId = result.lastInsertRowid as number;
+    let fileId: number;
+    try {
+        const transaction = db.transaction(() => {
+            const result = insertFile.run(relativePath, relativePath, extension, fileStats.size);
+            const id = result.lastInsertRowid as number;
 
-        for (const tagId of tagIds) {
-            insertFileTag.run(fileId, tagId);
+            for (const tagId of tagIds) {
+                insertFileTag.run(id, tagId);
+            }
+
+            return id;
+        });
+        fileId = transaction();
+    } catch (dbError: any) {
+        // DB INSERT 실패 시 Vault 복사본만 정리, 원본은 절대 삭제하지 않음
+        try { fs.unlinkSync(destinationPath); } catch { /* 무시 */ }
+        throw new Error(`DB 등록 실패: ${dbError.message}`);
+    }
+
+    // DB INSERT 성공 후에만 원본 삭제 (데이터 손실 방지)
+    if (shouldDeleteSource) {
+        try {
+            fs.unlinkSync(sourcePath);
+        } catch (unlinkError: any) {
+            console.warn(`원본 파일 삭제 실패 (무시): ${unlinkError.message}`);
         }
-
-        return fileId;
-    });
-
-    const fileId = transaction();
+    }
 
     return getFileWithTagsById(fileId);
 };

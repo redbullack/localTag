@@ -165,7 +165,7 @@ export default function Home() {
             showLoading({ operationType: 'sync', description: '동기화 중...' });
         }
         try {
-            const response = await window.electronAPI.syncFiles();
+            const response = await window.electronAPI.syncFiles({ silent: isSilent });
 
             if (response.success && response.data) {
                 const { addedCount, deletedCount, updatedCount, detectedFolderCount } = response.data;
@@ -232,12 +232,17 @@ export default function Home() {
         return cleanup;
     }, [updateProgress]);
 
-    /** 앱이 다시 포커스를 얻으면 조용히 동기화한다. */
+    /** 앱이 다시 포커스를 얻으면 조용히 동기화한다. (파일 작업 중이면 스킵) */
     useEffect(() => {
-        const handleFocus = () => {
-            if (vaultPath && !isSyncing) {
-                handleSync(true);
+        const handleFocus = async () => {
+            if (!vaultPath || isSyncing) return;
+
+            if (typeof window !== 'undefined' && window.electronAPI) {
+                const response = await window.electronAPI.isFileOperating();
+                if (response.success && response.data) return;
             }
+
+            handleSync(true);
         };
 
         window.addEventListener('focus', handleFocus);
