@@ -72,6 +72,23 @@ export const registerFileHandlers = (): void => {
         }
     });
 
+    ipcMain.handle('file:select-folder', async (_event, params?: { title?: string }) => {
+        try {
+            const result = await dialog.showOpenDialog({
+                properties: ['openDirectory'],
+                title: params?.title ?? '폴더 선택',
+            });
+
+            if (result.canceled || result.filePaths.length === 0) {
+                return { success: true, data: { folderPath: null } };
+            }
+
+            return { success: true, data: { folderPath: result.filePaths[0] } };
+        } catch (error: any) {
+            return { success: false, error: error.message };
+        }
+    });
+
     ipcMain.handle('file:add', async (_event, params: { tagIds?: number[]; filePaths?: string[] }) => {
         // 다이얼로그는 lock 밖에서 실행 (사용자 입력 대기 중 lock 점유 방지)
         let filePathsToProcess: string[] = [];
@@ -332,25 +349,31 @@ export const registerFileHandlers = (): void => {
         }
     });
 
-    ipcMain.handle('file:move-to-folder', async (_event, params: { files: { id: number; filename: string }[] }) => {
-        // 다이얼로그는 lock 밖에서 실행
+    ipcMain.handle('file:move-to-folder', async (_event, params: { files: { id: number; filename: string }[]; targetDir?: string }) => {
         const vaultPath = getVaultPath();
         if (!vaultPath) {
             return { success: false, error: 'Vault 경로가 설정되지 않았습니다.' };
         }
 
-        const result = await dialog.showOpenDialog({
-            properties: ['openDirectory'],
-            title: '파일을 이동할 폴더 선택',
-        });
+        let targetDir: string;
 
-        if (result.canceled || result.filePaths.length === 0) {
-            return { success: true, data: { movedCount: 0, errors: [] } };
+        if (params.targetDir) {
+            targetDir = params.targetDir;
+        } else {
+            // 하위 호환: targetDir 미전달 시 기존처럼 다이얼로그 표시
+            const result = await dialog.showOpenDialog({
+                properties: ['openDirectory'],
+                title: '파일을 이동할 폴더 선택',
+            });
+
+            if (result.canceled || result.filePaths.length === 0) {
+                return { success: true, data: { movedCount: 0, errors: [] } };
+            }
+            targetDir = result.filePaths[0];
         }
 
         const release = await fileOperationLock.acquire();
         try {
-            const targetDir = result.filePaths[0];
             const errors: string[] = [];
             let movedCount = 0;
             const totalCount = params.files.length;
@@ -415,25 +438,31 @@ export const registerFileHandlers = (): void => {
         }
     });
 
-    ipcMain.handle('file:copy-to-folder', async (_event, params: { files: { id: number; filename: string }[] }) => {
-        // 다이얼로그는 lock 밖에서 실행
+    ipcMain.handle('file:copy-to-folder', async (_event, params: { files: { id: number; filename: string }[]; targetDir?: string }) => {
         const vaultPath = getVaultPath();
         if (!vaultPath) {
             return { success: false, error: 'Vault 경로가 설정되지 않았습니다.' };
         }
 
-        const result = await dialog.showOpenDialog({
-            properties: ['openDirectory'],
-            title: '파일을 복사할 폴더 선택',
-        });
+        let targetDir: string;
 
-        if (result.canceled || result.filePaths.length === 0) {
-            return { success: true, data: { copiedCount: 0, errors: [] } };
+        if (params.targetDir) {
+            targetDir = params.targetDir;
+        } else {
+            // 하위 호환: targetDir 미전달 시 기존처럼 다이얼로그 표시
+            const result = await dialog.showOpenDialog({
+                properties: ['openDirectory'],
+                title: '파일을 복사할 폴더 선택',
+            });
+
+            if (result.canceled || result.filePaths.length === 0) {
+                return { success: true, data: { copiedCount: 0, errors: [] } };
+            }
+            targetDir = result.filePaths[0];
         }
 
         const release = await fileOperationLock.acquire();
         try {
-            const targetDir = result.filePaths[0];
             const errors: string[] = [];
             let copiedCount = 0;
             const totalCount = params.files.length;
