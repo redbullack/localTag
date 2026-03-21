@@ -75,6 +75,7 @@ export interface IElectronAPI {
 
     // File CRUD
     selectFiles: () => Promise<IpcResponse<{ filePaths: string[] }>>;
+    selectFolder: (params?: { title?: string }) => Promise<IpcResponse<{ folderPath: string | null }>>;
     addFiles: (params?: { tagIds?: number[]; filePaths?: string[] }) => Promise<IpcResponse<FileWithTags[]>>;
     getAllFiles: (params?: { page?: number; limit?: number; sort?: { column: string; order: string }; searchKeyword?: string }) => Promise<IpcResponse<FileWithTags[]>>;
     getFilesByTags: (params: { tagIds: number[]; page?: number; limit?: number; sort?: { column: string; order: string }; includeUntagged?: boolean; searchKeyword?: string }) => Promise<IpcResponse<FileWithTags[]>>;
@@ -91,8 +92,8 @@ export interface IElectronAPI {
     isFileOperating: () => Promise<IpcResponse<boolean>>;
     openFile: (params: { filename: string }) => Promise<IpcResponse<void>>;
     showFileInExplorer: (params: { filename: string }) => Promise<IpcResponse<void>>;
-    moveFilesToFolder: (params: { files: { id: number; filename: string }[] }) => Promise<IpcResponse<{ movedCount: number; errors: string[] }>>;
-    copyFilesToFolder: (params: { files: { id: number; filename: string }[] }) => Promise<IpcResponse<{ copiedCount: number; errors: string[] }>>;
+    moveFilesToFolder: (params: { files: { id: number; filename: string }[]; targetDir?: string }) => Promise<IpcResponse<{ movedCount: number; errors: string[] }>>;
+    copyFilesToFolder: (params: { files: { id: number; filename: string }[]; targetDir?: string }) => Promise<IpcResponse<{ copiedCount: number; errors: string[] }>>;
     getPathForFile: (file: File) => string;
 
     // Config

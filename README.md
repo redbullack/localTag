@@ -22,6 +22,10 @@ Electron과 Next.js 기반의 데스크탑 애플리케이션 프로젝트입니
 ## 진행 및 수정 사항 (Changelog)
 
 * **2026-03-21**
+  * **작업 내용**: 파일 이동/복사 시 로딩 오버레이가 표시되지 않는 버그 수정. 기존에는 `showLoading()` 호출 후 IPC 내부에서 OS 폴더 선택 다이얼로그가 열려, 500ms 지연 타이머가 다이얼로그 뒤에서 소진되고 실제 파일 작업 시 로딩이 표시되지 않는 문제가 있었음. `file:select-folder` IPC를 신설하여 다이얼로그와 파일 작업을 2단계로 분리 — 폴더 선택 완료 후에 `showLoading()`을 호출하는 방식으로 파일 추가와 동일한 패턴으로 통일.
+  * **변경된 핵심 파일**: `main/ipc/file-handler.ts`, `main/preload.ts`, `renderer/global.d.ts`, `renderer/app/page.tsx`
+
+* **2026-03-21**
   * **작업 내용**: 파일 추가 중 `window.focus` 이벤트로 동기화가 트리거될 때 발생하는 레이스 컨디션으로 원본 파일이 삭제되는 치명적 데이터 손실 버그 수정. 크로스 디바이스 복사(EXDEV) 시 원본 삭제 시점을 DB INSERT 이후로 변경하고, 비동기 뮤텍스(`file-operation-lock.ts`)로 파일 작업 간 상호 배제를 보장함.
   * **변경된 핵심 파일**: `main/lib/file-operation-lock.ts`(신규), `main/lib/file-repository.ts`, `main/ipc/file-handler.ts`, `main/preload.ts`, `renderer/global.d.ts`, `renderer/app/page.tsx`
 
