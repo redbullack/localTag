@@ -19,9 +19,7 @@ import {
     SortOption,
 } from '../lib/file-repository';
 import { copyFileWithProgress } from '../lib/file-copy-stream';
-
-// 동기화 중복 실행 방지 플래그
-let isSyncing = false;
+import { fileOperationLock } from '../lib/file-operation-lock';
 
 /** 진행률 전송용 BrowserWindow를 가져온다. 포커스가 없어도 동작하도록 fallback 처리. */
 const getMainWindow = (): BrowserWindow | null =>
@@ -75,23 +73,25 @@ export const registerFileHandlers = (): void => {
     });
 
     ipcMain.handle('file:add', async (_event, params: { tagIds?: number[]; filePaths?: string[] }) => {
-        try {
-            let filePathsToProcess: string[] = [];
+        // 다이얼로그는 lock 밖에서 실행 (사용자 입력 대기 중 lock 점유 방지)
+        let filePathsToProcess: string[] = [];
 
-            if (params?.filePaths && params.filePaths.length > 0) {
-                filePathsToProcess = params.filePaths;
-            } else {
-                const result = await dialog.showOpenDialog({
-                    properties: ['openFile', 'multiSelections'],
-                    title: '추가할 파일 선택',
-                });
+        if (params?.filePaths && params.filePaths.length > 0) {
+            filePathsToProcess = params.filePaths;
+        } else {
+            const result = await dialog.showOpenDialog({
+                properties: ['openFile', 'multiSelections'],
+                title: '추가할 파일 선택',
+            });
 
-                if (result.canceled || result.filePaths.length === 0) {
-                    return { success: true, data: [] };
-                }
-                filePathsToProcess = result.filePaths;
+            if (result.canceled || result.filePaths.length === 0) {
+                return { success: true, data: [] };
             }
+            filePathsToProcess = result.filePaths;
+        }
 
+        const release = await fileOperationLock.acquire();
+        try {
             // 중복 파일명 체크
             const filenames = filePathsToProcess.map(
                 (filePath) => require('path').basename(filePath)
@@ -138,6 +138,8 @@ export const registerFileHandlers = (): void => {
             return { success: true, data: addedFiles };
         } catch (error: any) {
             return { success: false, error: error.message };
+        } finally {
+            release();
         }
     });
 
@@ -240,14 +242,17 @@ export const registerFileHandlers = (): void => {
         }
     });
 
-    ipcMain.handle('file:sync', async () => {
-        if (isSyncing) {
-            return { success: false, error: '현재 동기화가 진행 중입니다.' };
+    ipcMain.handle('file:sync', async (_event, params?: { silent?: boolean }) => {
+        const isSilent = params?.silent ?? false;
+
+        // silent sync(포커스 복귀)는 파일 작업 중이면 즉시 스킵
+        if (isSilent && fileOperationLock.isLocked()) {
+            return { success: true, data: { addedCount: 0, deletedCount: 0, updatedCount: 0, detectedFolderCount: 0 } };
         }
 
-        isSyncing = true;
-        sendProgress({ operationType: 'sync', currentIndex: 0, totalCount: 0 });
+        const release = await fileOperationLock.acquire();
         try {
+            sendProgress({ operationType: 'sync', currentIndex: 0, totalCount: 0 });
             const result = syncVault();
             if (!result.success) {
                 return { success: false, error: result.error };
@@ -264,11 +269,12 @@ export const registerFileHandlers = (): void => {
         } catch (error: any) {
             return { success: false, error: error.message };
         } finally {
-            isSyncing = false;
+            release();
         }
     });
 
     ipcMain.handle('file:delete-batch', async (_event, params: { ids: number[] }) => {
+        const release = await fileOperationLock.acquire();
         try {
             const totalCount = params.ids.length;
             let deletedCount = 0;
@@ -286,6 +292,8 @@ export const registerFileHandlers = (): void => {
             return { success: true, data: { deletedCount } };
         } catch (error: any) {
             return { success: false, error: error.message };
+        } finally {
+            release();
         }
     });
 
@@ -325,21 +333,23 @@ export const registerFileHandlers = (): void => {
     });
 
     ipcMain.handle('file:move-to-folder', async (_event, params: { files: { id: number; filename: string }[] }) => {
+        // 다이얼로그는 lock 밖에서 실행
+        const vaultPath = getVaultPath();
+        if (!vaultPath) {
+            return { success: false, error: 'Vault 경로가 설정되지 않았습니다.' };
+        }
+
+        const result = await dialog.showOpenDialog({
+            properties: ['openDirectory'],
+            title: '파일을 이동할 폴더 선택',
+        });
+
+        if (result.canceled || result.filePaths.length === 0) {
+            return { success: true, data: { movedCount: 0, errors: [] } };
+        }
+
+        const release = await fileOperationLock.acquire();
         try {
-            const vaultPath = getVaultPath();
-            if (!vaultPath) {
-                return { success: false, error: 'Vault 경로가 설정되지 않았습니다.' };
-            }
-
-            const result = await dialog.showOpenDialog({
-                properties: ['openDirectory'],
-                title: '파일을 이동할 폴더 선택',
-            });
-
-            if (result.canceled || result.filePaths.length === 0) {
-                return { success: true, data: { movedCount: 0, errors: [] } };
-            }
-
             const targetDir = result.filePaths[0];
             const errors: string[] = [];
             let movedCount = 0;
@@ -400,25 +410,29 @@ export const registerFileHandlers = (): void => {
             return { success: true, data: { movedCount, errors } };
         } catch (error: any) {
             return { success: false, error: error.message };
+        } finally {
+            release();
         }
     });
 
     ipcMain.handle('file:copy-to-folder', async (_event, params: { files: { id: number; filename: string }[] }) => {
+        // 다이얼로그는 lock 밖에서 실행
+        const vaultPath = getVaultPath();
+        if (!vaultPath) {
+            return { success: false, error: 'Vault 경로가 설정되지 않았습니다.' };
+        }
+
+        const result = await dialog.showOpenDialog({
+            properties: ['openDirectory'],
+            title: '파일을 복사할 폴더 선택',
+        });
+
+        if (result.canceled || result.filePaths.length === 0) {
+            return { success: true, data: { copiedCount: 0, errors: [] } };
+        }
+
+        const release = await fileOperationLock.acquire();
         try {
-            const vaultPath = getVaultPath();
-            if (!vaultPath) {
-                return { success: false, error: 'Vault 경로가 설정되지 않았습니다.' };
-            }
-
-            const result = await dialog.showOpenDialog({
-                properties: ['openDirectory'],
-                title: '파일을 복사할 폴더 선택',
-            });
-
-            if (result.canceled || result.filePaths.length === 0) {
-                return { success: true, data: { copiedCount: 0, errors: [] } };
-            }
-
             const targetDir = result.filePaths[0];
             const errors: string[] = [];
             let copiedCount = 0;
@@ -466,6 +480,13 @@ export const registerFileHandlers = (): void => {
             return { success: true, data: { copiedCount, errors } };
         } catch (error: any) {
             return { success: false, error: error.message };
+        } finally {
+            release();
         }
+    });
+
+    // 파일 작업 잠금 상태 조회 (renderer에서 sync 스킵 판단용)
+    ipcMain.handle('file:is-operating', () => {
+        return { success: true, data: fileOperationLock.isLocked() };
     });
 };
