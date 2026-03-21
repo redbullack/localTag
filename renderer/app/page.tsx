@@ -583,10 +583,14 @@ export default function Home() {
     const handleMoveFile = async (file: FileWithTags) => {
         if (typeof window === 'undefined' || !window.electronAPI) return;
 
+        const selectResponse = await window.electronAPI.selectFolder({ title: '파일을 이동할 폴더 선택' });
+        if (!selectResponse.success || !selectResponse.data?.folderPath) return;
+
         showLoading({ operationType: 'move', description: '파일 이동 중...' });
         try {
             const response = await window.electronAPI.moveFilesToFolder({
                 files: [{ id: file.id, filename: file.filename }],
+                targetDir: selectResponse.data.folderPath,
             });
 
             if (handleFileTransferResponse(response, 'move', showToast)) {
@@ -601,10 +605,14 @@ export default function Home() {
     const handleCopyFile = async (file: FileWithTags) => {
         if (typeof window === 'undefined' || !window.electronAPI) return;
 
+        const selectResponse = await window.electronAPI.selectFolder({ title: '파일을 복사할 폴더 선택' });
+        if (!selectResponse.success || !selectResponse.data?.folderPath) return;
+
         showLoading({ operationType: 'copy', description: '파일 복사 중...' });
         try {
             const response = await window.electronAPI.copyFilesToFolder({
                 files: [{ id: file.id, filename: file.filename }],
+                targetDir: selectResponse.data.folderPath,
             });
 
             handleFileTransferResponse(response, 'copy', showToast);
@@ -623,9 +631,15 @@ export default function Home() {
 
         if (filesToMove.length === 0) return;
 
+        const selectResponse = await window.electronAPI.selectFolder({ title: '파일을 이동할 폴더 선택' });
+        if (!selectResponse.success || !selectResponse.data?.folderPath) return;
+
         showLoading({ operationType: 'move', description: '파일 이동 중...' });
         try {
-            const response = await window.electronAPI.moveFilesToFolder({ files: filesToMove });
+            const response = await window.electronAPI.moveFilesToFolder({
+                files: filesToMove,
+                targetDir: selectResponse.data.folderPath,
+            });
 
             if (handleFileTransferResponse(response, 'move', showToast)) {
                 setSelectedFileIds(new Set());
@@ -646,9 +660,15 @@ export default function Home() {
 
         if (filesToCopy.length === 0) return;
 
+        const selectResponse = await window.electronAPI.selectFolder({ title: '파일을 복사할 폴더 선택' });
+        if (!selectResponse.success || !selectResponse.data?.folderPath) return;
+
         showLoading({ operationType: 'copy', description: '파일 복사 중...' });
         try {
-            const response = await window.electronAPI.copyFilesToFolder({ files: filesToCopy });
+            const response = await window.electronAPI.copyFilesToFolder({
+                files: filesToCopy,
+                targetDir: selectResponse.data.folderPath,
+            });
 
             handleFileTransferResponse(response, 'copy', showToast);
         } finally {
