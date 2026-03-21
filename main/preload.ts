@@ -16,7 +16,7 @@ const initialSettings = readInitialSettings();
  * IPC 채널 목록:
  * - Vault:  get-vault-path, select-vault-path, vault:get-storage-info, vault:relocate
  * - Tag:    tag:create, tag:get-all, tag:update, tag:delete, tag:reorder
- * - File:   file:add, file:get-all, file:get-by-tags, file:rename, file:delete, file:update-tags, file:bulk-set-tags, file:check-duplicate
+ * - File:   file:select, file:select-folder, file:add, file:get-all, file:get-by-tags, file:rename, file:delete, file:update-tags, file:bulk-set-tags, file:check-duplicate
  * - Config: config:get-settings, config:get, config:set
  */
 contextBridge.exposeInMainWorld('electronAPI', {
@@ -51,6 +51,8 @@ contextBridge.exposeInMainWorld('electronAPI', {
     // File CRUD
     selectFiles: () =>
         ipcRenderer.invoke('file:select'),
+    selectFolder: (params?: { title?: string }) =>
+        ipcRenderer.invoke('file:select-folder', params),
     addFiles: (params?: { tagIds?: number[]; filePaths?: string[] }) =>
         ipcRenderer.invoke('file:add', params),
     getAllFiles: (params?: { page?: number; limit?: number; sort?: { column: string; order: string }; searchKeyword?: string }) =>
@@ -83,9 +85,9 @@ contextBridge.exposeInMainWorld('electronAPI', {
         ipcRenderer.invoke('file:open', params),
     showFileInExplorer: (params: { filename: string }) =>
         ipcRenderer.invoke('file:show-in-explorer', params),
-    moveFilesToFolder: (params: { files: { id: number; filename: string }[] }) =>
+    moveFilesToFolder: (params: { files: { id: number; filename: string }[]; targetDir?: string }) =>
         ipcRenderer.invoke('file:move-to-folder', params),
-    copyFilesToFolder: (params: { files: { id: number; filename: string }[] }) =>
+    copyFilesToFolder: (params: { files: { id: number; filename: string }[]; targetDir?: string }) =>
         ipcRenderer.invoke('file:copy-to-folder', params),
     getPathForFile: (file: File) => webUtils.getPathForFile(file),
 
