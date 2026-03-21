@@ -228,49 +228,48 @@ export default function FileList({
 }: FileListProps) {
     const { showToast } = useToast();
     const [isDragging, setIsDragging] = useState(false);
-    const [colWidths, setColWidths] = useState({ tags: 200, size: 80 });
+    const [colWidths, setColWidths] = useState({ name: 300, tags: 200, size: 80 });
     const [resizingCol, setResizingCol] = useState<'name' | 'tags' | null>(null);
+    const tableRef = useRef<HTMLDivElement>(null);
+    const initializedRef = useRef(false);
+
+    /** 첫 렌더 시 name 컬럼을 테이블 잔여 공간에 맞춘다. */
+    useEffect(() => {
+        if (initializedRef.current || !tableRef.current) return;
+        initializedRef.current = true;
+        const tableWidth = tableRef.current.clientWidth;
+        // 체크박스(32) + tags(200) + size(80) + 액션(160) + 좌우패딩(32)
+        const fixedWidth = 32 + 200 + 80 + 160 + 32;
+        const availableName = tableWidth - fixedWidth;
+        if (availableName > 150) {
+            setColWidths((prev) => ({ ...prev, name: availableName }));
+        }
+    }, [files.length]);
 
     const isResizingRef = useRef<{
         column: 'name' | 'tags';
         startX: number;
-        startWidths: { tags: number; size: number; name: number };
+        startWidths: { name: number; tags: number; size: number };
     } | null>(null);
 
-    /** 마우스 이동량을 기준으로 컬럼 너비를 동적으로 계산한다. */
+    /** 마우스 이동량을 기준으로 컬럼 너비를 동적으로 계산한다.
+     *  Windows 탐색기 방식: 구분선 좌측 컬럼만 변경, 우측 컬럼은 절대 변하지 않는다. */
     const handleResizeMove = useCallback((e: MouseEvent) => {
         if (!isResizingRef.current) return;
 
         const { column, startX, startWidths } = isResizingRef.current;
         const deltaX = e.clientX - startX;
 
-        setColWidths((prev) => {
+        setColWidths(() => {
             if (column === 'name') {
-                let newTagsWidth = startWidths.tags - deltaX;
-                if (newTagsWidth < 80) newTagsWidth = 80;
-
-                const maxTagsWidth = startWidths.tags + (startWidths.name - 150);
-                if (newTagsWidth > maxTagsWidth) newTagsWidth = maxTagsWidth;
-
-                return { ...prev, tags: newTagsWidth };
+                // name|tags 구분선: name 너비만 변경, tags/size는 불변
+                const newNameWidth = Math.max(150, startWidths.name + deltaX);
+                return { name: newNameWidth, tags: startWidths.tags, size: startWidths.size };
             }
 
-            let newTagsWidth = startWidths.tags + deltaX;
-            let newSizeWidth = startWidths.size - deltaX;
-
-            if (newTagsWidth < 80) {
-                const diff = 80 - newTagsWidth;
-                newTagsWidth = 80;
-                newSizeWidth -= diff;
-            }
-
-            if (newSizeWidth < 60) {
-                const diff = 60 - newSizeWidth;
-                newSizeWidth = 60;
-                newTagsWidth -= diff;
-            }
-
-            return { ...prev, tags: newTagsWidth, size: newSizeWidth };
+            // tags|size 구분선: tags 너비만 변경, name/size는 불변
+            const newTagsWidth = Math.max(80, startWidths.tags + deltaX);
+            return { name: startWidths.name, tags: newTagsWidth, size: startWidths.size };
         });
     }, []);
 
@@ -288,15 +287,10 @@ export default function FileList({
         e.preventDefault();
         e.stopPropagation();
 
-        const thElement = e.currentTarget.parentElement;
-        const tableHeader = thElement?.parentElement;
-        const nameTh = tableHeader?.children[1] as HTMLElement;
-        const startNameWidth = nameTh?.getBoundingClientRect().width || 150;
-
         isResizingRef.current = {
             column,
             startX: e.clientX,
-            startWidths: { tags: colWidths.tags, size: colWidths.size, name: startNameWidth },
+            startWidths: { name: colWidths.name, tags: colWidths.tags, size: colWidths.size },
         };
 
         document.addEventListener('mousemove', handleResizeMove);
@@ -314,49 +308,60 @@ export default function FileList({
         };
     }, [handleResizeMove, handleResizeEnd]);
 
-    /** 더블 클릭 시 내용 길이에 맞게 컬럼을 자동 조정한다. */
+    /** 더블 클릭 시 구분선 좌측 컬럼의 가장 긴 내용에 맞게 자동 조정한다.
+     *  Windows 탐색기 방식: 해당 구분선 좌측 컬럼만 변경, 다른 컬럼은 영향 없음. */
     const handleResizeDoubleClick = (column: 'name' | 'tags', e: React.MouseEvent) => {
         e.preventDefault();
         e.stopPropagation();
 
         if (column === 'name') {
-            let maxWidth = 150;
-            document.querySelectorAll('.file-row__filename').forEach((el) => {
-                maxWidth = Math.max(maxWidth, el.scrollWidth + 60);
+            // name|tags 구분선 더블클릭: name 너비만 내용에 맞게 조정
+            // ellipsis 상태에서 scrollWidth가 부정확하므로 숨겨진 임시 요소로 측정
+            let maxContentWidth = 150;
+            const measure = document.createElement('span');
+            measure.style.cssText = 'position:absolute;visibility:hidden;white-space:nowrap;font-size:14px;';
+            document.body.appendChild(measure);
+
+            const filenameEls = document.querySelectorAll('.file-row__filename') as NodeListOf<HTMLElement>;
+            filenameEls.forEach((el) => {
+                const computed = getComputedStyle(el);
+                measure.style.fontFamily = computed.fontFamily;
+                measure.style.fontWeight = computed.fontWeight;
+                measure.style.letterSpacing = computed.letterSpacing;
+                measure.textContent = el.textContent;
+                // 아이콘(20) + gap(8) + 텍스트 + 셀 패딩(16)
+                const contentWidth = 20 + 8 + measure.offsetWidth + 16;
+                maxContentWidth = Math.max(maxContentWidth, contentWidth);
             });
 
-            const currentWidth = (e.currentTarget.parentElement as HTMLElement)?.getBoundingClientRect().width || 150;
+            document.body.removeChild(measure);
+
             setColWidths((prev) => ({
                 ...prev,
-                tags: Math.max(80, prev.tags - (maxWidth - currentWidth)),
+                name: Math.max(150, maxContentWidth),
             }));
             return;
         }
 
-        let maxWidth = 80;
-        document.querySelectorAll('.file-row__tags-cell').forEach((el) => {
-            const badgeWidths = Array.from(el.querySelectorAll('.tag-badge')).reduce(
-                (sum, badge) => sum + badge.scrollWidth + 4,
-                0,
-            );
-            maxWidth = Math.max(maxWidth, badgeWidths + 32);
+        // tags|size 구분선 더블클릭: tags 너비만 내용에 맞게 조정
+        // overflow: hidden 상태이므로 임시 해제 후 측정
+        let maxContentWidth = 80;
+        const tagsCells = document.querySelectorAll('.file-row__tags-cell') as NodeListOf<HTMLElement>;
+        tagsCells.forEach((el) => {
+            const prevOverflow = el.style.overflow;
+            const prevFlexWrap = el.style.flexWrap;
+            el.style.overflow = 'visible';
+            el.style.flexWrap = 'nowrap';
+            const contentWidth = el.scrollWidth + 16;
+            maxContentWidth = Math.max(maxContentWidth, contentWidth);
+            el.style.overflow = prevOverflow;
+            el.style.flexWrap = prevFlexWrap;
         });
 
-        setColWidths((prev) => {
-            let newTagsWidth = maxWidth;
-            const tableEl = document.querySelector('.file-list__table');
-
-            if (tableEl) {
-                const tableWidth = tableEl.clientWidth;
-                // 고정 폭을 제외한 남는 너비 안에서만 태그 컬럼을 늘린다.
-                const maxAllowed = tableWidth - prev.size - 336;
-                if (newTagsWidth > maxAllowed) {
-                    newTagsWidth = Math.max(80, maxAllowed);
-                }
-            }
-
-            return { ...prev, tags: newTagsWidth };
-        });
+        setColWidths((prev) => ({
+            ...prev,
+            tags: Math.max(80, maxContentWidth),
+        }));
     };
 
     /** 파일 드래그 중 오버레이 표시 상태를 관리한다. */
@@ -506,8 +511,10 @@ export default function FileList({
                 </div>
             ) : (
                 <div
+                    ref={tableRef}
                     className={`file-list__table ${resizingCol ? 'file-list__table--resizing' : ''}`}
                     style={{
+                        '--col-name': `${colWidths.name}px`,
                         '--col-tags': `${colWidths.tags}px`,
                         '--col-size': `${colWidths.size}px`,
                     } as React.CSSProperties}

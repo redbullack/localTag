@@ -196,10 +196,9 @@
 /* ===== 테이블 ===== */
 
 .file-list__table {
-    display: flex;
-    flex-direction: column;
     flex: 1;
     min-height: 0;
+    overflow: auto;
 }
 
 .file-list__table--resizing {
@@ -212,22 +211,25 @@
 
 .file-list__table-header {
     display: grid;
-    grid-template-columns: 32px minmax(150px, 1fr) var(--col-tags, 200px) var(--col-size, 80px) 160px;
-    gap: 8px;
+    grid-template-columns: 32px var(--col-name, 300px) var(--col-tags, 200px) var(--col-size, 80px) 160px;
+    gap: 0;
+    min-width: max-content;
     padding: 8px 16px;
     border-bottom: 1px solid var(--border-subtle);
     background-color: var(--bg-tertiary);
+    position: sticky;
+    top: 0;
+    z-index: 5;
 }
 
 .file-list__th {
-    font-size: 11px;
-    font-weight: 600;
-    color: var(--text-muted);
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--text-secondary);
     position: relative;
     display: flex;
     align-items: center;
+    padding: 0 8px;
 }
 
 .file-list__th--size {
@@ -371,9 +373,9 @@
 
 .file-list__resizer::after {
     content: '';
-    height: 60%;
+    height: 16px;
     width: 1px;
-    background-color: var(--border-subtle);
+    background-color: var(--border-strong);
     transition: background-color 0.2s, width 0.2s;
 }
 
@@ -384,17 +386,15 @@
 }
 
 .file-list__body {
-    flex: 1;
-    min-height: 0;
-    overflow-y: auto;
 }
 
 /* ===== 파일 행 ===== */
 
 .file-row {
     display: grid;
-    grid-template-columns: 32px minmax(150px, 1fr) var(--col-tags, 200px) var(--col-size, 80px) 90px;
-    gap: 8px;
+    grid-template-columns: 32px var(--col-name, 300px) var(--col-tags, 200px) var(--col-size, 80px) 160px;
+    min-width: max-content;
+    gap: 0;
     align-items: center;
     padding: 10px 16px;
     border-bottom: 1px solid var(--border-subtle);
@@ -420,6 +420,7 @@
     align-items: center;
     gap: 8px;
     min-width: 0;
+    padding: 0 8px;
 }
 
 .file-row__icon {
@@ -454,6 +455,8 @@
     flex-wrap: wrap;
     gap: 4px;
     min-width: 0;
+    padding: 0 8px;
+    overflow: hidden;
 }
 
 .file-row__no-tags {
@@ -469,6 +472,7 @@
     color: var(--text-muted);
     text-align: right;
     white-space: nowrap;
+    padding: 0 8px;
 }
 
 /* 액션 버튼 셀 */
@@ -479,6 +483,7 @@
     justify-content: flex-end;
     opacity: 0;
     transition: opacity 0.15s ease;
+    padding: 0 8px;
 }
 
 .file-row__actions-cell--visible {
