@@ -21,6 +21,10 @@ Electron과 Next.js 기반의 데스크탑 애플리케이션 프로젝트입니
 ---
 ## 진행 및 수정 사항 (Changelog)
 
+* **2026-03-21**
+  * **작업 내용**: 파일 추가 중 `window.focus` 이벤트로 동기화가 트리거될 때 발생하는 레이스 컨디션으로 원본 파일이 삭제되는 치명적 데이터 손실 버그 수정. 크로스 디바이스 복사(EXDEV) 시 원본 삭제 시점을 DB INSERT 이후로 변경하고, 비동기 뮤텍스(`file-operation-lock.ts`)로 파일 작업 간 상호 배제를 보장함.
+  * **변경된 핵심 파일**: `main/lib/file-operation-lock.ts`(신규), `main/lib/file-repository.ts`, `main/ipc/file-handler.ts`, `main/preload.ts`, `renderer/global.d.ts`, `renderer/app/page.tsx`
+
 * **2026-03-19**
   * **작업 내용**: 파일 검색 기능 구현. (1) **debounce 실시간 검색**: 검색창에 타이핑 시 300ms 지연 후 자동으로 결과 반영. 빈 검색어는 전체 목록 표시. (2) **DB 검색**: 파일명을 LIKE '%keyword%' 형태로 조회. SQL 와일드카드(%, _) 이스케이프 처리로 특수문자 포함 검색 안전성 보장. (3) **세 쿼리 함수 확장**: `getAllFiles`, `getFilesByTagIds`, `getUntaggedFiles`에 `searchKeyword` 파라미터 추가. 각 함수는 기존 필터(태그·페이징·정렬)와 독립적으로 검색 조건 적용. (4) **UI 배치**: 파일 목록 헤더에 `file-list__header-center` 영역 추가, 검색창 배치. 빈 상태 텍스트를 검색 여부에 따라 동적 변경. (5) **CSS 테마 대응**: Light/Dark/System 모드에서 CSS 변수 기반으로 자동 적용. 포커스/hover 시 accent 색상 강조.
   * **변경된 핵심 파일**: `main/lib/file-repository.ts`, `main/ipc/file-handler.ts`, `main/preload.ts`, `renderer/global.d.ts`, `renderer/app/utils/use-debounce.ts`(신규), `renderer/app/page.tsx`, `renderer/app/components/file-list/file-list.tsx`, `renderer/app/components/file-list/file-list.css`

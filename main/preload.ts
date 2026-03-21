@@ -75,8 +75,10 @@ contextBridge.exposeInMainWorld('electronAPI', {
         ipcRenderer.invoke('file:get-untagged-count'),
     getUntaggedFiles: (params?: { page?: number; limit?: number; sort?: { column: string; order: string }; searchKeyword?: string }) =>
         ipcRenderer.invoke('file:get-untagged', params),
-    syncFiles: () =>
-        ipcRenderer.invoke('file:sync'),
+    syncFiles: (params?: { silent?: boolean }) =>
+        ipcRenderer.invoke('file:sync', params),
+    isFileOperating: () =>
+        ipcRenderer.invoke('file:is-operating'),
     openFile: (params: { filename: string }) =>
         ipcRenderer.invoke('file:open', params),
     showFileInExplorer: (params: { filename: string }) =>
