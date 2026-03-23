@@ -200,6 +200,7 @@
     flex-direction: column;
     flex: 1;
     min-height: 0;
+    overflow: auto;
 }
 
 .file-list__table--resizing {
@@ -212,11 +213,15 @@
 
 .file-list__table-header {
     display: grid;
-    grid-template-columns: 32px minmax(150px, 1fr) var(--col-tags, 200px) var(--col-size, 80px) 160px;
+    grid-template-columns: 32px var(--col-name, 300px) var(--col-tags, 200px) var(--col-size, 100px) 90px;
     gap: 8px;
     padding: 8px 16px;
     border-bottom: 1px solid var(--border-subtle);
     background-color: var(--bg-tertiary);
+    min-width: max-content;
+    position: sticky;
+    top: 0;
+    z-index: 5;
 }
 
 .file-list__th {
@@ -386,19 +391,19 @@
 .file-list__body {
     flex: 1;
     min-height: 0;
-    overflow-y: auto;
 }
 
 /* ===== 파일 행 ===== */
 
 .file-row {
     display: grid;
-    grid-template-columns: 32px minmax(150px, 1fr) var(--col-tags, 200px) var(--col-size, 80px) 90px;
+    grid-template-columns: 32px var(--col-name, 300px) var(--col-tags, 200px) var(--col-size, 100px) 90px;
     gap: 8px;
     align-items: center;
     padding: 10px 16px;
     border-bottom: 1px solid var(--border-subtle);
     transition: background-color 0.1s ease;
+    min-width: max-content;
 }
 
 .file-row--selected {

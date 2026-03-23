@@ -228,50 +228,39 @@ export default function FileList({
 }: FileListProps) {
     const { showToast } = useToast();
     const [isDragging, setIsDragging] = useState(false);
-    const [colWidths, setColWidths] = useState({ tags: 200, size: 80 });
-    const [resizingCol, setResizingCol] = useState<'name' | 'tags' | null>(null);
+    const [colWidths, setColWidths] = useState({ name: 300, tags: 200, size: 100 });
+    const [resizingCol, setResizingCol] = useState<'name' | 'tags' | 'size' | null>(null);
+    const tableRef = useRef<HTMLDivElement>(null);
 
     const isResizingRef = useRef<{
-        column: 'name' | 'tags';
+        column: 'name' | 'tags' | 'size';
         startX: number;
-        startWidths: { tags: number; size: number; name: number };
+        startWidths: { name: number; tags: number; size: number };
     } | null>(null);
 
-    /** 마우스 이동량을 기준으로 컬럼 너비를 동적으로 계산한다. */
+    /** 마운트 시 컨테이너 너비에 맞춰 name 초기 너비를 산출한다. */
+    useEffect(() => {
+        if (tableRef.current) {
+            const containerWidth = tableRef.current.clientWidth;
+            // checkbox(32) + actions(90) + gap(8*4) + padding(32)
+            const fixedWidth = 32 + 90 + 32 + 32;
+            const nameWidth = Math.max(200, containerWidth - fixedWidth - 200 - 100);
+            setColWidths({ name: nameWidth, tags: 200, size: 100 });
+        }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
+
+    const COL_MIN_WIDTHS = { name: 150, tags: 80, size: 60 };
+
+    /** 마우스 이동량을 기준으로 드래그 중인 컬럼의 너비만 변경한다. */
     const handleResizeMove = useCallback((e: MouseEvent) => {
         if (!isResizingRef.current) return;
 
         const { column, startX, startWidths } = isResizingRef.current;
         const deltaX = e.clientX - startX;
+        const newWidth = Math.max(COL_MIN_WIDTHS[column], startWidths[column] + deltaX);
 
-        setColWidths((prev) => {
-            if (column === 'name') {
-                let newTagsWidth = startWidths.tags - deltaX;
-                if (newTagsWidth < 80) newTagsWidth = 80;
-
-                const maxTagsWidth = startWidths.tags + (startWidths.name - 150);
-                if (newTagsWidth > maxTagsWidth) newTagsWidth = maxTagsWidth;
-
-                return { ...prev, tags: newTagsWidth };
-            }
-
-            let newTagsWidth = startWidths.tags + deltaX;
-            let newSizeWidth = startWidths.size - deltaX;
-
-            if (newTagsWidth < 80) {
-                const diff = 80 - newTagsWidth;
-                newTagsWidth = 80;
-                newSizeWidth -= diff;
-            }
-
-            if (newSizeWidth < 60) {
-                const diff = 60 - newSizeWidth;
-                newSizeWidth = 60;
-                newTagsWidth -= diff;
-            }
-
-            return { ...prev, tags: newTagsWidth, size: newSizeWidth };
-        });
+        setColWidths((prev) => ({ ...prev, [column]: newWidth }));
     }, []);
 
     const handleResizeEnd = useCallback(() => {
@@ -283,20 +272,15 @@ export default function FileList({
         setResizingCol(null);
     }, [handleResizeMove]);
 
-    /** 컬럼 리사이즈 시작 시 기준 너비를 저장한다. */
-    const handleResizeStart = (column: 'name' | 'tags', e: React.MouseEvent) => {
+    /** 컬럼 리사이즈 시작 시 현재 너비를 저장한다. */
+    const handleResizeStart = (column: 'name' | 'tags' | 'size', e: React.MouseEvent) => {
         e.preventDefault();
         e.stopPropagation();
-
-        const thElement = e.currentTarget.parentElement;
-        const tableHeader = thElement?.parentElement;
-        const nameTh = tableHeader?.children[1] as HTMLElement;
-        const startNameWidth = nameTh?.getBoundingClientRect().width || 150;
 
         isResizingRef.current = {
             column,
             startX: e.clientX,
-            startWidths: { tags: colWidths.tags, size: colWidths.size, name: startNameWidth },
+            startWidths: { ...colWidths },
         };
 
         document.addEventListener('mousemove', handleResizeMove);
@@ -314,49 +298,43 @@ export default function FileList({
         };
     }, [handleResizeMove, handleResizeEnd]);
 
-    /** 더블 클릭 시 내용 길이에 맞게 컬럼을 자동 조정한다. */
-    const handleResizeDoubleClick = (column: 'name' | 'tags', e: React.MouseEvent) => {
+    /** 더블 클릭 시 해당 컬럼 콘텐츠에 맞게 자동 피팅한다. */
+    const handleResizeDoubleClick = (column: 'name' | 'tags' | 'size', e: React.MouseEvent) => {
         e.preventDefault();
         e.stopPropagation();
 
         if (column === 'name') {
-            let maxWidth = 150;
+            let maxWidth = COL_MIN_WIDTHS.name;
             document.querySelectorAll('.file-row__filename').forEach((el) => {
                 maxWidth = Math.max(maxWidth, el.scrollWidth + 60);
             });
-
-            const currentWidth = (e.currentTarget.parentElement as HTMLElement)?.getBoundingClientRect().width || 150;
-            setColWidths((prev) => ({
-                ...prev,
-                tags: Math.max(80, prev.tags - (maxWidth - currentWidth)),
-            }));
+            setColWidths((prev) => ({ ...prev, name: maxWidth }));
             return;
         }
 
-        let maxWidth = 80;
-        document.querySelectorAll('.file-row__tags-cell').forEach((el) => {
-            const badgeWidths = Array.from(el.querySelectorAll('.tag-badge')).reduce(
-                (sum, badge) => sum + badge.scrollWidth + 4,
-                0,
-            );
-            maxWidth = Math.max(maxWidth, badgeWidths + 32);
-        });
+        if (column === 'tags') {
+            let maxWidth = COL_MIN_WIDTHS.tags;
+            document.querySelectorAll('.file-row__tags-cell').forEach((el) => {
+                const badgeWidths = Array.from(el.querySelectorAll('.tag-badge')).reduce(
+                    (sum, badge) => sum + badge.scrollWidth + 4,
+                    0,
+                );
+                maxWidth = Math.max(maxWidth, badgeWidths + 16);
+            });
+            setColWidths((prev) => ({ ...prev, tags: maxWidth }));
+            return;
+        }
 
-        setColWidths((prev) => {
-            let newTagsWidth = maxWidth;
-            const tableEl = document.querySelector('.file-list__table');
-
-            if (tableEl) {
-                const tableWidth = tableEl.clientWidth;
-                // 고정 폭을 제외한 남는 너비 안에서만 태그 컬럼을 늘린다.
-                const maxAllowed = tableWidth - prev.size - 336;
-                if (newTagsWidth > maxAllowed) {
-                    newTagsWidth = Math.max(80, maxAllowed);
-                }
-            }
-
-            return { ...prev, tags: newTagsWidth };
-        });
+        if (column === 'size') {
+            let maxWidth = COL_MIN_WIDTHS.size;
+            const range = document.createRange();
+            document.querySelectorAll('.file-row__size-cell').forEach((el) => {
+                range.selectNodeContents(el);
+                const textWidth = range.getBoundingClientRect().width;
+                maxWidth = Math.max(maxWidth, Math.ceil(textWidth) + 16);
+            });
+            setColWidths((prev) => ({ ...prev, size: maxWidth }));
+        }
     };
 
     /** 파일 드래그 중 오버레이 표시 상태를 관리한다. */
@@ -506,8 +484,10 @@ export default function FileList({
                 </div>
             ) : (
                 <div
+                    ref={tableRef}
                     className={`file-list__table ${resizingCol ? 'file-list__table--resizing' : ''}`}
                     style={{
+                        '--col-name': `${colWidths.name}px`,
                         '--col-tags': `${colWidths.tags}px`,
                         '--col-size': `${colWidths.size}px`,
                     } as React.CSSProperties}
@@ -538,7 +518,14 @@ export default function FileList({
                                 onDoubleClick={(e) => handleResizeDoubleClick('tags', e)}
                             />
                         </div>
-                        <div className="file-list__th file-list__th--size">크기</div>
+                        <div className="file-list__th file-list__th--size">
+                            크기
+                            <div
+                                className={`file-list__resizer ${resizingCol === 'size' ? 'is-resizing' : ''}`}
+                                onMouseDown={(e) => handleResizeStart('size', e)}
+                                onDoubleClick={(e) => handleResizeDoubleClick('size', e)}
+                            />
+                        </div>
                         <div className="file-list__th file-list__th--actions" />
                     </div>
 
