@@ -360,6 +360,36 @@ export default function Home() {
         await loadFiles();
     };
 
+    /** 태그 즐겨찾기를 토글한다. */
+    const handleToggleFavorite = async (tagId: number) => {
+        if (typeof window === 'undefined' || !window.electronAPI) return;
+
+        const tag = tagList.find((t) => t.id === tagId);
+        if (!tag) return;
+
+        const response = await window.electronAPI.updateTag({
+            id: tagId,
+            isFavorite: !tag.isFavorite,
+        });
+
+        if (!response.success) {
+            showToast({
+                type: 'error',
+                message: response.error || '즐겨찾기 변경에 실패했습니다.',
+                duration: 4000,
+            });
+            return;
+        }
+
+        showToast({
+            type: 'success',
+            message: tag.isFavorite ? '즐겨찾기에서 해제되었습니다.' : '즐겨찾기에 추가되었습니다.',
+            duration: 3000,
+        });
+
+        await loadTags();
+    };
+
     /** 사이드바 태그 선택을 토글하고, 필터 변경 시 첫 페이지로 이동한다. */
     const handleSelectTag = (tagId: number) => {
         setSelectedTagIds((prevIds) => (
@@ -763,6 +793,7 @@ export default function Home() {
                 onCreateChildTag={handleOpenCreateChildModal}
                 onSelectTag={handleSelectTag}
                 onReorderTags={handleReorderTags}
+                onToggleFavorite={handleToggleFavorite}
             />
 
             <main className="main-content">
