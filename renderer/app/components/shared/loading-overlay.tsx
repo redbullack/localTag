@@ -6,7 +6,7 @@ import './loading-overlay.css';
 
 /** 파일 작업 진행률 상태 */
 export interface LoadingProgress {
-    operationType: 'add' | 'delete' | 'move' | 'copy' | 'sync';
+    operationType: 'add' | 'delete' | 'move' | 'copy' | 'sync' | 'relocate';
     description: string;
     currentFile?: string;
     currentIndex?: number;
@@ -15,8 +15,13 @@ export interface LoadingProgress {
     totalBytes?: number;
 }
 
+interface ShowLoadingOptions {
+    /** true이면 지연 없이 즉시 오버레이를 표시한다. (기본: false) */
+    immediate?: boolean;
+}
+
 interface LoadingOverlayContextType {
-    showLoading: (progress: LoadingProgress) => void;
+    showLoading: (progress: LoadingProgress, options?: ShowLoadingOptions) => void;
     updateProgress: (progress: Partial<LoadingProgress>) => void;
     hideLoading: () => void;
     isOperationActive: boolean;
@@ -27,13 +32,17 @@ const LoadingOverlayContext = createContext<LoadingOverlayContextType | undefine
 export function LoadingOverlayProvider({ children }: { children: ReactNode }) {
     const [progress, setProgress] = useState<LoadingProgress | null>(null);
     const isActiveRef = useRef(false);
-    const { isVisible, startLoading, stopLoading } = useDelayedLoading();
+    const { isVisible, startLoading, forceShow, stopLoading } = useDelayedLoading();
 
-    const showLoading = useCallback((initial: LoadingProgress) => {
+    const showLoading = useCallback((initial: LoadingProgress, options?: ShowLoadingOptions) => {
         isActiveRef.current = true;
         setProgress(initial);
-        startLoading();
-    }, [startLoading]);
+        if (options?.immediate) {
+            forceShow();
+        } else {
+            startLoading();
+        }
+    }, [forceShow, startLoading]);
 
     const updateProgress = useCallback((partial: Partial<LoadingProgress>) => {
         setProgress((prev) => prev ? { ...prev, ...partial } : null);

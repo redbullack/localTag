@@ -1,6 +1,6 @@
 import { BrowserWindow, dialog, ipcMain } from 'electron';
 import * as fs from 'fs';
-import { statfs } from 'fs/promises';
+import { access, copyFile, mkdir, readdir, rmdir, statfs, unlink } from 'fs/promises';
 import * as path from 'path';
 import { getVaultPath, setVaultPath } from '../lib/store';
 
@@ -92,7 +92,7 @@ export const registerVaultHandlers = () => {
 
             // 쓰기 권한 확인
             try {
-                fs.accessSync(selectedLocation, fs.constants.W_OK);
+                await access(selectedLocation, fs.constants.W_OK);
             } catch {
                 return { success: false, error: '선택한 위치에 쓰기 권한이 없습니다.' };
             }
@@ -100,7 +100,7 @@ export const registerVaultHandlers = () => {
             // 이동할 파일 목록 수집
             const files: string[] = [];
             try {
-                const entries = fs.readdirSync(currentVaultPath, { withFileTypes: true });
+                const entries = await readdir(currentVaultPath, { withFileTypes: true });
                 for (const entry of entries) {
                     if (entry.isFile()) {
                         files.push(entry.name);
@@ -126,9 +126,9 @@ export const registerVaultHandlers = () => {
             }
 
             // 3. Phase A — 새 폴더 생성 + 파일 복사
-            fs.mkdirSync(newVaultPath, { recursive: true });
+            await mkdir(newVaultPath, { recursive: true });
 
-            const win = BrowserWindow.getFocusedWindow();
+            const win = BrowserWindow.getFocusedWindow() ?? BrowserWindow.getAllWindows()[0] ?? null;
             const copiedFiles: string[] = [];
 
             try {
@@ -144,20 +144,20 @@ export const registerVaultHandlers = () => {
                         currentFile: filename,
                     });
 
-                    fs.copyFileSync(sourcePath, targetPath);
+                    await copyFile(sourcePath, targetPath);
                     copiedFiles.push(filename);
                 }
             } catch (error: any) {
                 // 복사 실패 시 롤백: 이미 복사된 파일 삭제
                 for (const filename of copiedFiles) {
                     try {
-                        fs.unlinkSync(path.join(newVaultPath, filename));
+                        await unlink(path.join(newVaultPath, filename));
                     } catch {
                         // 롤백 중 에러 무시
                     }
                 }
                 try {
-                    fs.rmdirSync(newVaultPath);
+                    await rmdir(newVaultPath);
                 } catch {
                     // 폴더 삭제 실패 무시
                 }
@@ -167,14 +167,14 @@ export const registerVaultHandlers = () => {
             // 4. Phase B — 원본 삭제 + vaultPath 업데이트
             for (const filename of files) {
                 try {
-                    fs.unlinkSync(path.join(currentVaultPath, filename));
+                    await unlink(path.join(currentVaultPath, filename));
                 } catch {
                     // 원본 삭제 실패는 무시 (데이터 손실 없음)
                 }
             }
 
             try {
-                fs.rmdirSync(currentVaultPath);
+                await rmdir(currentVaultPath);
             } catch {
                 // 폴더 삭제 실패 무시 (다른 파일이 남아있을 수 있음)
             }
