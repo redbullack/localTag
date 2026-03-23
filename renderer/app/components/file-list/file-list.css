@@ -373,7 +373,7 @@
     content: '';
     height: 60%;
     width: 1px;
-    background-color: var(--border-subtle);
+    background-color: var(--border-strong);
     transition: background-color 0.2s, width 0.2s;
 }
 
