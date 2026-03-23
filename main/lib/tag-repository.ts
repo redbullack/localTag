@@ -12,6 +12,7 @@ export interface Tag {
     name: string;
     parentId: number | null;
     color: string | null;
+    isFavorite: boolean;
     fileCount?: number;
 }
 
@@ -26,6 +27,7 @@ interface UpdateTagParams {
     name?: string;
     color?: string | null;
     parentId?: number | null;
+    isFavorite?: boolean;
 }
 
 /**
@@ -56,6 +58,7 @@ export const createTag = (params: CreateTagParams): Tag => {
         name,
         parentId,
         color,
+        isFavorite: false,
     };
 };
 
@@ -68,7 +71,7 @@ export const getAllTags = (): Tag[] => {
 
     // 1. 모든 태그 정보 조회
     const tags = db.prepare(`
-        SELECT id, name, parent_id AS parentId, color
+        SELECT id, name, parent_id AS parentId, color, is_favorite AS isFavorite
         FROM tags
         ORDER BY parent_id IS NOT NULL, parent_id, sort_order, name
     `).all() as Tag[];
@@ -125,6 +128,7 @@ export const getAllTags = (): Tag[] => {
     // 7. 결과 반환: 각 태그에 중복 제거된 하위 폴더 포함 파일 개수 삽입
     return tags.map(tag => ({
         ...tag,
+        isFavorite: !!(tag as any).isFavorite,
         fileCount: tagFileIdsMap.get(tag.id)!.size
     }));
 };
@@ -137,7 +141,7 @@ export const getAllTags = (): Tag[] => {
  */
 export const updateTag = (params: UpdateTagParams): Tag => {
     const db = getDb();
-    const { id, name, color, parentId } = params;
+    const { id, name, color, parentId, isFavorite } = params;
 
     const currentTag = db.prepare('SELECT * FROM tags WHERE id = ?').get(id) as any;
     if (!currentTag) {
@@ -147,18 +151,20 @@ export const updateTag = (params: UpdateTagParams): Tag => {
     const updatedName = name !== undefined ? name : currentTag.name;
     const updatedColor = color !== undefined ? color : currentTag.color;
     const updatedParentId = parentId !== undefined ? parentId : currentTag.parent_id;
+    const updatedIsFavorite = isFavorite !== undefined ? (isFavorite ? 1 : 0) : currentTag.is_favorite;
 
     db.prepare(`
         UPDATE tags
-        SET name = ?, color = ?, parent_id = ?
+        SET name = ?, color = ?, parent_id = ?, is_favorite = ?
         WHERE id = ?
-    `).run(updatedName, updatedColor, updatedParentId, id);
+    `).run(updatedName, updatedColor, updatedParentId, updatedIsFavorite, id);
 
     return {
         id,
         name: updatedName,
         parentId: updatedParentId,
         color: updatedColor,
+        isFavorite: !!updatedIsFavorite,
     };
 };
 

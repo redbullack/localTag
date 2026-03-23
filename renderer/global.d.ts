@@ -13,6 +13,7 @@ export interface Tag {
     name: string;
     parentId: number | null;
     color: string | null;
+    isFavorite?: boolean;
 }
 
 /** 파일 레코드 */
@@ -69,7 +70,7 @@ export interface IElectronAPI {
     // Tag CRUD
     createTag: (params: { name: string; color?: string; parentId?: number }) => Promise<IpcResponse<Tag>>;
     getAllTags: () => Promise<IpcResponse<Tag[]>>;
-    updateTag: (params: { id: number; name?: string; color?: string; parentId?: number | null }) => Promise<IpcResponse<Tag>>;
+    updateTag: (params: { id: number; name?: string; color?: string; parentId?: number | null; isFavorite?: boolean }) => Promise<IpcResponse<Tag>>;
     deleteTag: (params: { id: number }) => Promise<IpcResponse<{ success: boolean }>>;
     reorderTags: (params: { parentId: number | null; orderedIds: number[] }) => Promise<IpcResponse<void>>;
 
