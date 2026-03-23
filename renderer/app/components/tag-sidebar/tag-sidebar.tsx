@@ -30,6 +30,7 @@ interface TagSidebarProps {
     onCreateChildTag: (parentTag: Tag) => void;
     onSelectTag: (tagId: number) => void;
     onReorderTags: (parentId: number | null, orderedIds: number[]) => void;
+    onToggleFavorite: (tagId: number) => void;
 }
 
 interface DragState {
@@ -58,6 +59,7 @@ function TagTreeItem({
     onDeleteTag,
     onCreateChildTag,
     onSelectTag,
+    onToggleFavorite,
     onToggleExpand,
     onDragStart,
     onDragOver,
@@ -75,6 +77,7 @@ function TagTreeItem({
     onDeleteTag: (tagId: number) => void;
     onCreateChildTag: (parentTag: Tag) => void;
     onSelectTag: (tagId: number) => void;
+    onToggleFavorite: (tagId: number) => void;
     onToggleExpand: (nodeId: number) => void;
     onDragStart: (tagId: number, parentId: number | null) => void;
     onDragOver: (e: React.DragEvent, tagId: number, parentId: number | null) => void;
@@ -162,6 +165,25 @@ function TagTreeItem({
                 {isHovered && (
                     <div className="tag-tree-item__actions">
                         <button
+                            className={`tag-tree-item__action-btn ${node.isFavorite ? 'tag-tree-item__action-btn--favorite' : ''}`}
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                onToggleFavorite(node.id);
+                            }}
+                            aria-label={node.isFavorite ? `${node.name} 즐겨찾기 해제` : `${node.name} 즐겨찾기 추가`}
+                            title={node.isFavorite ? '즐겨찾기 해제' : '즐겨찾기 추가'}
+                        >
+                            <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+                                <path
+                                    d="M6 1L7.5 4.1L11 4.5L8.5 7L9.2 10.5L6 8.8L2.8 10.5L3.5 7L1 4.5L4.5 4.1L6 1Z"
+                                    stroke="currentColor"
+                                    strokeWidth="1"
+                                    strokeLinejoin="round"
+                                    fill={node.isFavorite ? 'currentColor' : 'none'}
+                                />
+                            </svg>
+                        </button>
+                        <button
                             className="tag-tree-item__action-btn"
                             onClick={(e) => {
                                 e.stopPropagation();
@@ -216,6 +238,7 @@ function TagTreeItem({
                             onDeleteTag={onDeleteTag}
                             onCreateChildTag={onCreateChildTag}
                             onSelectTag={onSelectTag}
+                            onToggleFavorite={onToggleFavorite}
                             onToggleExpand={onToggleExpand}
                             onDragStart={onDragStart}
                             onDragOver={onDragOver}
@@ -262,6 +285,64 @@ function getSiblingIds(tree: TagTreeNode[], parentId: number | null): number[] {
     return findChildren(tree) ?? [];
 }
 
+/** 즐겨찾기 섹션의 개별 태그 아이템을 렌더링합니다. */
+function FavoriteTagItem({
+    tag,
+    isActive,
+    onSelectTag,
+    onToggleFavorite,
+}: {
+    tag: Tag;
+    isActive: boolean;
+    onSelectTag: (tagId: number) => void;
+    onToggleFavorite: (tagId: number) => void;
+}) {
+    const [isHovered, setIsHovered] = useState(false);
+
+    return (
+        <div
+            className={`tag-tree-item__row tag-sidebar__favorite-row ${isActive ? 'tag-tree-item__row--active' : ''}`}
+            style={{ paddingLeft: '12px' }}
+            onClick={() => onSelectTag(tag.id)}
+            onMouseEnter={() => setIsHovered(true)}
+            onMouseLeave={() => setIsHovered(false)}
+        >
+            <span className="tag-tree-item__toggle tag-tree-item__toggle--hidden" aria-hidden="true" />
+            <span
+                className="tag-tree-item__dot"
+                style={{ backgroundColor: tag.color || DEFAULT_TAG_COLOR }}
+            />
+            <span className="tag-tree-item__name">
+                {tag.name}
+                <span className="tag-tree-item__count">({tag.fileCount || 0})</span>
+            </span>
+            {isHovered && (
+                <div className="tag-tree-item__actions">
+                    <button
+                        className="tag-tree-item__action-btn tag-tree-item__action-btn--favorite"
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            onToggleFavorite(tag.id);
+                        }}
+                        aria-label={`${tag.name} 즐겨찾기 해제`}
+                        title="즐겨찾기 해제"
+                    >
+                        <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+                            <path
+                                d="M6 1L7.5 4.1L11 4.5L8.5 7L9.2 10.5L6 8.8L2.8 10.5L3.5 7L1 4.5L4.5 4.1L6 1Z"
+                                stroke="currentColor"
+                                strokeWidth="1"
+                                strokeLinejoin="round"
+                                fill="currentColor"
+                            />
+                        </svg>
+                    </button>
+                </div>
+            )}
+        </div>
+    );
+}
+
 const SORT_CYCLE: TagSortOrder[] = ['none', 'asc', 'desc', 'count-asc', 'count-desc'];
 const SORT_LABELS: Record<TagSortOrder, string> = {
     none: '기본 순서',
@@ -282,10 +363,12 @@ export default function TagSidebar({
     onCreateChildTag,
     onSelectTag,
     onReorderTags,
+    onToggleFavorite,
 }: TagSidebarProps) {
     const { showToast } = useToast();
     const [sortOrder, setSortOrder] = useState<TagSortOrder>('none');
     const tagTree = buildTagTree(tags, sortOrder);
+    const favoriteTags = tags.filter((t) => t.isFavorite);
 
     // 명시적으로 접은 id만 추적한다. Set에 없는 id는 기본값으로 펼쳐진 상태로 취급한다.
     const [collapsedIds, setCollapsedIds] = useState<Set<number>>(new Set());
@@ -460,6 +543,34 @@ export default function TagSidebar({
                 />
             </div>
 
+            {/* 즐겨찾기 섹션 */}
+            {favoriteTags.length > 0 && (
+                <div className="tag-sidebar__favorite-section">
+                    <div className="tag-sidebar__favorite-header">
+                        <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+                            <path
+                                d="M6 1L7.5 4.1L11 4.5L8.5 7L9.2 10.5L6 8.8L2.8 10.5L3.5 7L1 4.5L4.5 4.1L6 1Z"
+                                stroke="currentColor"
+                                strokeWidth="1"
+                                strokeLinejoin="round"
+                                fill="currentColor"
+                            />
+                        </svg>
+                        즐겨찾기
+                    </div>
+                    {favoriteTags.map((tag) => (
+                        <FavoriteTagItem
+                            key={tag.id}
+                            tag={tag}
+                            isActive={selectedTagIds.includes(tag.id)}
+                            onSelectTag={onSelectTag}
+                            onToggleFavorite={onToggleFavorite}
+                        />
+                    ))}
+                    <div className="tag-sidebar__divider" />
+                </div>
+            )}
+
             {/* 태그 없음 항목 */}
             <div className="tag-sidebar__untagged-section">
                 <div
@@ -503,6 +614,7 @@ export default function TagSidebar({
                             onDeleteTag={onDeleteTag}
                             onCreateChildTag={onCreateChildTag}
                             onSelectTag={onSelectTag}
+                            onToggleFavorite={onToggleFavorite}
                             onToggleExpand={handleToggleExpand}
                             onDragStart={handleDragStart}
                             onDragOver={handleDragOver}

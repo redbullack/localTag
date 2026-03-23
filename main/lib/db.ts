@@ -77,4 +77,10 @@ const createSchema = () => {
             )
         `).run();
     }
+
+    // 마이그레이션: tags 테이블에 is_favorite 컬럼 추가
+    const hasFavorite = columns.some((col) => col.name === 'is_favorite');
+    if (!hasFavorite) {
+        db.prepare('ALTER TABLE tags ADD COLUMN is_favorite INTEGER DEFAULT 0').run();
+    }
 };

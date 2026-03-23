@@ -34,7 +34,7 @@ export const registerTagHandlers = (): void => {
         }
     });
 
-    ipcMain.handle('tag:update', (_event, params: { id: number; name?: string; color?: string; parentId?: number | null }) => {
+    ipcMain.handle('tag:update', (_event, params: { id: number; name?: string; color?: string; parentId?: number | null; isFavorite?: boolean }) => {
         try {
             return { success: true, data: updateTag(params) };
         } catch (error: any) {
