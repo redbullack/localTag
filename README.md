@@ -22,6 +22,10 @@ Electron과 Next.js 기반의 데스크탑 애플리케이션 프로젝트입니
 ## 진행 및 수정 사항 (Changelog)
 
 * **2026-03-23**
+  * **작업 내용**: 태그 컬럼 더블클릭 자동 맞춤 시 최대 너비 상한 적용. 기존에는 태그가 많은 행이 있을 때 더블클릭 auto-fit으로 태그 컬럼이 과도하게 넓어지는 문제가 있었음. 테이블 컨테이너 너비의 40%를 상한으로 설정하여 자동 맞춤이 일정 수준 이상 커지지 않도록 개선. 드래그 수동 리사이즈 동작에는 영향 없음.
+  * **변경된 핵심 파일**: `renderer/app/components/file-list/file-list.tsx`
+
+* **2026-03-23**
   * **작업 내용**: 파일 목록 컬럼 리사이징 기능을 Windows 파일 탐색기 방식으로 전면 개선. 기존에는 name↔tags, tags↔size 컬럼이 시소처럼 연동되고 전체 테이블 너비가 고정되어 있어 독립 조작이 불가능했음. 각 컬럼(name/tags/size)이 독립적으로 리사이즈되고, 컬럼 확장 시 전체 테이블 너비가 커지며 횡 스크롤이 발생하도록 구조 변경. size 컬럼에 리사이저 추가, sticky 헤더 적용, 더블 클릭 auto-fit을 컬럼별 독립 동작으로 개선. 또한 size 컬럼 더블 클릭 시 `scrollWidth`(컬럼 너비)를 반환하여 매번 증가하던 버그를 Range API를 사용한 실제 텍스트 너비 측정으로 수정.
   * **변경된 핵심 파일**: `renderer/app/components/file-list/file-list.tsx`, `renderer/app/components/file-list/file-list.css`
 
