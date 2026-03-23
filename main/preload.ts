@@ -41,7 +41,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
         ipcRenderer.invoke('tag:create', params),
     getAllTags: () =>
         ipcRenderer.invoke('tag:get-all'),
-    updateTag: (params: { id: number; name?: string; color?: string; parentId?: number | null }) =>
+    updateTag: (params: { id: number; name?: string; color?: string; parentId?: number | null; isFavorite?: boolean }) =>
         ipcRenderer.invoke('tag:update', params),
     deleteTag: (params: { id: number }) =>
         ipcRenderer.invoke('tag:delete', params),

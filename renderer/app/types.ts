@@ -8,6 +8,7 @@ export interface Tag {
     name: string;
     parentId: number | null;
     color: string | null;
+    isFavorite?: boolean;
     fileCount?: number;
 }
 

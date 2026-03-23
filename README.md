@@ -22,6 +22,10 @@ Electron과 Next.js 기반의 데스크탑 애플리케이션 프로젝트입니
 ## 진행 및 수정 사항 (Changelog)
 
 * **2026-03-23**
+  * **작업 내용**: 태그 즐겨찾기 기능 추가. Steam 라이브러리 스타일로, 태그 위에 커서를 올리면 나타나는 별(★) 아이콘 버튼으로 즐겨찾기를 토글할 수 있음. 즐겨찾기된 태그는 사이드바 상단 "즐겨찾기" 섹션에 별도로 표시되며, 클릭 시 기존과 동일하게 파일 필터로 동작함. 즐겨찾기 상태는 SQLite `tags.is_favorite` 컬럼에 영속 저장됨. 기존 `tag:update` IPC 채널에 `isFavorite` 파라미터를 추가하는 방식으로 구현하여 변경 범위 최소화.
+  * **변경된 핵심 파일**: `main/lib/db.ts`, `main/lib/tag-repository.ts`, `main/ipc/tag-handler.ts`, `main/preload.ts`, `renderer/app/types.ts`, `renderer/global.d.ts`, `renderer/app/page.tsx`, `renderer/app/components/tag-sidebar/tag-sidebar.tsx`, `renderer/app/components/tag-sidebar/tag-sidebar.css`
+
+* **2026-03-23**
   * **작업 내용**: Vault 폴더 이동 시 앱이 "(응답 없음)" 상태가 되는 현상 수정. 원인은 `vault-handler.ts`의 파일 복사/삭제가 모두 동기 API(`fs.copyFileSync`, `fs.unlinkSync`)로 처리되어 메인 프로세스 이벤트 루프를 블로킹한 것. 모든 파일 I/O를 `fs.promises.*` 비동기 API로 전환하고, `BrowserWindow.getFocusedWindow()`에 `getAllWindows()` fallback을 추가하여 포커스 이탈 시에도 진행률이 정상 전송되도록 개선. 또한 Vault 이동 중 자체 진행률 UI 대신 전체 화면 `LoadingOverlay`를 사용하여 모든 UI 조작을 차단하도록 변경.
   * **변경된 핵심 파일**: `main/ipc/vault-handler.ts`, `renderer/app/components/vault-info/vault-info.tsx`, `renderer/app/components/shared/loading-overlay.tsx`, `renderer/app/utils/use-delayed-loading.ts`, `renderer/app/page.tsx`
 

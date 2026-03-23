@@ -98,6 +98,36 @@
     color: var(--text-primary);
 }
 
+/* ===== 즐겨찾기 섹션 ===== */
+.tag-sidebar__favorite-section {
+    padding: 4px 0 0;
+}
+
+.tag-sidebar__favorite-header {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 12px;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--text-muted);
+}
+
+.tag-sidebar__favorite-row {
+    cursor: pointer;
+}
+
+.tag-tree-item__action-btn--favorite {
+    color: #f5c542;
+}
+
+.tag-tree-item__action-btn--favorite:hover {
+    background-color: var(--bg-modifier-active);
+    color: #f5c542;
+}
+
 /* ===== 태그 없음 섹션 ===== */
 .tag-sidebar__untagged-section {
     padding: 4px 0 0;
