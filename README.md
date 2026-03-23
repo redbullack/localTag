@@ -22,6 +22,10 @@ Electron과 Next.js 기반의 데스크탑 애플리케이션 프로젝트입니
 ## 진행 및 수정 사항 (Changelog)
 
 * **2026-03-23**
+  * **작업 내용**: Vault 폴더 이동 시 앱이 "(응답 없음)" 상태가 되는 현상 수정. 원인은 `vault-handler.ts`의 파일 복사/삭제가 모두 동기 API(`fs.copyFileSync`, `fs.unlinkSync`)로 처리되어 메인 프로세스 이벤트 루프를 블로킹한 것. 모든 파일 I/O를 `fs.promises.*` 비동기 API로 전환하고, `BrowserWindow.getFocusedWindow()`에 `getAllWindows()` fallback을 추가하여 포커스 이탈 시에도 진행률이 정상 전송되도록 개선. 또한 Vault 이동 중 자체 진행률 UI 대신 전체 화면 `LoadingOverlay`를 사용하여 모든 UI 조작을 차단하도록 변경.
+  * **변경된 핵심 파일**: `main/ipc/vault-handler.ts`, `renderer/app/components/vault-info/vault-info.tsx`, `renderer/app/components/shared/loading-overlay.tsx`, `renderer/app/utils/use-delayed-loading.ts`, `renderer/app/page.tsx`
+
+* **2026-03-23**
   * **작업 내용**: 태그 컬럼 더블클릭 자동 맞춤 시 최대 너비 상한 적용. 기존에는 태그가 많은 행이 있을 때 더블클릭 auto-fit으로 태그 컬럼이 과도하게 넓어지는 문제가 있었음. 테이블 컨테이너 너비의 40%를 상한으로 설정하여 자동 맞춤이 일정 수준 이상 커지지 않도록 개선. 드래그 수동 리사이즈 동작에는 영향 없음.
   * **변경된 핵심 파일**: `renderer/app/components/file-list/file-list.tsx`
 

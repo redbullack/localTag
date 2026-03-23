@@ -21,6 +21,7 @@ export default function Home() {
     const [vaultPath, setVaultPath] = useState<string | null>(null);
     const [isLoading, setIsLoading] = useState(true);
     const [isSyncing, setIsSyncing] = useState(false);
+    const [isRelocating, setIsRelocating] = useState(false);
     const { showToast } = useToast();
     const { showConfirm } = useConfirm();
     const { showLoading, updateProgress, hideLoading } = useLoadingOverlay();
@@ -790,8 +791,10 @@ export default function Home() {
                     <VaultInfo
                         vaultPath={vaultPath}
                         isSyncing={isSyncing}
+                        isRelocating={isRelocating}
                         onSync={() => handleSync(false)}
                         onVaultRelocated={(newPath) => setVaultPath(newPath)}
+                        onRelocatingChange={setIsRelocating}
                         refreshTrigger={storageRefreshTrigger}
                     />
 

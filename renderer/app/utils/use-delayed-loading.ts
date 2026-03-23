@@ -24,6 +24,17 @@ export function useDelayedLoading(delayMs = 500, minDisplayMs = 300) {
         }, delayMs);
     }, [delayMs]);
 
+    /** 지연 없이 즉시 로딩 UI를 표시한다. */
+    const forceShow = useCallback(() => {
+        isActiveRef.current = true;
+        if (delayTimerRef.current) {
+            clearTimeout(delayTimerRef.current);
+            delayTimerRef.current = null;
+        }
+        shownAtRef.current = Date.now();
+        setIsVisible(true);
+    }, []);
+
     const stopLoading = useCallback(() => {
         isActiveRef.current = false;
 
@@ -52,5 +63,5 @@ export function useDelayedLoading(delayMs = 500, minDisplayMs = 300) {
         }
     }, [minDisplayMs]);
 
-    return { isVisible, startLoading, stopLoading };
+    return { isVisible, startLoading, forceShow, stopLoading };
 }
