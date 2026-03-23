@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { formatBytes } from '../../utils/format-bytes';
 import { useConfirm } from '../shared/confirm-dialog';
+import { useLoadingOverlay } from '../shared/loading-overlay';
 import { useToast } from '../shared/toast-provider';
 import './vault-info.css';
 
@@ -14,17 +15,13 @@ interface StorageInfo {
     driveUsed: number;
 }
 
-interface RelocateProgress {
-    current: number;
-    total: number;
-    currentFile: string;
-}
-
 interface VaultInfoProps {
     vaultPath: string;
     isSyncing: boolean;
+    isRelocating: boolean;
     onSync: () => void;
     onVaultRelocated: (newPath: string) => void;
+    onRelocatingChange: (isRelocating: boolean) => void;
     /** 파일 변경 이벤트 시 용량 정보를 갱신하기 위한 트리거 카운터 */
     refreshTrigger: number;
 }
@@ -32,16 +29,17 @@ interface VaultInfoProps {
 export default function VaultInfo({
     vaultPath,
     isSyncing,
+    isRelocating,
     onSync,
     onVaultRelocated,
+    onRelocatingChange,
     refreshTrigger,
 }: VaultInfoProps) {
     const { showToast } = useToast();
     const { showConfirm } = useConfirm();
+    const { showLoading, updateProgress, hideLoading } = useLoadingOverlay();
 
     const [storageInfo, setStorageInfo] = useState<StorageInfo | null>(null);
-    const [isRelocating, setIsRelocating] = useState(false);
-    const [relocateProgress, setRelocateProgress] = useState<RelocateProgress | null>(null);
 
     const isDisabled = isSyncing || isRelocating;
 
@@ -71,12 +69,22 @@ export default function VaultInfo({
         });
         if (!confirmed) return;
 
-        setIsRelocating(true);
-        setRelocateProgress(null);
+        onRelocatingChange(true);
 
-        // 진행률 수신 등록
+        // 진행률 수신 등록 — 첫 번째 이벤트 수신 시 로딩 오버레이를 즉시 표시한다.
+        // (relocateVault 내부에서 폴더 선택 다이얼로그가 먼저 열리므로,
+        //  다이얼로그 전에 showLoading을 호출하면 500ms 지연 타이머가 소진되어 표시되지 않는다.)
+        const overlayShownRef = { current: false };
         const cleanup = window.electronAPI.onVaultRelocateProgress((progress) => {
-            setRelocateProgress(progress);
+            if (!overlayShownRef.current) {
+                overlayShownRef.current = true;
+                showLoading({ operationType: 'relocate', description: 'Vault 이동 중...' }, { immediate: true });
+            }
+            updateProgress({
+                currentFile: progress.currentFile,
+                currentIndex: progress.current,
+                totalCount: progress.total,
+            });
         });
 
         try {
@@ -110,8 +118,8 @@ export default function VaultInfo({
             });
         } finally {
             cleanup();
-            setIsRelocating(false);
-            setRelocateProgress(null);
+            onRelocatingChange(false);
+            hideLoading();
             loadStorageInfo();
         }
     };
@@ -119,28 +127,6 @@ export default function VaultInfo({
     const driveUsedPercent = storageInfo && storageInfo.driveTotal > 0
         ? Math.round((storageInfo.driveUsed / storageInfo.driveTotal) * 100)
         : 0;
-
-    // ── 이동 중 UI ──
-    if (isRelocating && relocateProgress) {
-        const percent = Math.round((relocateProgress.current / relocateProgress.total) * 100);
-        return (
-            <div className="vault-info vault-info--relocating">
-                <div className="vault-info__relocate-status">
-                    <span className="vault-info__relocate-icon">📦</span>
-                    <span className="vault-info__relocate-text">
-                        Vault 이동 중... {relocateProgress.currentFile} ({relocateProgress.current}/{relocateProgress.total})
-                    </span>
-                </div>
-                <div className="vault-info__progress-bar">
-                    <div
-                        className="vault-info__progress-fill"
-                        style={{ width: `${percent}%` }}
-                    />
-                </div>
-                <span className="vault-info__progress-percent">{percent}%</span>
-            </div>
-        );
-    }
 
     // ── 기본 UI (2행 compact) ──
     return (
