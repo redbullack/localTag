@@ -313,6 +313,9 @@ export default function FileList({
         }
 
         if (column === 'tags') {
+            const TAG_COL_MAX_WIDTH = tableRef.current
+                ? Math.round(tableRef.current.clientWidth * 0.4)
+                : 400;
             let maxWidth = COL_MIN_WIDTHS.tags;
             document.querySelectorAll('.file-row__tags-cell').forEach((el) => {
                 const badgeWidths = Array.from(el.querySelectorAll('.tag-badge')).reduce(
@@ -321,6 +324,7 @@ export default function FileList({
                 );
                 maxWidth = Math.max(maxWidth, badgeWidths + 16);
             });
+            maxWidth = Math.min(maxWidth, TAG_COL_MAX_WIDTH);
             setColWidths((prev) => ({ ...prev, tags: maxWidth }));
             return;
         }
