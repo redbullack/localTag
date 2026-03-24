@@ -4,10 +4,12 @@ export type ThemeMode = 'light' | 'dark' | 'system';
 
 export interface AppSettings {
     theme: ThemeMode;
+    autoStart: boolean;
 }
 
 const DEFAULT_SETTINGS: AppSettings = {
     theme: 'system',
+    autoStart: false,
 };
 
 interface ConfigType {
@@ -31,7 +33,7 @@ export const setVaultPath = (vaultPath: string): void => {
 };
 
 export const getSettings = (): AppSettings => {
-    return store.get('settings');
+    return { ...DEFAULT_SETTINGS, ...store.get('settings') };
 };
 
 export const getSetting = <K extends keyof AppSettings>(key: K): AppSettings[K] => {

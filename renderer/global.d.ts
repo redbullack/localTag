@@ -108,6 +108,7 @@ export type ThemeMode = 'light' | 'dark' | 'system';
 
 export interface AppSettings {
     theme: ThemeMode;
+    autoStart: boolean;
 }
 
 declare global {

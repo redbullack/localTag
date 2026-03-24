@@ -40,6 +40,12 @@ app.whenReady().then(() => {
         initDb();
     }
 
+    // 프로덕션 빌드에서만 자동 시작 설정 적용
+    if (!isDev) {
+        const autoStart = getSettings().autoStart;
+        app.setLoginItemSettings({ openAtLogin: autoStart });
+    }
+
     registerTagHandlers();
     registerFileHandlers();
     registerVaultHandlers();
