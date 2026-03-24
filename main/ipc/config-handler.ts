@@ -1,5 +1,7 @@
-import { ipcMain } from 'electron';
+import { ipcMain, app } from 'electron';
 import { getSettings, getSetting, setSetting, type AppSettings } from '../lib/store';
+
+const isDev = process.env.NODE_ENV === 'development';
 
 /**
  * 앱 설정 관련 IPC 핸들러를 등록합니다.
@@ -29,6 +31,13 @@ export const registerConfigHandlers = (): void => {
     ipcMain.handle('config:set', (_event, params: { key: keyof AppSettings; value: any }) => {
         try {
             setSetting(params.key, params.value);
+
+            if (params.key === 'autoStart' && !isDev) {
+                app.setLoginItemSettings({
+                    openAtLogin: params.value as boolean,
+                });
+            }
+
             return { success: true, data: null };
         } catch (error: any) {
             return { success: false, error: error.message };

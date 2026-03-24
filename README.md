@@ -22,6 +22,10 @@ Electron과 Next.js 기반의 데스크탑 애플리케이션 프로젝트입니
 ## 진행 및 수정 사항 (Changelog)
 
 * **2026-03-24**
+  * **작업 내용**: 인스톨러 바탕화면 바로가기 옵션 및 앱 내 PC 부팅 자동 시작 토글 기능 추가. NSIS 설치 마법사에서 바탕화면 바로가기 생성 여부를 선택할 수 있으며, 헤더 우측 슬라이드 토글로 자동 시작을 켜고 끌 수 있음. electron-store 기반 설정 영속화 및 `app.setLoginItemSettings()` 연동.
+  * **변경된 핵심 파일**: `package.json`, `main/lib/store.ts`, `main/ipc/config-handler.ts`, `main/main.ts`, `renderer/global.d.ts`, `renderer/app/components/shared/auto-start-toggle.tsx`, `renderer/app/components/shared/auto-start-toggle.css`, `renderer/app/page.tsx`, `renderer/app/globals.css`
+
+* **2026-03-24**
   * **작업 내용**: 태그 및 파일 목록의 hover 액션 버튼을 완전히 제거하고, 우클릭 컨텍스트 메뉴(아이콘+제목 표시)로 대체. TagSidebar(즐겨찾기/하위태그생성/수정/삭제)와 FileList(열기/탐색기/태그수정/이름변경/이동/복사/삭제) 각각 우클릭 메뉴 적용. 공유 ContextMenu 컴포넌트 신규 추가. FileList의 actions 전용 컬럼(90px)도 제거하여 파일 정보 표시 공간 확보.
   * **변경된 핵심 파일**: `renderer/app/components/shared/context-menu.tsx`(신규), `renderer/app/components/shared/context-menu.css`(신규), `renderer/app/components/tag-sidebar/tag-sidebar.tsx`, `renderer/app/components/tag-sidebar/tag-sidebar.css`, `renderer/app/components/file-list/file-list.tsx`, `renderer/app/components/file-list/file-list.css`
 

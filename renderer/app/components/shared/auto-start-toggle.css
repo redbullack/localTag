@@ -1,0 +1,39 @@
+.auto-start-toggle {
+    position: relative;
+    width: 36px;
+    height: 20px;
+    border: none;
+    border-radius: 10px;
+    background-color: var(--bg-tertiary);
+    cursor: pointer;
+    padding: 0;
+    transition: background-color 0.2s ease;
+}
+
+.auto-start-toggle:hover {
+    background-color: var(--bg-modifier-hover);
+}
+
+.auto-start-toggle--active {
+    background-color: var(--accent-primary);
+}
+
+.auto-start-toggle--active:hover {
+    opacity: 0.85;
+}
+
+.auto-start-toggle__knob {
+    position: absolute;
+    top: 3px;
+    left: 3px;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background-color: var(--text-muted);
+    transition: all 0.2s ease;
+}
+
+.auto-start-toggle--active .auto-start-toggle__knob {
+    left: 19px;
+    background-color: white;
+}
