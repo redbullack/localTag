@@ -24,6 +24,18 @@
     "url": "https://github.com/redbullack/localTag/issues"
   },
   "homepage": "https://github.com/redbullack/localTag#readme",
+  "build": {
+    "appId": "com.localtag.app",
+    "productName": "LocalTag",
+    "win": {
+      "target": "nsis"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true
+    }
+  },
   "dependencies": {
     "@tailwindcss/postcss": "^4.2.1",
     "better-sqlite3": "^12.6.2",

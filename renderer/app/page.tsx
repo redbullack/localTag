@@ -7,6 +7,7 @@ import { useConfirm } from './components/shared/confirm-dialog';
 import { useLoadingOverlay } from './components/shared/loading-overlay';
 import { useToast } from './components/shared/toast-provider';
 import TagFormModal from './components/tag-form-modal/tag-form-modal';
+import AutoStartToggle from './components/shared/auto-start-toggle';
 import ThemeToggle from './components/shared/theme-toggle';
 import TagSidebar from './components/tag-sidebar/tag-sidebar';
 import VaultInfo from './components/vault-info/vault-info';
@@ -814,6 +815,7 @@ export default function Home() {
                         </h1>
                     </div>
                     <div className="main-content__header-right">
+                        <AutoStartToggle />
                         <ThemeToggle />
                     </div>
                 </div>
