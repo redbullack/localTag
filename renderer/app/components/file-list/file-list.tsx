@@ -4,6 +4,7 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import './file-list.css';
 import type { FileWithTags, SortOption } from '../../types';
 import TagBadge from '../shared/tag-badge';
+import ContextMenu, { type ContextMenuItem } from '../shared/context-menu';
 import { useToast } from '../shared/toast-provider';
 import Pagination from '../shared/pagination';
 import { formatBytes } from '../../utils/format-bytes';
@@ -40,38 +41,39 @@ interface FileListProps {
 function FileRow({
     file,
     isSelected,
+    isRenaming,
     onToggleSelect,
     onRenameFile,
-    onDeleteFile,
-    onMoveFile,
-    onCopyFile,
-    onEditFileTags,
+    onRenameCancel,
+    onContextMenu,
+    onOpenFile,
 }: {
     file: FileWithTags;
     isSelected: boolean;
+    isRenaming: boolean;
     onToggleSelect: (fileId: number) => void;
     onRenameFile: (fileId: number, newFilename: string) => void;
-    onDeleteFile: (fileId: number, skipConfirmation?: boolean) => void;
-    onMoveFile: (file: FileWithTags) => void;
-    onCopyFile: (file: FileWithTags) => void;
-    onEditFileTags: (file: FileWithTags) => void;
+    onRenameCancel: () => void;
+    onContextMenu: (e: React.MouseEvent, file: FileWithTags) => void;
+    onOpenFile: (file: FileWithTags) => void;
 }) {
-    const { showToast } = useToast();
-    const [isHovered, setIsHovered] = useState(false);
-    const [isRenaming, setIsRenaming] = useState(false);
     const [renameValue, setRenameValue] = useState(file.filename);
+
+    /** isRenaming이 true로 바뀌면 현재 파일명으로 초기화한다. */
+    useEffect(() => {
+        if (isRenaming) setRenameValue(file.filename);
+    }, [isRenaming, file.filename]);
 
     /** 인라인 이름 편집을 확정하거나 취소한다. */
     const handleRenameSubmit = () => {
         const trimmedName = renameValue.trim();
         if (!trimmedName || trimmedName === file.filename) {
-            setIsRenaming(false);
-            setRenameValue(file.filename);
+            onRenameCancel();
             return;
         }
 
         onRenameFile(file.id, trimmedName);
-        setIsRenaming(false);
+        onRenameCancel();
     };
 
     const handleRenameKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -80,41 +82,19 @@ function FileRow({
         }
 
         if (e.key === 'Escape') {
-            setIsRenaming(false);
-            setRenameValue(file.filename);
-        }
-    };
-
-    const handleOpenFile = async () => {
-        try {
-            const result = await window.electronAPI.openFile({ filename: file.filename });
-            if (!result.success) {
-                showToast({ type: 'error', message: `파일 열기 실패: ${result.error}`, duration: 4000 });
-            }
-        } catch (error) {
-            console.error('Failed to open file:', error);
-            showToast({ type: 'error', message: '파일 열기에 실패했습니다.', duration: 4000 });
-        }
-    };
-
-    const handleShowInExplorer = async () => {
-        try {
-            const result = await window.electronAPI.showFileInExplorer({ filename: file.filename });
-            if (!result.success) {
-                showToast({ type: 'error', message: `탐색기 열기 실패: ${result.error}`, duration: 4000 });
-            }
-        } catch (error) {
-            console.error('Failed to show file in explorer:', error);
-            showToast({ type: 'error', message: '파일 탐색기를 여는 데 실패했습니다.', duration: 4000 });
+            onRenameCancel();
         }
     };
 
     return (
         <div
             className={`file-row ${isSelected ? 'file-row--selected' : ''}`}
-            onMouseEnter={() => setIsHovered(true)}
-            onMouseLeave={() => setIsHovered(false)}
-            onDoubleClick={handleOpenFile}
+            onDoubleClick={() => onOpenFile(file)}
+            onContextMenu={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                onContextMenu(e, file);
+            }}
         >
             <div className="file-row__checkbox-cell">
                 <input
@@ -161,42 +141,6 @@ function FileRow({
             <div className="file-row__size-cell">
                 {formatBytes(file.size ?? 0)}
             </div>
-
-            {/* 액션 버튼 */}
-            <div className={`file-row__actions-cell ${isHovered ? 'file-row__actions-cell--visible' : ''}`}>
-                <button className="file-row__action-btn" onClick={handleOpenFile} title="열기">
-                    📂
-                </button>
-                <button className="file-row__action-btn" onClick={handleShowInExplorer} title="파일 탐색기에서 보기">
-                    🗂️
-                </button>
-                <button className="file-row__action-btn" onClick={() => onEditFileTags(file)} title="태그 수정">
-                    🏷️
-                </button>
-                <button
-                    className="file-row__action-btn"
-                    onClick={() => {
-                        setIsRenaming(true);
-                        setRenameValue(file.filename);
-                    }}
-                    title="이름 변경"
-                >
-                    ✎
-                </button>
-                <button className="file-row__action-btn" onClick={() => onMoveFile(file)} title="이동">
-                    📤
-                </button>
-                <button className="file-row__action-btn" onClick={() => onCopyFile(file)} title="복사">
-                    📋
-                </button>
-                <button
-                    className="file-row__action-btn file-row__action-btn--danger"
-                    onClick={() => onDeleteFile(file.id)}
-                    title="삭제"
-                >
-                    🗑️
-                </button>
-            </div>
         </div>
     );
 }
@@ -232,6 +176,15 @@ export default function FileList({
     const [resizingCol, setResizingCol] = useState<'name' | 'tags' | 'size' | null>(null);
     const tableRef = useRef<HTMLDivElement>(null);
 
+    // ── 우클릭 컨텍스트 메뉴 ──
+    const [contextMenu, setContextMenu] = useState<{
+        position: { x: number; y: number };
+        file: FileWithTags;
+    } | null>(null);
+
+    // ── 인라인 이름 변경 (FileRow에서 분리) ──
+    const [renamingFileId, setRenamingFileId] = useState<number | null>(null);
+
     const isResizingRef = useRef<{
         column: 'name' | 'tags' | 'size';
         startX: number;
@@ -242,8 +195,8 @@ export default function FileList({
     useEffect(() => {
         if (tableRef.current) {
             const containerWidth = tableRef.current.clientWidth;
-            // checkbox(32) + actions(90) + gap(8*4) + padding(32)
-            const fixedWidth = 32 + 90 + 32 + 32;
+            // checkbox(32) + gap(8*3) + padding(32)
+            const fixedWidth = 32 + 24 + 32;
             const nameWidth = Math.max(200, containerWidth - fixedWidth - 200 - 100);
             setColWidths({ name: nameWidth, tags: 200, size: 100 });
         }
@@ -392,6 +345,82 @@ export default function FileList({
         onDropFiles?.(filePaths);
     };
 
+    // ── 파일 열기 / 탐색기 핸들러 ──
+
+    const handleOpenFile = async (file: FileWithTags) => {
+        try {
+            const result = await window.electronAPI.openFile({ filename: file.filename });
+            if (!result.success) {
+                showToast({ type: 'error', message: `파일 열기 실패: ${result.error}`, duration: 4000 });
+            }
+        } catch (error) {
+            console.error('Failed to open file:', error);
+            showToast({ type: 'error', message: '파일 열기에 실패했습니다.', duration: 4000 });
+        }
+    };
+
+    const handleShowInExplorer = async (file: FileWithTags) => {
+        try {
+            const result = await window.electronAPI.showFileInExplorer({ filename: file.filename });
+            if (!result.success) {
+                showToast({ type: 'error', message: `탐색기 열기 실패: ${result.error}`, duration: 4000 });
+            }
+        } catch (error) {
+            console.error('Failed to show file in explorer:', error);
+            showToast({ type: 'error', message: '파일 탐색기를 여는 데 실패했습니다.', duration: 4000 });
+        }
+    };
+
+    // ── 우클릭 컨텍스트 메뉴 ──
+
+    const handleFileContextMenu = (e: React.MouseEvent, file: FileWithTags) => {
+        setContextMenu({ position: { x: e.clientX, y: e.clientY }, file });
+    };
+
+    const buildFileContextMenuItems = (): ContextMenuItem[] => {
+        if (!contextMenu) return [];
+        const { file } = contextMenu;
+
+        return [
+            {
+                label: '열기',
+                icon: <span>📂</span>,
+                onClick: () => handleOpenFile(file),
+            },
+            {
+                label: '파일 탐색기에서 보기',
+                icon: <span>🗂️</span>,
+                onClick: () => handleShowInExplorer(file),
+            },
+            {
+                label: '태그 수정',
+                icon: <span>🏷️</span>,
+                onClick: () => onEditFileTags(file),
+            },
+            {
+                label: '이름 변경',
+                icon: <span>✎</span>,
+                onClick: () => setRenamingFileId(file.id),
+            },
+            {
+                label: '이동',
+                icon: <span>📤</span>,
+                onClick: () => onMoveFile(file),
+            },
+            {
+                label: '복사',
+                icon: <span>📋</span>,
+                onClick: () => onCopyFile(file),
+            },
+            {
+                label: '삭제',
+                icon: <span>🗑️</span>,
+                onClick: () => onDeleteFile(file.id),
+                danger: true,
+            },
+        ];
+    };
+
     // ==== 페이징 로직 ====
     const limit = 50;
 
@@ -530,7 +559,6 @@ export default function FileList({
                                 onDoubleClick={(e) => handleResizeDoubleClick('size', e)}
                             />
                         </div>
-                        <div className="file-list__th file-list__th--actions" />
                     </div>
 
                     {/* 파일 행 */}
@@ -540,16 +568,25 @@ export default function FileList({
                                 key={file.id}
                                 file={file}
                                 isSelected={selectedFileIds.has(file.id)}
+                                isRenaming={renamingFileId === file.id}
                                 onToggleSelect={onToggleSelect}
                                 onRenameFile={onRenameFile}
-                                onDeleteFile={onDeleteFile}
-                                onMoveFile={onMoveFile}
-                                onCopyFile={onCopyFile}
-                                onEditFileTags={onEditFileTags}
+                                onRenameCancel={() => setRenamingFileId(null)}
+                                onContextMenu={handleFileContextMenu}
+                                onOpenFile={handleOpenFile}
                             />
                         ))}
                     </div>
                 </div>
+            )}
+
+            {/* 우클릭 컨텍스트 메뉴 */}
+            {contextMenu && (
+                <ContextMenu
+                    position={contextMenu.position}
+                    onClose={() => setContextMenu(null)}
+                    items={buildFileContextMenuItems()}
+                />
             )}
 
             {/* Pagination UI */}

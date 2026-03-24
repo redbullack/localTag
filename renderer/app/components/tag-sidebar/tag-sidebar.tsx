@@ -4,6 +4,7 @@ import { useRef, useState } from 'react';
 import './tag-sidebar.css';
 import type { Tag, TagTreeNode } from '../../types';
 import TagSearchDropdown from '../shared/tag-search-dropdown';
+import ContextMenu, { type ContextMenuItem } from '../shared/context-menu';
 import { buildTagTree, type TagSortOrder } from '../../utils/tag-tree';
 import { useSidebarResize } from '../../utils/use-sidebar-resize';
 import { useToast } from '../shared/toast-provider';
@@ -55,12 +56,9 @@ function TagTreeItem({
     collapsedIds,
     isDragEnabled,
     dragState,
-    onEditTag,
-    onDeleteTag,
-    onCreateChildTag,
     onSelectTag,
-    onToggleFavorite,
     onToggleExpand,
+    onContextMenu,
     onDragStart,
     onDragOver,
     onDrop,
@@ -73,19 +71,15 @@ function TagTreeItem({
     collapsedIds: Set<number>;
     isDragEnabled: boolean;
     dragState: DragState;
-    onEditTag: (tag: Tag) => void;
-    onDeleteTag: (tagId: number) => void;
-    onCreateChildTag: (parentTag: Tag) => void;
     onSelectTag: (tagId: number) => void;
-    onToggleFavorite: (tagId: number) => void;
     onToggleExpand: (nodeId: number) => void;
+    onContextMenu: (e: React.MouseEvent, node: TagTreeNode) => void;
     onDragStart: (tagId: number, parentId: number | null) => void;
     onDragOver: (e: React.DragEvent, tagId: number, parentId: number | null) => void;
     onDrop: (tagId: number, parentId: number | null) => void;
     onDragEnd: () => void;
     onBlockedDragAttempt: () => void;
 }) {
-    const [isHovered, setIsHovered] = useState(false);
     const hasChildren = node.children.length > 0;
     const isExpanded = !collapsedIds.has(node.id);
     const isActive = selectedTagIds.includes(node.id);
@@ -104,8 +98,11 @@ function TagTreeItem({
                 className={`tag-tree-item__row ${isActive ? 'tag-tree-item__row--active' : ''} ${isDragging ? 'tag-tree-item__row--dragging' : ''} ${dragOverClass}`}
                 style={{ paddingLeft: `${12 + depth * 16}px` }}
                 onClick={() => onSelectTag(node.id)}
-                onMouseEnter={() => setIsHovered(true)}
-                onMouseLeave={() => setIsHovered(false)}
+                onContextMenu={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    onContextMenu(e, node);
+                }}
                 draggable
                 onDragStart={(e) => {
                     if (!isDragEnabled) {
@@ -160,66 +157,6 @@ function TagTreeItem({
                     {node.name}
                     <span className="tag-tree-item__count">({node.fileCount || 0})</span>
                 </span>
-
-                {/* 액션 버튼 (hover 시 표시) */}
-                {isHovered && (
-                    <div className="tag-tree-item__actions">
-                        <button
-                            className={`tag-tree-item__action-btn ${node.isFavorite ? 'tag-tree-item__action-btn--favorite' : ''}`}
-                            onClick={(e) => {
-                                e.stopPropagation();
-                                onToggleFavorite(node.id);
-                            }}
-                            aria-label={node.isFavorite ? `${node.name} 즐겨찾기 해제` : `${node.name} 즐겨찾기 추가`}
-                            title={node.isFavorite ? '즐겨찾기 해제' : '즐겨찾기 추가'}
-                        >
-                            <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
-                                <path
-                                    d="M6 1L7.5 4.1L11 4.5L8.5 7L9.2 10.5L6 8.8L2.8 10.5L3.5 7L1 4.5L4.5 4.1L6 1Z"
-                                    stroke="currentColor"
-                                    strokeWidth="1"
-                                    strokeLinejoin="round"
-                                    fill={node.isFavorite ? 'currentColor' : 'none'}
-                                />
-                            </svg>
-                        </button>
-                        <button
-                            className="tag-tree-item__action-btn"
-                            onClick={(e) => {
-                                e.stopPropagation();
-                                onCreateChildTag(node);
-                            }}
-                            aria-label={`${node.name} 하위 태그 생성`}
-                            title="하위 태그 생성"
-                        >
-                            <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
-                                <path d="M6 2V10M2 6H10" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-                            </svg>
-                        </button>
-                        <button
-                            className="tag-tree-item__action-btn"
-                            onClick={(e) => {
-                                e.stopPropagation();
-                                onEditTag(node);
-                            }}
-                            aria-label={`${node.name} 수정`}
-                            title="수정"
-                        >
-                            ✎
-                        </button>
-                        <button
-                            className="tag-tree-item__action-btn tag-tree-item__action-btn--danger"
-                            onClick={(e) => {
-                                e.stopPropagation();
-                                onDeleteTag(node.id);
-                            }}
-                            aria-label={`${node.name} 삭제`}
-                            title="삭제"
-                        >
-                            ✕
-                        </button>
-                    </div>
-                )}
             </div>
 
             {/* 하위 태그 (재귀 렌더링) */}
@@ -234,12 +171,9 @@ function TagTreeItem({
                             collapsedIds={collapsedIds}
                             isDragEnabled={isDragEnabled}
                             dragState={dragState}
-                            onEditTag={onEditTag}
-                            onDeleteTag={onDeleteTag}
-                            onCreateChildTag={onCreateChildTag}
                             onSelectTag={onSelectTag}
-                            onToggleFavorite={onToggleFavorite}
                             onToggleExpand={onToggleExpand}
+                            onContextMenu={onContextMenu}
                             onDragStart={onDragStart}
                             onDragOver={onDragOver}
                             onDrop={onDrop}
@@ -290,22 +224,23 @@ function FavoriteTagItem({
     tag,
     isActive,
     onSelectTag,
-    onToggleFavorite,
+    onContextMenu,
 }: {
     tag: Tag;
     isActive: boolean;
     onSelectTag: (tagId: number) => void;
-    onToggleFavorite: (tagId: number) => void;
+    onContextMenu: (e: React.MouseEvent, tag: Tag) => void;
 }) {
-    const [isHovered, setIsHovered] = useState(false);
-
     return (
         <div
             className={`tag-tree-item__row tag-sidebar__favorite-row ${isActive ? 'tag-tree-item__row--active' : ''}`}
             style={{ paddingLeft: '12px' }}
             onClick={() => onSelectTag(tag.id)}
-            onMouseEnter={() => setIsHovered(true)}
-            onMouseLeave={() => setIsHovered(false)}
+            onContextMenu={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                onContextMenu(e, tag);
+            }}
         >
             <span className="tag-tree-item__toggle tag-tree-item__toggle--hidden" aria-hidden="true" />
             <span
@@ -316,29 +251,6 @@ function FavoriteTagItem({
                 {tag.name}
                 <span className="tag-tree-item__count">({tag.fileCount || 0})</span>
             </span>
-            {isHovered && (
-                <div className="tag-tree-item__actions">
-                    <button
-                        className="tag-tree-item__action-btn tag-tree-item__action-btn--favorite"
-                        onClick={(e) => {
-                            e.stopPropagation();
-                            onToggleFavorite(tag.id);
-                        }}
-                        aria-label={`${tag.name} 즐겨찾기 해제`}
-                        title="즐겨찾기 해제"
-                    >
-                        <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
-                            <path
-                                d="M6 1L7.5 4.1L11 4.5L8.5 7L9.2 10.5L6 8.8L2.8 10.5L3.5 7L1 4.5L4.5 4.1L6 1Z"
-                                stroke="currentColor"
-                                strokeWidth="1"
-                                strokeLinejoin="round"
-                                fill="currentColor"
-                            />
-                        </svg>
-                    </button>
-                </div>
-            )}
         </div>
     );
 }
@@ -468,6 +380,70 @@ export default function TagSidebar({
 
     const { isDragging: isResizing, handleMouseDown } = useSidebarResize({ minWidth: 180, maxWidth: 400, defaultWidth: 260 });
 
+    // ── 우클릭 컨텍스트 메뉴 ──
+
+    const [contextMenu, setContextMenu] = useState<{
+        position: { x: number; y: number };
+        tag: Tag | TagTreeNode;
+        isFavoriteSection?: boolean;
+    } | null>(null);
+
+    const handleTagContextMenu = (e: React.MouseEvent, tag: Tag | TagTreeNode) => {
+        setContextMenu({ position: { x: e.clientX, y: e.clientY }, tag });
+    };
+
+    const handleFavoriteContextMenu = (e: React.MouseEvent, tag: Tag) => {
+        setContextMenu({ position: { x: e.clientX, y: e.clientY }, tag, isFavoriteSection: true });
+    };
+
+    const buildTagContextMenuItems = (): ContextMenuItem[] => {
+        if (!contextMenu) return [];
+        const { tag, isFavoriteSection } = contextMenu;
+
+        const items: ContextMenuItem[] = [
+            {
+                label: tag.isFavorite ? '즐겨찾기 해제' : '즐겨찾기 추가',
+                icon: (
+                    <svg width="14" height="14" viewBox="0 0 12 12" fill="none">
+                        <path
+                            d="M6 1L7.5 4.1L11 4.5L8.5 7L9.2 10.5L6 8.8L2.8 10.5L3.5 7L1 4.5L4.5 4.1L6 1Z"
+                            stroke="currentColor" strokeWidth="1" strokeLinejoin="round"
+                            fill={tag.isFavorite ? 'currentColor' : 'none'}
+                        />
+                    </svg>
+                ),
+                onClick: () => onToggleFavorite(tag.id),
+            },
+        ];
+
+        if (!isFavoriteSection) {
+            items.push(
+                {
+                    label: '하위 태그 생성',
+                    icon: (
+                        <svg width="14" height="14" viewBox="0 0 12 12" fill="none">
+                            <path d="M6 2V10M2 6H10" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+                        </svg>
+                    ),
+                    onClick: () => onCreateChildTag(tag as Tag),
+                },
+                {
+                    label: '수정',
+                    icon: <span style={{ fontSize: '14px' }}>✎</span>,
+                    onClick: () => onEditTag(tag as Tag),
+                },
+                {
+                    label: '삭제',
+                    icon: <span style={{ fontSize: '14px' }}>✕</span>,
+                    onClick: () => onDeleteTag(tag.id),
+                    danger: true,
+                },
+            );
+        }
+
+        return items;
+    };
+
     return (
         <aside className="tag-sidebar">
             {/* 사이드바 헤더 */}
@@ -564,7 +540,7 @@ export default function TagSidebar({
                             tag={tag}
                             isActive={selectedTagIds.includes(tag.id)}
                             onSelectTag={onSelectTag}
-                            onToggleFavorite={onToggleFavorite}
+                            onContextMenu={handleFavoriteContextMenu}
                         />
                     ))}
                     <div className="tag-sidebar__divider" />
@@ -610,12 +586,9 @@ export default function TagSidebar({
                             collapsedIds={collapsedIds}
                             isDragEnabled={isDragEnabled}
                             dragState={dragState}
-                            onEditTag={onEditTag}
-                            onDeleteTag={onDeleteTag}
-                            onCreateChildTag={onCreateChildTag}
                             onSelectTag={onSelectTag}
-                            onToggleFavorite={onToggleFavorite}
                             onToggleExpand={handleToggleExpand}
+                            onContextMenu={handleTagContextMenu}
                             onDragStart={handleDragStart}
                             onDragOver={handleDragOver}
                             onDrop={handleDrop}
@@ -625,6 +598,15 @@ export default function TagSidebar({
                     ))
                 )}
             </div>
+
+            {/* 우클릭 컨텍스트 메뉴 */}
+            {contextMenu && (
+                <ContextMenu
+                    position={contextMenu.position}
+                    onClose={() => setContextMenu(null)}
+                    items={buildTagContextMenuItems()}
+                />
+            )}
 
             {/* 드래그 리사이즈 핸들 */}
             <div
