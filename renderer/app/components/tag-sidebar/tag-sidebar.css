@@ -119,14 +119,6 @@
     cursor: pointer;
 }
 
-.tag-tree-item__action-btn--favorite {
-    color: #f5c542;
-}
-
-.tag-tree-item__action-btn--favorite:hover {
-    background-color: var(--bg-modifier-active);
-    color: #f5c542;
-}
 
 /* ===== 태그 없음 섹션 ===== */
 .tag-sidebar__untagged-section {
@@ -268,39 +260,6 @@
     color: var(--text-primary);
 }
 
-/* 액션 버튼 */
-.tag-tree-item__actions {
-    display: flex;
-    gap: 2px;
-    margin-left: auto;
-    flex-shrink: 0;
-}
-
-.tag-tree-item__action-btn {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 22px;
-    height: 22px;
-    border: none;
-    border-radius: 4px;
-    background: transparent;
-    color: var(--text-muted);
-    font-size: 12px;
-    cursor: pointer;
-    transition: all 0.1s ease;
-    padding: 0;
-}
-
-.tag-tree-item__action-btn:hover {
-    background-color: var(--bg-modifier-active);
-    color: var(--text-primary);
-}
-
-.tag-tree-item__action-btn--danger:hover {
-    background-color: var(--accent-danger);
-    color: white;
-}
 
 /* ===== 접기/펼치기 버튼 ===== */
 .tag-sidebar__collapse-btn {
