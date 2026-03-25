@@ -5,6 +5,6 @@ export default defineConfig({
     outDir: 'dist-main',
     clean: true,
     format: ['cjs'],
-    external: ['electron', 'better-sqlite3'],
+    external: ['electron', 'better-sqlite3', 'electron-updater'],
     target: 'node16',
 });

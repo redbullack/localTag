@@ -18,6 +18,7 @@ const initialSettings = readInitialSettings();
  * - Tag:    tag:create, tag:get-all, tag:update, tag:delete, tag:reorder
  * - File:   file:select, file:select-folder, file:add, file:get-all, file:get-by-tags, file:rename, file:delete, file:update-tags, file:bulk-set-tags, file:check-duplicate
  * - Config: config:get-settings, config:get, config:set
+ * - Update: update:check, update:download, update:install, update:get-version
  */
 contextBridge.exposeInMainWorld('electronAPI', {
     // Vault 관련
@@ -95,6 +96,32 @@ contextBridge.exposeInMainWorld('electronAPI', {
     getSettings: () => ipcRenderer.invoke('config:get-settings'),
     getConfig: (params: { key: string }) => ipcRenderer.invoke('config:get', params),
     setConfig: (params: { key: string; value: any }) => ipcRenderer.invoke('config:set', params),
+
+    // Update
+    checkForUpdate: () => ipcRenderer.invoke('update:check'),
+    downloadUpdate: () => ipcRenderer.invoke('update:download'),
+    installUpdate: () => ipcRenderer.invoke('update:install'),
+    getAppVersion: () => ipcRenderer.invoke('update:get-version'),
+    onUpdateAvailable: (callback: (info: { version: string; releaseNotes?: string }) => void) => {
+        const handler = (_event: Electron.IpcRendererEvent, info: { version: string; releaseNotes?: string }) => callback(info);
+        ipcRenderer.on('update:available', handler);
+        return () => { ipcRenderer.removeListener('update:available', handler); };
+    },
+    onUpdateDownloadProgress: (callback: (progress: { percent: number; bytesPerSecond: number; transferred: number; total: number }) => void) => {
+        const handler = (_event: Electron.IpcRendererEvent, progress: { percent: number; bytesPerSecond: number; transferred: number; total: number }) => callback(progress);
+        ipcRenderer.on('update:download-progress', handler);
+        return () => { ipcRenderer.removeListener('update:download-progress', handler); };
+    },
+    onUpdateDownloaded: (callback: (info: { version: string }) => void) => {
+        const handler = (_event: Electron.IpcRendererEvent, info: { version: string }) => callback(info);
+        ipcRenderer.on('update:downloaded', handler);
+        return () => { ipcRenderer.removeListener('update:downloaded', handler); };
+    },
+    onUpdateError: (callback: (message: string) => void) => {
+        const handler = (_event: Electron.IpcRendererEvent, message: string) => callback(message);
+        ipcRenderer.on('update:error', handler);
+        return () => { ipcRenderer.removeListener('update:error', handler); };
+    },
 });
 
 // 동기적 초기 설정값 — layout.tsx 인라인 스크립트에서 FOUC 방지용으로 참조

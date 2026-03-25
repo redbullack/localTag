@@ -15,7 +15,9 @@ import type { FileWithTags, SortOption, Tag } from './types';
 import { reorderTagListLocally } from './utils/tag-tree';
 import { UNTAGGED_TAG_ID } from './constants';
 import { useDebounce } from './utils/use-debounce';
+import { useAutoUpdate } from './utils/use-auto-update';
 import { handleAddFilesResponse, handleFileTransferResponse } from './utils/file-transfer';
+import UpdateBanner from './components/shared/update-banner';
 import './components/shared/tag-badge.css';
 
 export default function Home() {
@@ -51,6 +53,9 @@ export default function Home() {
 
     // 파일 태그 에디터 상태
     const [tagEditorFiles, setTagEditorFiles] = useState<FileWithTags[] | null>(null);
+
+    // 자동 업데이트 상태
+    const updateState = useAutoUpdate();
 
     // VaultInfo 용량 정보 갱신 트리거
     const [storageRefreshTrigger, setStorageRefreshTrigger] = useState(0);
@@ -798,6 +803,8 @@ export default function Home() {
             />
 
             <main className="main-content">
+                <UpdateBanner {...updateState} />
+
                 <div className="main-content__header">
                     <div className="main-content__header-left">
                         <span className="main-content__header-icon">📁</span>
