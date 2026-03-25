@@ -21,6 +21,10 @@ Electron과 Next.js 기반의 데스크탑 애플리케이션 프로젝트입니
 ---
 ## 진행 및 수정 사항 (Changelog)
 
+* **2026-03-25** (3)
+  * **작업 내용**: v1.1.1 버그픽스 릴리스. `latest.yml`에 명시된 파일명(`LocalTag-Setup-1.1.0.exe`)과 실제 GitHub 릴리스에 업로드된 파일명(`LocalTag.Setup.1.1.0.exe`)이 달라 `electron-updater`가 다운로드 실패하는 문제 수정. `package.json`의 `nsis` 설정에 `artifactName` 필드를 명시(`LocalTag-Setup-${version}.exe`)하여 빌드 시 파일명이 항상 일치하도록 고정. 버전 `1.1.0` → `1.1.1` bump.
+  * **변경된 핵심 파일**: `package.json`
+
 * **2026-03-25** (2)
   * **작업 내용**: Public 레포 전환 준비 및 v1.1.0 버전 태깅. (1) **`.gitignore` 보완**: Public 레포 전환 시 민감 정보 유출 방지를 위해 `.env` 파일을 `.gitignore`에 추가. (2) **버전 업**: `package.json`의 앱 버전을 `1.0.0` → `1.1.0`으로 갱신.
   * **변경된 핵심 파일**: `.gitignore`, `package.json`
