@@ -14,6 +14,14 @@ export interface AutoUpdateState {
     dismiss: () => void;
 }
 
+/** 에러 메시지를 사용자 친화적인 짧은 메시지로 변환 */
+const sanitizeErrorMessage = (message: string): string => {
+    if (message.includes('404')) return '릴리스 정보를 찾을 수 없습니다.';
+    if (message.includes('net::') || message.includes('ENOTFOUND')) return '네트워크 연결을 확인해주세요.';
+    if (message.length > 100) return message.slice(0, 100) + '…';
+    return message;
+};
+
 /** 앱 자동 업데이트 상태를 관리하는 커스텀 훅 */
 export function useAutoUpdate(): AutoUpdateState {
     const [status, setStatus] = useState<UpdateStatus>('idle');
@@ -29,7 +37,7 @@ export function useAutoUpdate(): AutoUpdateState {
         window.electronAPI.checkForUpdate().then((response) => {
             if (!response.success) {
                 setStatus('error');
-                setErrorMessage(response.error ?? '업데이트 확인에 실패했습니다.');
+                setErrorMessage(sanitizeErrorMessage(response.error ?? '업데이트 확인에 실패했습니다.'));
                 return;
             }
 
@@ -59,7 +67,7 @@ export function useAutoUpdate(): AutoUpdateState {
 
         const cleanupError = window.electronAPI.onUpdateError((message) => {
             setStatus('error');
-            setErrorMessage(message);
+            setErrorMessage(sanitizeErrorMessage(message));
         });
 
         return () => {
@@ -89,7 +97,7 @@ export function useAutoUpdate(): AutoUpdateState {
         window.electronAPI.checkForUpdate().then((response) => {
             if (!response.success) {
                 setStatus('error');
-                setErrorMessage(response.error ?? '업데이트 확인에 실패했습니다.');
+                setErrorMessage(sanitizeErrorMessage(response.error ?? '업데이트 확인에 실패했습니다.'));
                 return;
             }
 
