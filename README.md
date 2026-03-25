@@ -21,6 +21,10 @@ Electron과 Next.js 기반의 데스크탑 애플리케이션 프로젝트입니
 ---
 ## 진행 및 수정 사항 (Changelog)
 
+* **2026-03-25**
+  * **작업 내용**: 배포 준비(Git 정리 + GitHub Releases 설정) 및 자동 업데이트 기능 구현. (1) **Git 정리**: `tsc.log`, `tsconfig.tsbuildinfo`, `package-lock.json`을 Git 추적에서 해제하고 `.gitignore`에 `*.log`, `tsconfig.tsbuildinfo`, `.vscode` 항목 추가. (2) **GitHub Releases 배포 설정**: `package.json`의 `build` 섹션에 `publish` 설정(provider: github) 추가. (3) **자동 업데이트**: `electron-updater` 패키지 도입. Main 프로세스에 `update-handler.ts`를 신규 생성하여 GitHub Releases 기반 업데이트 감지·다운로드·설치 IPC 채널 4개(`update:check`, `update:download`, `update:install`, `update:get-version`) 및 Main→Renderer 이벤트 4개(`update:available`, `update:download-progress`, `update:downloaded`, `update:error`) 구현. Renderer에 `useAutoUpdate` 커스텀 훅과 `UpdateBanner` 배너 컴포넌트를 추가하여 앱 시작 시 자동 감지 → 사용자 알림 → 다운로드 → 설치 흐름 완성.
+  * **변경된 핵심 파일**: `.gitignore`, `package.json`, `tsup.config.ts`, `main/ipc/update-handler.ts`(신규), `main/main.ts`, `main/preload.ts`, `renderer/global.d.ts`, `renderer/app/utils/use-auto-update.ts`(신규), `renderer/app/components/shared/update-banner.tsx`(신규), `renderer/app/components/shared/update-banner.css`(신규), `renderer/app/page.tsx`
+
 * **2026-03-24**
   * **작업 내용**: 인스톨러 바탕화면 바로가기 옵션 및 앱 내 PC 부팅 자동 시작 토글 기능 추가. NSIS 설치 마법사에서 바탕화면 바로가기 생성 여부를 선택할 수 있으며, 헤더 우측 슬라이드 토글로 자동 시작을 켜고 끌 수 있음. electron-store 기반 설정 영속화 및 `app.setLoginItemSettings()` 연동.
   * **변경된 핵심 파일**: `package.json`, `main/lib/store.ts`, `main/ipc/config-handler.ts`, `main/main.ts`, `renderer/global.d.ts`, `renderer/app/components/shared/auto-start-toggle.tsx`, `renderer/app/components/shared/auto-start-toggle.css`, `renderer/app/page.tsx`, `renderer/app/globals.css`

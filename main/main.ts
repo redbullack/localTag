@@ -7,6 +7,7 @@ import { registerTagHandlers } from './ipc/tag-handler';
 import { registerFileHandlers } from './ipc/file-handler';
 import { registerVaultHandlers } from './ipc/vault-handler';
 import { registerConfigHandlers } from './ipc/config-handler';
+import { registerUpdateHandlers } from './ipc/update-handler';
 
 const VAULT_FOLDER_NAME = 'MyTaggedFiles';
 const isDev = process.env.NODE_ENV === 'development';
@@ -50,6 +51,7 @@ app.whenReady().then(() => {
     registerFileHandlers();
     registerVaultHandlers();
     registerConfigHandlers();
+    registerUpdateHandlers();
 
     ipcMain.handle('get-vault-path', () => {
         return getVaultPath();

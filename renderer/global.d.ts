@@ -101,6 +101,31 @@ export interface IElectronAPI {
     getSettings: () => Promise<IpcResponse<AppSettings>>;
     getConfig: (params: { key: string }) => Promise<IpcResponse<any>>;
     setConfig: (params: { key: string; value: any }) => Promise<IpcResponse<null>>;
+
+    // Update
+    checkForUpdate: () => Promise<IpcResponse<UpdateCheckResult>>;
+    downloadUpdate: () => Promise<IpcResponse<null>>;
+    installUpdate: () => Promise<void>;
+    getAppVersion: () => Promise<IpcResponse<string>>;
+    onUpdateAvailable: (callback: (info: { version: string; releaseNotes?: string }) => void) => () => void;
+    onUpdateDownloadProgress: (callback: (progress: UpdateDownloadProgress) => void) => () => void;
+    onUpdateDownloaded: (callback: (info: { version: string }) => void) => () => void;
+    onUpdateError: (callback: (message: string) => void) => () => void;
+}
+
+/** 업데이트 확인 결과 */
+export interface UpdateCheckResult {
+    available: boolean;
+    version?: string;
+    releaseNotes?: string;
+}
+
+/** 다운로드 진행률 */
+export interface UpdateDownloadProgress {
+    percent: number;
+    bytesPerSecond: number;
+    transferred: number;
+    total: number;
 }
 
 /** 앱 설정 타입 */

@@ -7,3 +7,6 @@ dist-main
 dist
 package-lock.json
 next-env.d.ts
+*.log
+tsconfig.tsbuildinfo
+.vscode
