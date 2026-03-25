@@ -21,6 +21,10 @@ Electron과 Next.js 기반의 데스크탑 애플리케이션 프로젝트입니
 ---
 ## 진행 및 수정 사항 (Changelog)
 
+* **2026-03-25** (2)
+  * **작업 내용**: Public 레포 전환 준비 및 v1.1.0 버전 태깅. (1) **`.gitignore` 보완**: Public 레포 전환 시 민감 정보 유출 방지를 위해 `.env` 파일을 `.gitignore`에 추가. (2) **버전 업**: `package.json`의 앱 버전을 `1.0.0` → `1.1.0`으로 갱신.
+  * **변경된 핵심 파일**: `.gitignore`, `package.json`
+
 * **2026-03-25**
   * **작업 내용**: 배포 준비(Git 정리 + GitHub Releases 설정) 및 자동 업데이트 기능 구현. (1) **Git 정리**: `tsc.log`, `tsconfig.tsbuildinfo`, `package-lock.json`을 Git 추적에서 해제하고 `.gitignore`에 `*.log`, `tsconfig.tsbuildinfo`, `.vscode` 항목 추가. (2) **GitHub Releases 배포 설정**: `package.json`의 `build` 섹션에 `publish` 설정(provider: github) 추가. (3) **자동 업데이트**: `electron-updater` 패키지 도입. Main 프로세스에 `update-handler.ts`를 신규 생성하여 GitHub Releases 기반 업데이트 감지·다운로드·설치 IPC 채널 4개(`update:check`, `update:download`, `update:install`, `update:get-version`) 및 Main→Renderer 이벤트 4개(`update:available`, `update:download-progress`, `update:downloaded`, `update:error`) 구현. Renderer에 `useAutoUpdate` 커스텀 훅과 `UpdateBanner` 배너 컴포넌트를 추가하여 앱 시작 시 자동 감지 → 사용자 알림 → 다운로드 → 설치 흐름 완성. (4) **앱 아이콘 추가**: `build/` 폴더에 `icon.ico`, `icon.png` 파일 추가하여 인스톨러 및 앱 아이콘 적용. (5) **Next.js 상대 경로 설정**: `next.config.mjs`에 상대 경로 설정 추가하여 빌드된 Renderer가 Electron 환경에서 정상 로드되도록 개선. (6) **자동 업데이트 에러 메시지 개선**: `useAutoUpdate` 훅의 에러 핸들링을 수정하여 에러 메시지 내용이 UpdateBanner에 정확히 출력되도록 로직 보완 및 배너 CSS 스타일 개선.
   * **변경된 핵심 파일**: `.gitignore`, `package.json`, `tsup.config.ts`, `main/ipc/update-handler.ts`(신규), `main/main.ts`, `main/preload.ts`, `renderer/global.d.ts`, `renderer/app/utils/use-auto-update.ts`(신규), `renderer/app/components/shared/update-banner.tsx`(신규), `renderer/app/components/shared/update-banner.css`(신규), `renderer/app/page.tsx`, `build/icon.ico`(신규), `build/icon.png`(신규), `renderer/next.config.mjs`
