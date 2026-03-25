@@ -1,0 +1,69 @@
+/* ===== 컨텍스트 메뉴 ===== */
+
+.context-menu {
+    position: fixed;
+    z-index: 100;
+    min-width: 180px;
+    padding: 4px 0;
+    background-color: var(--bg-primary);
+    border: 1px solid var(--border-subtle);
+    border-radius: 8px;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12), 0 1px 4px rgba(0, 0, 0, 0.08);
+}
+
+/* ===== 메뉴 아이템 ===== */
+
+.context-menu__item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    padding: 8px 14px;
+    border: none;
+    background: transparent;
+    color: var(--text-primary);
+    font-size: 13px;
+    cursor: pointer;
+    transition: background-color 0.1s ease;
+    text-align: left;
+    white-space: nowrap;
+}
+
+.context-menu__item:hover {
+    background-color: var(--bg-modifier-hover);
+}
+
+.context-menu__item--danger {
+    color: var(--accent-danger);
+}
+
+.context-menu__item--danger:hover {
+    background-color: rgba(218, 55, 60, 0.1);
+}
+
+/* ===== 아이콘 ===== */
+
+.context-menu__item-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 16px;
+    height: 16px;
+    flex-shrink: 0;
+    font-size: 14px;
+    line-height: 1;
+}
+
+/* ===== 라벨 ===== */
+
+.context-menu__item-label {
+    flex: 1;
+}
+
+/* ===== 구분선 ===== */
+
+.context-menu__separator {
+    height: 1px;
+    margin: 4px 8px;
+    background-color: var(--border-subtle);
+}

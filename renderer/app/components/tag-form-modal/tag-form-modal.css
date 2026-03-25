@@ -1,0 +1,274 @@
+/* ===== 모달 오버레이 ===== */
+.modal-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: var(--modal-overlay);
+    animation: fadeIn 0.15s ease;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
+/* ===== 모달 컨테이너 ===== */
+.modal-container {
+    width: 100%;
+    max-width: 440px;
+    background-color: var(--modal-bg);
+    border-radius: 8px;
+    box-shadow: var(--shadow-elevation);
+    animation: slideUp 0.2s ease;
+}
+
+@keyframes slideUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* ===== 모달 헤더 ===== */
+.modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 16px 0;
+}
+
+.modal-title {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--text-primary);
+}
+
+.modal-close-button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    border: none;
+    border-radius: 4px;
+    background: transparent;
+    color: var(--text-muted);
+    font-size: 20px;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.modal-close-button:hover {
+    background-color: var(--bg-modifier-hover);
+    color: var(--text-primary);
+}
+
+/* ===== 모달 바디 ===== */
+.modal-body {
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+/* ===== 폼 그룹 ===== */
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.form-label {
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
+    color: var(--text-secondary);
+}
+
+.form-input,
+.form-select {
+    padding: 10px 12px;
+    border-radius: 4px;
+    border: 1px solid var(--border-subtle);
+    background-color: var(--bg-secondary);
+    color: var(--text-primary);
+    font-size: 14px;
+    outline: none;
+    transition: border-color 0.15s ease;
+}
+
+.form-input:focus,
+.form-select:focus {
+    border-color: var(--accent-primary);
+}
+
+.form-input::placeholder {
+    color: var(--text-muted);
+}
+
+.form-error {
+    font-size: 12px;
+    color: var(--accent-danger);
+}
+
+.form-input--error {
+    border-color: var(--accent-danger);
+}
+
+.form-input--error:focus {
+    border-color: var(--accent-danger);
+}
+
+/* ===== 색상 팔레트 ===== */
+.color-palette {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.color-swatch {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    border: 2px solid transparent;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    padding: 0;
+}
+
+.color-swatch:hover {
+    transform: scale(1.15);
+}
+
+.color-swatch--selected {
+    border-color: var(--text-primary);
+    transform: scale(1.15);
+    box-shadow: 0 0 0 2px var(--bg-primary);
+}
+
+/* ===== 모달 푸터 ===== */
+.modal-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+    padding: 0 16px 16px;
+}
+
+/* ===== 버튼 공통 ===== */
+.button {
+    padding: 8px 16px;
+    border-radius: 4px;
+    border: none;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.button--primary {
+    background-color: var(--accent-primary);
+    color: white;
+}
+
+.button--primary:hover {
+    background-color: var(--accent-primary-hover);
+}
+
+.button--primary:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.button--secondary {
+    background: transparent;
+    color: var(--text-secondary);
+}
+
+.button--secondary:hover {
+    text-decoration: underline;
+}
+
+/* ===== 커스텀 셀렉트 (상위 태그) ===== */
+
+.parent-select {
+    display: flex;
+    flex-direction: column;
+}
+
+.parent-select__selected-value {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    padding: 10px 12px;
+    border-radius: 4px;
+    border: 1px solid var(--border-subtle);
+    background-color: var(--bg-secondary);
+    color: var(--text-primary);
+    font-size: 14px;
+    margin-bottom: 8px;
+}
+
+.parent-select__search-wrapper {
+    position: relative;
+    width: 100%;
+}
+
+.parent-select__search-input-placeholder {
+    width: 100%;
+    padding: 8px 12px;
+    border: 1px solid var(--border-subtle);
+    border-radius: 6px;
+    background-color: var(--bg-primary);
+    color: var(--text-muted);
+    /* Placeholder text color */
+    font-size: 14px;
+    outline: none;
+    cursor: text;
+}
+
+/* ===== 부모 태그 선택 드롭다운 영역 설정 (TagSearchDropdown 공통 컴포넌트 사용) ===== */
+.parent-select__dropdown-wrapper {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 10;
+    animation: dropdownFadeIn 0.15s ease;
+}
+
+@keyframes dropdownFadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-4px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* ===== 태그 컬러 점 (단일 선택 태그 이름 앞) ===== */
+.tag-color-dot {
+    display: inline-block;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    border: 1px solid var(--color-dot-border);
+}

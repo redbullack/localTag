@@ -1,0 +1,118 @@
+.update-banner {
+    position: fixed;
+    top: 1rem;
+    right: 1rem;
+    z-index: 9000;
+    max-width: 360px;
+    background-color: var(--bg-secondary);
+    border: 1px solid var(--border-subtle);
+    border-radius: 8px;
+    padding: 0.75rem 1rem;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    animation: updateBannerSlideIn 0.3s ease-out;
+}
+
+@keyframes updateBannerSlideIn {
+    from {
+        opacity: 0;
+        transform: translateX(100%);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+.update-banner__content {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    font-size: 0.85rem;
+    color: var(--text-primary);
+}
+
+.update-banner__icon {
+    flex-shrink: 0;
+    font-size: 1rem;
+    line-height: 1;
+}
+
+.update-banner__message {
+    flex: 1;
+    line-height: 1.4;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.update-banner__actions {
+    display: flex;
+    gap: 0.4rem;
+    align-items: center;
+    flex-shrink: 0;
+}
+
+.update-banner__btn {
+    padding: 0.3rem 0.7rem;
+    border-radius: 4px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    cursor: pointer;
+    border: none;
+    transition: background-color 0.2s;
+}
+
+.update-banner__btn--primary {
+    background-color: var(--accent-primary);
+    color: white;
+}
+
+.update-banner__btn--primary:hover {
+    background-color: var(--accent-primary-hover);
+}
+
+.update-banner__btn--dismiss {
+    background-color: transparent;
+    color: var(--text-secondary);
+}
+
+.update-banner__btn--dismiss:hover {
+    background-color: var(--bg-modifier-hover);
+    color: var(--text-primary);
+}
+
+/* ===== 프로그레스 바 ===== */
+
+.update-banner__progress-track {
+    width: 120px;
+    height: 6px;
+    background-color: var(--bg-tertiary);
+    border-radius: 3px;
+    overflow: hidden;
+    flex-shrink: 0;
+}
+
+.update-banner__progress-fill {
+    height: 100%;
+    background-color: var(--accent-primary);
+    border-radius: 3px;
+    transition: width 0.3s ease;
+}
+
+/* ===== 상태별 좌측 보더 ===== */
+
+.update-banner--available {
+    border-left: 3px solid var(--accent-primary);
+}
+
+.update-banner--downloading {
+    border-left: 3px solid var(--accent-primary);
+}
+
+.update-banner--downloaded {
+    border-left: 3px solid var(--accent-success);
+}
+
+.update-banner--error {
+    border-left: 3px solid var(--accent-warning);
+}

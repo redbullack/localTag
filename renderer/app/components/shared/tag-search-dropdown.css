@@ -1,0 +1,92 @@
+/* ===== 태그 검색 리스트 컨테이너 ===== */
+.tag-search-dropdown {
+    display: flex;
+    flex-direction: column;
+    /* 외부에서 width, maxHeight 등을 제어할 수 있도록 기본 스타일만 지정 */
+    width: 100%;
+    background-color: var(--bg-secondary);
+    border: 1px solid var(--border-subtle);
+    border-radius: 4px;
+    box-shadow: var(--shadow-elevation);
+    overflow: hidden;
+}
+
+/* ===== 검색 입력창 ===== */
+.tag-search-dropdown__input {
+    width: 100%;
+    padding: 10px 12px;
+    border: none;
+    border-bottom: 1px solid var(--border-subtle);
+    background-color: transparent;
+    color: var(--text-primary);
+    font-size: 14px;
+    outline: none;
+}
+
+.tag-search-dropdown__input::placeholder {
+    color: var(--text-muted);
+}
+
+/* ===== 드롭다운 리스트 ===== */
+.tag-search-dropdown__list {
+    list-style: none;
+    padding: 4px;
+    margin: 0;
+    max-height: 200px;
+    overflow-y: auto;
+}
+
+/* ===== 옵션 아이템 ===== */
+.tag-search-dropdown__item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 10px;
+    border-radius: 3px;
+    font-size: 14px;
+    color: var(--text-primary);
+    cursor: pointer;
+    transition: background-color 0.1s ease;
+    /* 기본적으로 왼쪽 정렬 유지 */
+    text-align: left;
+    background: none;
+    border: none;
+    width: 100%;
+}
+
+.tag-search-dropdown__item:hover {
+    background-color: var(--bg-modifier-hover);
+}
+
+.tag-search-dropdown__item--selected {
+    background-color: var(--accent-primary);
+    color: white;
+}
+
+.tag-search-dropdown__item--selected:hover {
+    background-color: var(--accent-primary-hover);
+}
+
+/* ===== 다중 선택 모드 체크 아이콘 ===== */
+.tag-search-dropdown__item-check {
+    margin-left: auto;
+    font-weight: bold;
+}
+
+/* ===== 태그 컬러 dot ===== */
+.tag-color-dot {
+    display: inline-block;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    border: 1px solid var(--color-dot-border);
+}
+
+/* ===== 빈 상태 메시지 ===== */
+.tag-search-dropdown__empty {
+    padding: 16px;
+    text-align: center;
+    color: var(--text-muted);
+    font-size: 14px;
+}

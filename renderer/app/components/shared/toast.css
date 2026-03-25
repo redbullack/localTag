@@ -1,0 +1,122 @@
+.toast-container {
+  position: relative;
+  /* 애니메이션 초기 상태 (아래로 숨겨짐, 투명) */
+  transform: translateY(20px);
+  opacity: 0;
+  pointer-events: none; /* 사라질 때 클릭 방지 */
+}
+
+/* 팝업 등장 애니메이션 */
+.toast-container.toast-visible {
+  transform: translateY(0);
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* 팝업 퇴장 애니메이션 */
+.toast-container {
+  max-height: 200px; /* 다중 줄 메시지 수용 */
+  transition: 
+    transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), 
+    opacity 0.3s ease,
+    max-height 0.3s ease,
+    margin 0.3s ease,
+    padding 0.3s ease;
+}
+
+.toast-container.toast-hiding {
+  transform: translateY(20px);
+  opacity: 0;
+  max-height: 0;
+  margin-top: 0;
+  margin-bottom: 0;
+  padding-top: 0;
+  padding-bottom: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.toast-content {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+
+  background-color: var(--bg-secondary);
+  border: 1px solid var(--border-subtle);
+  border-radius: 8px;
+  padding: 1rem 1.25rem;
+
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  color: var(--text-primary);
+  font-size: 0.9rem;
+  font-weight: 500;
+  min-width: 260px;
+  max-width: 440px;
+}
+
+/* ===== 타입별 좌측 보더 색상 ===== */
+
+.toast--success .toast-content {
+  border-left: 3px solid var(--accent-success);
+}
+
+.toast--error .toast-content {
+  border-left: 3px solid var(--accent-danger);
+}
+
+.toast--warning .toast-content {
+  border-left: 3px solid var(--accent-warning);
+}
+
+.toast--info .toast-content {
+  border-left: 3px solid var(--accent-primary);
+}
+
+/* ===== 아이콘 ===== */
+
+.toast-icon {
+  flex-shrink: 0;
+  font-size: 1rem;
+  line-height: 1;
+}
+
+.toast-message {
+  flex: 1;
+  line-height: 1.4;
+}
+
+.toast-actions {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.toast-btn {
+  padding: 0.4rem 0.8rem;
+  border-radius: 4px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  border: none;
+  transition: background-color 0.2s;
+}
+
+.toast-btn-cancel {
+  background-color: transparent;
+  color: var(--text-secondary);
+}
+
+.toast-btn-cancel:hover {
+  background-color: var(--bg-modifier-hover);
+  color: var(--text-primary);
+}
+
+.toast-btn-confirm {
+  background-color: var(--accent-primary);
+  color: white;
+}
+
+.toast-btn-confirm:hover {
+  background-color: var(--accent-primary-hover);
+}

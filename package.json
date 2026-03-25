@@ -1,0 +1,70 @@
+{
+  "name": "localtag",
+  "version": "1.1.1",
+  "description": "",
+  "main": "dist-main/main.js",
+  "scripts": {
+    "postinstall": "electron-builder install-app-deps",
+    "dev:next": "next dev ./renderer -p 3123",
+    "build:next": "next build ./renderer",
+    "build:electron": "tsup",
+    "dev:electron": "tsup && cross-env NODE_ENV=development electron .",
+    "dev": "concurrently -k \"npm run dev:next\" \"wait-on tcp:3123 && npm run dev:electron\"",
+    "build": "npm run build:next && npm run build:electron && electron-builder"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/redbullack/localTag.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/redbullack/localTag/issues"
+  },
+  "homepage": "https://github.com/redbullack/localTag#readme",
+  "build": {
+    "appId": "com.localtag.app",
+    "productName": "LocalTag",
+    "publish": {
+      "provider": "github",
+      "owner": "redbullack",
+      "repo": "localTag"
+    },
+    "win": {
+      "target": "nsis"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "artifactName": "LocalTag-Setup-${version}.exe"
+    }
+  },
+  "dependencies": {
+    "@tailwindcss/postcss": "^4.2.1",
+    "better-sqlite3": "^12.6.2",
+    "electron-store": "^8.2.0",
+    "electron-updater": "^6.8.3",
+    "next": "^16.1.6",
+    "react": "^19.2.4",
+    "react-dom": "^19.2.4"
+  },
+  "devDependencies": {
+    "@types/better-sqlite3": "^7.6.13",
+    "@types/node": "^25.3.3",
+    "@types/react": "^19.2.14",
+    "autoprefixer": "^10.4.27",
+    "concurrently": "^9.2.1",
+    "cross-env": "^10.1.0",
+    "electron": "^40.6.1",
+    "electron-builder": "^26.8.1",
+    "electron-rebuild": "^3.2.9",
+    "postcss": "^8.5.6",
+    "tailwindcss": "^4.2.1",
+    "tsup": "^8.5.1",
+    "typescript": "^5.9.3",
+    "wait-on": "^9.0.4"
+  }
+}

@@ -1,0 +1,257 @@
+'use client';
+
+import { useState, useEffect, useRef, useCallback } from 'react';
+import './tag-form-modal.css';
+import type { Tag } from '../../types';
+import TagSearchDropdown from '../shared/tag-search-dropdown';
+import { useClickOutside } from '../../utils/use-click-outside';
+import { COLOR_PRESETS } from '../../constants';
+
+/**
+ * TagFormModal - 태그 생성/수정 모달 컴포넌트
+ *
+ * @param isOpen - 모달 열림 여부
+ * @param onClose - 모달 닫기 콜백
+ * @param onSubmit - 저장 콜백 (name, color, parentId)
+ * @param existingTag - 수정 모드일 때 기존 태그 데이터 (없으면 생성 모드)
+ * @param allTags - 부모 태그 선택을 위한 전체 태그 목록
+ */
+
+interface TagFormModalProps {
+    isOpen: boolean;
+    onClose: () => void;
+    onSubmit: (data: { name: string; color: string; parentId: number | null }) => void;
+    existingTag?: Tag | null;
+    allTags: Tag[];
+    defaultParentId?: number | null;
+}
+
+export default function TagFormModal({
+    isOpen,
+    onClose,
+    onSubmit,
+    existingTag = null,
+    allTags,
+    defaultParentId = null,
+}: TagFormModalProps) {
+    const [tagName, setTagName] = useState('');
+    const [selectedColor, setSelectedColor] = useState(COLOR_PRESETS[0]);
+    const [selectedParentId, setSelectedParentId] = useState<number | null>(null);
+    const [errorMessage, setErrorMessage] = useState('');
+    const [isDuplicateName, setIsDuplicateName] = useState(false);
+
+    // 상위 태그 선택 드롭다운 상태
+    const [isParentDropdownOpen, setIsParentDropdownOpen] = useState(false);
+    const parentDropdownContainerRef = useRef<HTMLDivElement>(null);
+
+    const isEditMode = existingTag !== null;
+
+    useEffect(() => {
+        if (isOpen) {
+            if (existingTag) {
+                setTagName(existingTag.name);
+                setSelectedColor(existingTag.color || COLOR_PRESETS[0]);
+                setSelectedParentId(existingTag.parentId);
+            } else {
+                setTagName('');
+                setSelectedColor(COLOR_PRESETS[0]);
+                setSelectedParentId(defaultParentId);
+            }
+            setErrorMessage('');
+            setIsDuplicateName(false);
+            setIsParentDropdownOpen(false);
+        }
+    }, [isOpen, existingTag, defaultParentId]);
+
+    // 상위 태그 드롭다운 외부 클릭 감지
+    const handleCloseParentDropdown = useCallback(() => {
+        setIsParentDropdownOpen(false);
+    }, []);
+    useClickOutside(parentDropdownContainerRef, handleCloseParentDropdown, isParentDropdownOpen);
+
+    /** 입력된 이름이 기존 태그와 중복되는지 검사 */
+    const checkDuplicateName = (name: string): boolean => {
+        const trimmedLower = name.trim().toLowerCase();
+        if (!trimmedLower) return false;
+
+        return allTags.some((tag) => {
+            if (existingTag && tag.id === existingTag.id) return false;
+            return tag.name.toLowerCase() === trimmedLower;
+        });
+    };
+
+    /** 태그 이름 변경 핸들러 */
+    const handleTagNameChange = (value: string) => {
+        setTagName(value);
+
+        if (checkDuplicateName(value)) {
+            setIsDuplicateName(true);
+            setErrorMessage('이미 동일한 이름의 태그가 존재합니다.');
+        } else {
+            setIsDuplicateName(false);
+            setErrorMessage('');
+        }
+    };
+
+    const handleSubmit = () => {
+        const trimmedName = tagName.trim();
+        if (!trimmedName) {
+            setErrorMessage('태그 이름을 입력해 주세요.');
+            return;
+        }
+        if (isDuplicateName) return;
+
+        onSubmit({
+            name: trimmedName,
+            color: selectedColor,
+            parentId: selectedParentId,
+        });
+    };
+
+    const handleOverlayClick = (e: React.MouseEvent) => {
+        if (e.target === e.currentTarget) {
+            onClose();
+        }
+    };
+
+    const handleKeyDown = (e: React.KeyboardEvent) => {
+        if (e.key === 'Enter') {
+            if (!isParentDropdownOpen) {
+                handleSubmit();
+            }
+        }
+        if (e.key === 'Escape') {
+            if (isParentDropdownOpen) {
+                setIsParentDropdownOpen(false);
+            } else {
+                onClose();
+            }
+        }
+    };
+
+    // 부모 태그 선택 시, 자기 자신과 자기 하위 태그는 제외 (수정 모드)
+    const availableParentTags = allTags.filter((tag) => {
+        if (!existingTag) return true;
+        return tag.id !== existingTag.id;
+    });
+
+    const handleParentSelect = (parentId: number | null) => {
+        setSelectedParentId(parentId);
+        setIsParentDropdownOpen(false);
+    };
+
+    const selectedParentTag = allTags.find((tag) => tag.id === selectedParentId) ?? null;
+    const selectedParentTagIds = new Set(selectedParentId !== null ? [selectedParentId] : []);
+
+    if (!isOpen) return null;
+
+    return (
+        <div className="modal-overlay" onClick={handleOverlayClick}>
+            <div className="modal-container" onKeyDown={handleKeyDown}>
+                <div className="modal-header">
+                    <h2 className="modal-title">
+                        {isEditMode ? '태그 수정' : '새 태그 만들기'}
+                    </h2>
+                    <button className="modal-close-button" onClick={onClose} aria-label="닫기">
+                        ×
+                    </button>
+                </div>
+
+                <div className="modal-body">
+                    {/* 태그 이름 입력 */}
+                    <div className="form-group">
+                        <label className="form-label" htmlFor="tag-name-input">
+                            태그 이름
+                        </label>
+                        <input
+                            id="tag-name-input"
+                            className={`form-input ${isDuplicateName ? 'form-input--error' : ''}`}
+                            type="text"
+                            value={tagName}
+                            onChange={(e) => handleTagNameChange(e.target.value)}
+                            placeholder="태그 이름을 입력하세요"
+                            maxLength={50}
+                            autoFocus
+                        />
+                        {errorMessage && (
+                            <p className="form-error">{errorMessage}</p>
+                        )}
+                    </div>
+
+                    {/* 색상 선택 */}
+                    <div className="form-group">
+                        <label className="form-label">색상</label>
+                        <div className="color-palette">
+                            {COLOR_PRESETS.map((color, index) => (
+                                <button
+                                    key={index}
+                                    className={`color-swatch ${selectedColor === color ? 'color-swatch--selected' : ''}`}
+                                    style={{ backgroundColor: color }}
+                                    onClick={() => setSelectedColor(color)}
+                                    aria-label={`색상 ${color}`}
+                                />
+                            ))}
+                        </div>
+                    </div>
+
+                    {/* 부모 태그 선택 */}
+                    <div className="form-group">
+                        <label className="form-label" id="parent-tag-select-label">
+                            상위 태그 (선택사항)
+                        </label>
+                        <div className="parent-select" ref={parentDropdownContainerRef}>
+                            <div className="parent-select__selected-value">
+                                {selectedParentTag ? (
+                                    <>
+                                        <span
+                                            className="tag-color-dot"
+                                            style={{
+                                                backgroundColor:
+                                                    selectedParentTag.color || '#99aab5',
+                                            }}
+                                        />
+                                        {selectedParentTag.name}
+                                    </>
+                                ) : (
+                                    '없음 (루트 태그)'
+                                )}
+                            </div>
+
+                            <div className="parent-select__search-wrapper">
+                                <input
+                                    className="parent-select__search-input-placeholder"
+                                    type="text"
+                                    placeholder="🔍 상위 태그 검색..."
+                                    onClick={() => setIsParentDropdownOpen(true)}
+                                    readOnly
+                                />
+                                {isParentDropdownOpen && (
+                                    <div className="parent-select__dropdown-wrapper">
+                                        <TagSearchDropdown
+                                            tags={availableParentTags}
+                                            selectedTagIds={selectedParentTagIds}
+                                            onSelectTag={handleParentSelect}
+                                            selectionMode="single"
+                                            showRootOption={true}
+                                            searchPlaceholder="🔍 상위 태그 검색..."
+                                            autoFocus={true}
+                                        />
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div className="modal-footer">
+                    <button className="button button--secondary" onClick={onClose}>
+                        취소
+                    </button>
+                    <button className="button button--primary" onClick={handleSubmit} disabled={isDuplicateName}>
+                        {isEditMode ? '수정' : '생성'}
+                    </button>
+                </div>
+            </div>
+        </div>
+    );
+}

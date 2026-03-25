@@ -1,0 +1,318 @@
+/* ===== 사이드바 컨테이너 ===== */
+.tag-sidebar {
+    position: relative;
+    width: var(--sidebar-width);
+    min-width: var(--sidebar-width);
+    height: 100vh;
+    background-color: var(--bg-secondary);
+    border-right: 1px solid var(--border-subtle);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+/* ===== 사이드바 헤더 ===== */
+.tag-sidebar__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 12px 8px;
+    border-bottom: 1px solid var(--border-subtle);
+}
+
+.tag-sidebar__search {
+    padding: 8px 12px;
+    border-bottom: 1px solid var(--border-subtle);
+}
+
+.tag-sidebar__title {
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--text-muted);
+}
+
+.tag-sidebar__count {
+    font-size: 0.85em;
+    font-weight: 400;
+    color: var(--text-secondary);
+    margin-left: 6px;
+    text-transform: none;
+    letter-spacing: normal;
+}
+
+/* ===== 헤더 액션 그룹 ===== */
+.tag-sidebar__header-actions {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.tag-sidebar__sort-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    border: none;
+    border-radius: 4px;
+    background: transparent;
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: all 0.15s ease;
+    padding: 0;
+}
+
+.tag-sidebar__sort-btn:hover {
+    background-color: var(--bg-modifier-hover);
+    color: var(--text-primary);
+}
+
+.tag-sidebar__sort-btn--active {
+    color: var(--accent-primary);
+}
+
+.tag-sidebar__sort-btn--active:hover {
+    color: var(--accent-primary);
+}
+
+.tag-sidebar__add-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    border: none;
+    border-radius: 4px;
+    background: transparent;
+    color: var(--text-muted);
+    font-size: 18px;
+    font-weight: 300;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.tag-sidebar__add-btn:hover {
+    background-color: var(--bg-modifier-hover);
+    color: var(--text-primary);
+}
+
+/* ===== 즐겨찾기 섹션 ===== */
+.tag-sidebar__favorite-section {
+    padding: 4px 0 0;
+}
+
+.tag-sidebar__favorite-header {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 12px;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--text-muted);
+}
+
+.tag-sidebar__favorite-row {
+    cursor: pointer;
+}
+
+
+/* ===== 태그 없음 섹션 ===== */
+.tag-sidebar__untagged-section {
+    padding: 4px 0 0;
+}
+
+.tag-sidebar__untagged-row {
+    cursor: pointer;
+}
+
+.tag-sidebar__untagged-dot {
+    background-color: var(--text-muted);
+    opacity: 0.5;
+}
+
+.tag-sidebar__divider {
+    height: 1px;
+    background-color: var(--border-subtle);
+    margin: 4px 8px 0;
+}
+
+/* ===== 태그 리스트 ===== */
+.tag-sidebar__list {
+    flex: 1;
+    overflow-y: auto;
+    padding: 4px 0;
+}
+
+/* ===== 빈 상태 ===== */
+.tag-sidebar__empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    padding: 32px 12px;
+    text-align: center;
+    color: var(--text-muted);
+    font-size: 13px;
+}
+
+.tag-sidebar__empty-btn {
+    padding: 6px 12px;
+    border: 1px dashed var(--border-strong);
+    border-radius: 4px;
+    background: transparent;
+    color: var(--text-secondary);
+    font-size: 13px;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.tag-sidebar__empty-btn:hover {
+    border-color: var(--accent-primary);
+    color: var(--accent-primary);
+}
+
+/* ===== 트리 아이템 ===== */
+.tag-tree-item__row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 12px;
+    cursor: pointer;
+    border-radius: 4px;
+    margin: 1px 4px;
+    transition: background-color 0.1s ease;
+    min-height: 32px;
+}
+
+.tag-tree-item__row:hover {
+    background-color: var(--bg-modifier-hover);
+}
+
+.tag-tree-item__row--active {
+    background-color: var(--bg-modifier-active);
+}
+
+.tag-tree-item__row--active .tag-tree-item__name {
+    color: var(--text-primary);
+    font-weight: 600;
+}
+
+/* 확장/축소 토글 */
+.tag-tree-item__toggle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 16px;
+    height: 16px;
+    border: none;
+    border-radius: 2px;
+    background: transparent;
+    color: var(--text-muted);
+    cursor: pointer;
+    padding: 0;
+    flex-shrink: 0;
+}
+
+.tag-tree-item__toggle--hidden {
+    visibility: hidden;
+}
+
+.tag-tree-item__arrow {
+    transition: transform 0.15s ease;
+}
+
+.tag-tree-item__arrow--expanded {
+    transform: rotate(90deg);
+}
+
+/* 색상 도트 */
+.tag-tree-item__dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+/* 태그 이름 */
+.tag-tree-item__name {
+    flex: 1;
+    font-size: 14px;
+    color: var(--text-secondary);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.tag-tree-item__count {
+    font-size: 11px;
+    color: var(--text-muted);
+    margin-left: 6px;
+}
+
+.tag-tree-item__row:hover .tag-tree-item__name {
+    color: var(--text-primary);
+}
+
+
+/* ===== 접기/펼치기 버튼 ===== */
+.tag-sidebar__collapse-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    border: none;
+    border-radius: 4px;
+    background: transparent;
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: all 0.15s ease;
+    padding: 0;
+}
+
+.tag-sidebar__collapse-btn:hover {
+    background-color: var(--bg-modifier-hover);
+    color: var(--text-primary);
+}
+
+/* ===== 드래그 리사이즈 핸들 ===== */
+.sidebar-resize-handle {
+    position: absolute;
+    right: -2px;
+    top: 0;
+    width: 4px;
+    height: 100%;
+    cursor: col-resize;
+    background: transparent;
+    transition: background-color 0.15s ease;
+    z-index: 10;
+}
+
+.sidebar-resize-handle:hover,
+.sidebar-resize-handle--dragging {
+    background-color: var(--accent-primary);
+}
+
+/* ===== 드래그 앤 드롭 시각 피드백 ===== */
+
+/* 드래그 중인 아이템 */
+.tag-tree-item__row--dragging {
+    opacity: 0.4;
+}
+
+/* 드롭 위치 표시선 (위) */
+.tag-tree-item__row--drag-over-above {
+    box-shadow: 0 -2px 0 0 var(--accent-primary);
+}
+
+/* 드롭 위치 표시선 (아래) */
+.tag-tree-item__row--drag-over-below {
+    box-shadow: 0 2px 0 0 var(--accent-primary);
+}

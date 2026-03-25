@@ -1,0 +1,13 @@
+.mcp.json
+.env
+node_modules
+.next
+renderer/.next
+renderer/out
+dist-main
+dist
+package-lock.json
+next-env.d.ts
+*.log
+tsconfig.tsbuildinfo
+.vscode

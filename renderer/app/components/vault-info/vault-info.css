@@ -1,0 +1,183 @@
+/* ===== Vault 정보 ===== */
+
+.vault-info {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 12px 16px;
+    border-radius: 6px;
+    background-color: var(--bg-secondary);
+    border: 1px solid var(--border-subtle);
+}
+
+.vault-info--relocating {
+    flex-direction: row;
+    align-items: center;
+    gap: 12px;
+}
+
+/* ── 행 공통 ── */
+
+.vault-info__row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.vault-info__row--primary {
+    justify-content: space-between;
+    flex-wrap: wrap;
+}
+
+.vault-info__row--storage {
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+/* ── 1행: 경로 + 버튼 ── */
+
+.vault-info__path-group {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+    flex: 1;
+}
+
+.vault-info__label {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-muted);
+    white-space: nowrap;
+}
+
+.vault-info__path {
+    font-size: 13px;
+    color: var(--accent-success);
+    word-break: break-all;
+}
+
+.vault-info__actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
+}
+
+.vault-info__action-btn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+    font-weight: 500;
+    padding: 8px 16px;
+    border: 1px solid var(--border-strong);
+    border-radius: 8px;
+    background-color: transparent;
+    color: var(--text-primary);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    white-space: nowrap;
+}
+
+.vault-info__action-btn:hover:not(:disabled) {
+    border-color: var(--accent-primary);
+    background-color: var(--bg-modifier-hover);
+}
+
+.vault-info__action-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+/* sync-button은 globals.css에서 유지 (다른 곳에서도 사용 가능) */
+
+/* ── 2행: 용량 정보 ── */
+
+.vault-info__storage-items {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.vault-info__storage-item {
+    font-size: 12px;
+    color: var(--text-secondary);
+    white-space: nowrap;
+}
+
+.vault-info__storage-divider {
+    font-size: 12px;
+    color: var(--text-muted);
+}
+
+/* ── 용량 프로그레스 바 ── */
+
+.vault-info__capacity-bar {
+    flex: 1;
+    min-width: 60px;
+    max-width: 120px;
+    height: 6px;
+    border-radius: 3px;
+    background-color: var(--bg-tertiary);
+    overflow: hidden;
+}
+
+.vault-info__capacity-fill {
+    height: 100%;
+    border-radius: 3px;
+    background-color: var(--accent-primary);
+    transition: width 0.3s ease;
+}
+
+.vault-info__capacity-fill[data-warn] {
+    background-color: var(--accent-danger);
+}
+
+/* ── 이동 중 UI ── */
+
+.vault-info__relocate-status {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
+}
+
+.vault-info__relocate-icon {
+    font-size: 16px;
+}
+
+.vault-info__relocate-text {
+    font-size: 13px;
+    color: var(--text-primary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 400px;
+}
+
+.vault-info__progress-bar {
+    flex: 1;
+    min-width: 100px;
+    height: 8px;
+    border-radius: 4px;
+    background-color: var(--bg-tertiary);
+    overflow: hidden;
+}
+
+.vault-info__progress-fill {
+    height: 100%;
+    border-radius: 4px;
+    background-color: var(--accent-primary);
+    transition: width 0.15s ease;
+}
+
+.vault-info__progress-percent {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-secondary);
+    white-space: nowrap;
+    min-width: 36px;
+    text-align: right;
+}
