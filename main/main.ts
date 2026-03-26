@@ -1,4 +1,4 @@
-import { app, BrowserWindow, ipcMain, dialog } from 'electron';
+import { app, BrowserWindow, ipcMain, dialog, Menu } from 'electron';
 import * as path from 'path';
 import * as fs from 'fs';
 import { getVaultPath, setVaultPath, getSettings, getAutoCollectSettings } from './lib/store';
@@ -36,6 +36,8 @@ function createWindow() {
         win.loadFile(path.join(__dirname, '../renderer/out/index.html'));
     }
 }
+
+Menu.setApplicationMenu(null);
 
 app.whenReady().then(() => {
     const currentVaultPath = getVaultPath();

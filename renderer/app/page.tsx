@@ -878,6 +878,7 @@ export default function Home() {
                         </button>
                         <AutoStartToggle />
                         <ThemeToggle />
+                        <span className="main-content__version">v{process.env.NEXT_PUBLIC_APP_VERSION}</span>
                     </div>
                 </div>
 
