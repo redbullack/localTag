@@ -1,15 +1,15 @@
 {
   "name": "localtag",
-  "version": "1.1.1",
+  "version": "1.1.2",
   "description": "",
   "main": "dist-main/main.js",
   "scripts": {
     "postinstall": "electron-builder install-app-deps",
-    "dev:next": "next dev ./renderer -p 3123",
+    "dev:next": "next dev ./renderer -p 3456",
     "build:next": "next build ./renderer",
     "build:electron": "tsup",
     "dev:electron": "tsup && cross-env NODE_ENV=development electron .",
-    "dev": "concurrently -k \"npm run dev:next\" \"wait-on tcp:3123 && npm run dev:electron\"",
+    "dev": "concurrently -k \"npm run dev:next\" \"wait-on tcp:3456 && npm run dev:electron\"",
     "build": "npm run build:next && npm run build:electron && electron-builder"
   },
   "repository": {

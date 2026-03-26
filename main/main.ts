@@ -1,13 +1,15 @@
-import { app, BrowserWindow, ipcMain, dialog } from 'electron';
+import { app, BrowserWindow, ipcMain, dialog, Menu } from 'electron';
 import * as path from 'path';
 import * as fs from 'fs';
-import { getVaultPath, setVaultPath, getSettings } from './lib/store';
+import { getVaultPath, setVaultPath, getSettings, getAutoCollectSettings } from './lib/store';
 import { initDb } from './lib/db';
 import { registerTagHandlers } from './ipc/tag-handler';
 import { registerFileHandlers } from './ipc/file-handler';
 import { registerVaultHandlers } from './ipc/vault-handler';
 import { registerConfigHandlers } from './ipc/config-handler';
 import { registerUpdateHandlers } from './ipc/update-handler';
+import { registerCollectHandlers } from './ipc/collect-handler';
+import { downloadWatcher } from './lib/download-watcher';
 
 const VAULT_FOLDER_NAME = 'MyTaggedFiles';
 const isDev = process.env.NODE_ENV === 'development';
@@ -28,12 +30,14 @@ function createWindow() {
     });
 
     if (isDev) {
-        win.loadURL('http://localhost:3123');
+        win.loadURL('http://localhost:3456');
         win.webContents.openDevTools();
     } else {
         win.loadFile(path.join(__dirname, '../renderer/out/index.html'));
     }
 }
+
+Menu.setApplicationMenu(null);
 
 app.whenReady().then(() => {
     const currentVaultPath = getVaultPath();
@@ -52,6 +56,7 @@ app.whenReady().then(() => {
     registerVaultHandlers();
     registerConfigHandlers();
     registerUpdateHandlers();
+    registerCollectHandlers();
 
     ipcMain.handle('get-vault-path', () => {
         return getVaultPath();
@@ -77,11 +82,22 @@ app.whenReady().then(() => {
 
     createWindow();
 
+    // 자동 수집 watcher 초기화 (Vault + DB 준비 완료 후)
+    if (currentVaultPath && getAutoCollectSettings().enabled) {
+        downloadWatcher.start().catch((error) => {
+            console.error('[Main] 자동 수집 watcher 시작 실패:', error);
+        });
+    }
+
     app.on('activate', () => {
         if (BrowserWindow.getAllWindows().length === 0) {
             createWindow();
         }
     });
+});
+
+app.on('before-quit', () => {
+    downloadWatcher.stop();
 });
 
 app.on('window-all-closed', () => {

@@ -2,14 +2,30 @@ import Store from 'electron-store';
 
 export type ThemeMode = 'light' | 'dark' | 'system';
 
+export interface AutoCollectSettings {
+    enabled: boolean;
+    watchPaths: string[];
+    defaultTagIds: number[];
+    stabilityDelayMs: number;
+}
+
 export interface AppSettings {
     theme: ThemeMode;
     autoStart: boolean;
+    autoCollect: AutoCollectSettings;
 }
+
+const DEFAULT_AUTO_COLLECT: AutoCollectSettings = {
+    enabled: false,
+    watchPaths: [],
+    defaultTagIds: [],
+    stabilityDelayMs: 3000,
+};
 
 const DEFAULT_SETTINGS: AppSettings = {
     theme: 'system',
     autoStart: false,
+    autoCollect: DEFAULT_AUTO_COLLECT,
 };
 
 interface ConfigType {
@@ -44,4 +60,16 @@ export const setSetting = <K extends keyof AppSettings>(key: K, value: AppSettin
     const settings = store.get('settings');
     settings[key] = value;
     store.set('settings', settings);
+};
+
+export const getAutoCollectSettings = (): AutoCollectSettings => {
+    const settings = getSettings();
+    return { ...DEFAULT_AUTO_COLLECT, ...settings.autoCollect };
+};
+
+export const setAutoCollectSettings = (autoCollect: Partial<AutoCollectSettings>): AutoCollectSettings => {
+    const current = getAutoCollectSettings();
+    const updated = { ...current, ...autoCollect };
+    setSetting('autoCollect', updated);
+    return updated;
 };
