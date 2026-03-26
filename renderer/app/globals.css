@@ -376,14 +376,14 @@ body {
     opacity: 0;
     visibility: hidden;
     transform: translateY(-4px);
-    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    transition: opacity 0.1s ease, visibility 0.1s ease, transform 0.1s ease;
     /* 다른 요소들에 묻히지 않도록 z-index 상향 조절 */
     z-index: 9999;
     pointer-events: none;
 }
 
 [data-tooltip]:hover::before,
-[data-tooltip]:focus::before {
+[data-tooltip]:focus-visible::before {
     opacity: 1;
     visibility: visible;
     transform: translateY(0);

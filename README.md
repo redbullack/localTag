@@ -21,6 +21,10 @@ Electron과 Next.js 기반의 데스크탑 애플리케이션 프로젝트입니
 ---
 ## 진행 및 수정 사항 (Changelog)
 
+* **2026-03-26** (2)
+  * **작업 내용**: 툴팁 시스템 통일 및 UX 개선. 헤더 영역 버튼들(`AutoStartToggle`, 다운로드 수집 설정 버튼)에서 브라우저 네이티브 `title` 속성을 CSS 커스텀 `data-tooltip`으로 교체하여 앱 전체 툴팁 스타일 통일. `ThemeToggle` 버튼에도 `data-tooltip` 속성 추가. 툴팁 CSS 트랜지션을 간소화(`cubic-bezier` → `ease`, 0.2s → 0.1s)하고, `:focus` → `:focus-visible`로 변경하여 마우스 클릭 시 불필요한 툴팁 노출 방지.
+  * **변경된 핵심 파일**: `renderer/app/components/shared/auto-start-toggle.tsx`, `renderer/app/components/shared/theme-toggle.tsx`, `renderer/app/globals.css`, `renderer/app/page.tsx`
+
 * **2026-03-26**
   * **작업 내용**: 다운로드 자동 수집 기능 추가. 지정한 감시 폴더(예: 다운로드 폴더)에 새 파일이 추가되면 Vault로 자동 이동하고 기본 태그를 부여하는 기능. (1) **Main 프로세스**: `download-watcher.ts` 싱글톤 클래스 신규 생성 — `fs.watch` 이벤트 감시 + 60초 폴링 fallback 병행, 파일 크기 안정성 검사(최대 10회) 및 잠금 해제 확인 후 수집, 브라우저 임시 파일(.crdownload, .part 등) 자동 필터링. `collect-handler.ts` 신규 생성 — `collect:get-settings`, `collect:update-settings`, `collect:toggle`, `collect:select-watch-folder`, `collect:get-status` IPC 채널 5개 및 `collect:file-collected` Main→Renderer 이벤트 1개 구현. (2) **설정 영속화**: `store.ts`에 `AutoCollectSettings` 타입 및 `getAutoCollectSettings`/`setAutoCollectSettings` 함수 추가, electron-store 기반 설정 저장. (3) **Renderer**: `AutoCollectSettingsModal` 컴포넌트 신규 생성 — 토글 ON/OFF, 감시 폴더 추가/제거, 기본 태그 선택 UI. 헤더에 다운로드 아이콘 버튼 추가(활성 시 초록 점 표시). 수집 완료/실패 시 Toast 알림. (4) **기타**: 개발 포트 3123→3456 변경, `next.config.mjs`에 turbopack root 설정 추가.
   * **변경된 핵심 파일**: `main/lib/download-watcher.ts`(신규), `main/ipc/collect-handler.ts`(신규), `main/lib/store.ts`, `main/main.ts`, `main/preload.ts`, `main/lib/file-repository.ts`, `renderer/app/components/auto-collect-settings/auto-collect-settings.tsx`(신규), `renderer/app/components/auto-collect-settings/auto-collect-settings.css`(신규), `renderer/app/page.tsx`, `renderer/global.d.ts`, `package.json`, `renderer/next.config.mjs`, `CLAUDE.md`

@@ -866,7 +866,7 @@ export default function Home() {
                         <button
                             className={`collect-settings-button${isCollectEnabled ? ' collect-settings-button--active' : ''}`}
                             onClick={() => setIsCollectModalOpen(true)}
-                            title={`다운로드 자동 수집 설정 (${isCollectEnabled ? '켜짐' : '꺼짐'})`}
+                            data-tooltip={`다운로드 자동 수집 설정 (${isCollectEnabled ? '켜짐' : '꺼짐'})`}
                             type="button"
                         >
                             {isCollectEnabled && <span className="collect-settings-button__indicator" />}
