@@ -15,7 +15,7 @@
 
 ```bash
 npm run dev              # Next.js + Electron 동시 실행
-npm run dev:next         # renderer only (port 3123)
+npm run dev:next         # renderer only (port 3456)
 npm run dev:electron     # main only
 npm run build            # 전체 프로덕션 빌드
 npx tsc --noEmit         # 타입 체크

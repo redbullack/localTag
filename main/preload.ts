@@ -17,6 +17,7 @@ const initialSettings = readInitialSettings();
  * - Vault:  get-vault-path, select-vault-path, vault:get-storage-info, vault:relocate
  * - Tag:    tag:create, tag:get-all, tag:update, tag:delete, tag:reorder
  * - File:   file:select, file:select-folder, file:add, file:get-all, file:get-by-tags, file:rename, file:delete, file:update-tags, file:bulk-set-tags, file:check-duplicate
+ * - Collect: collect:get-settings, collect:update-settings, collect:toggle, collect:select-watch-folder, collect:get-status, collect:file-collected
  * - Config: config:get-settings, config:get, config:set
  * - Update: update:check, update:download, update:install, update:get-version
  */
@@ -91,6 +92,18 @@ contextBridge.exposeInMainWorld('electronAPI', {
     copyFilesToFolder: (params: { files: { id: number; filename: string }[]; targetDir?: string }) =>
         ipcRenderer.invoke('file:copy-to-folder', params),
     getPathForFile: (file: File) => webUtils.getPathForFile(file),
+
+    // Auto-Collect
+    getAutoCollectSettings: () => ipcRenderer.invoke('collect:get-settings'),
+    updateAutoCollectSettings: (params: Record<string, any>) => ipcRenderer.invoke('collect:update-settings', params),
+    toggleAutoCollect: (params: { enabled: boolean }) => ipcRenderer.invoke('collect:toggle', params),
+    selectWatchFolder: () => ipcRenderer.invoke('collect:select-watch-folder'),
+    getAutoCollectStatus: () => ipcRenderer.invoke('collect:get-status'),
+    onFileCollected: (callback: (event: { filename: string; tagNames: string[]; skipped?: boolean; error?: string }) => void) => {
+        const handler = (_event: Electron.IpcRendererEvent, data: { filename: string; tagNames: string[]; skipped?: boolean; error?: string }) => callback(data);
+        ipcRenderer.on('collect:file-collected', handler);
+        return () => { ipcRenderer.removeListener('collect:file-collected', handler); };
+    },
 
     // Config
     getSettings: () => ipcRenderer.invoke('config:get-settings'),

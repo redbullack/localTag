@@ -102,6 +102,14 @@ export interface IElectronAPI {
     getConfig: (params: { key: string }) => Promise<IpcResponse<any>>;
     setConfig: (params: { key: string; value: any }) => Promise<IpcResponse<null>>;
 
+    // Auto-Collect
+    getAutoCollectSettings: () => Promise<IpcResponse<AutoCollectSettings>>;
+    updateAutoCollectSettings: (params: Partial<AutoCollectSettings>) => Promise<IpcResponse<AutoCollectSettings>>;
+    toggleAutoCollect: (params: { enabled: boolean }) => Promise<IpcResponse<{ enabled: boolean }>>;
+    selectWatchFolder: () => Promise<IpcResponse<{ folderPath: string | null }>>;
+    getAutoCollectStatus: () => Promise<IpcResponse<{ watching: boolean; watchPaths: string[] }>>;
+    onFileCollected: (callback: (event: FileCollectedEvent) => void) => () => void;
+
     // Update
     checkForUpdate: () => Promise<IpcResponse<UpdateCheckResult>>;
     downloadUpdate: () => Promise<IpcResponse<null>>;
@@ -131,9 +139,26 @@ export interface UpdateDownloadProgress {
 /** 앱 설정 타입 */
 export type ThemeMode = 'light' | 'dark' | 'system';
 
+/** 자동 수집 설정 */
+export interface AutoCollectSettings {
+    enabled: boolean;
+    watchPaths: string[];
+    defaultTagIds: number[];
+    stabilityDelayMs: number;
+}
+
+/** 자동 수집 파일 알림 이벤트 */
+export interface FileCollectedEvent {
+    filename: string;
+    tagNames: string[];
+    skipped?: boolean;
+    error?: string;
+}
+
 export interface AppSettings {
     theme: ThemeMode;
     autoStart: boolean;
+    autoCollect: AutoCollectSettings;
 }
 
 declare global {
