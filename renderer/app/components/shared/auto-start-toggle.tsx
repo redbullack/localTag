@@ -43,7 +43,7 @@ export default function AutoStartToggle() {
         <button
             className={`auto-start-toggle${autoStart ? ' auto-start-toggle--active' : ''}`}
             onClick={handleToggle}
-            title={`PC 부팅 시 자동으로 앱 실행 (${autoStart ? '켜짐' : '꺼짐'})`}
+            data-tooltip={`PC 부팅 시 자동으로 앱 실행 (${autoStart ? '켜짐' : '꺼짐'})`}
             aria-label={`PC 부팅 시 자동으로 앱 실행 (${autoStart ? '켜짐' : '꺼짐'})`}
             role="switch"
             aria-checked={autoStart}

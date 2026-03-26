@@ -22,6 +22,7 @@ export default function ThemeToggle() {
                     onClick={() => setThemeMode(option.value)}
                     aria-checked={themeMode === option.value}
                     aria-label={option.label}
+                    data-tooltip={option.label}
                     role="radio"
                     type="button"
                 >
