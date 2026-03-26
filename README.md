@@ -21,6 +21,10 @@ Electron과 Next.js 기반의 데스크탑 애플리케이션 프로젝트입니
 ---
 ## 진행 및 수정 사항 (Changelog)
 
+* **2026-03-26** (3)
+  * **작업 내용**: 앱 버전 표시 및 기본 메뉴바 제거. (1) `next.config.mjs`에서 `package.json`의 버전을 읽어 `NEXT_PUBLIC_APP_VERSION` 환경변수로 주입. (2) 헤더 우측에 `v{버전}` 텍스트를 소형 뮤트 스타일로 표시. (3) Electron 기본 애플리케이션 메뉴바를 `Menu.setApplicationMenu(null)`로 제거. (4) `update-banner.css`에서 메시지 텍스트의 ellipsis(말줄임) 처리를 제거하여 긴 업데이트 메시지가 잘리지 않도록 개선.
+  * **변경된 핵심 파일**: `main/main.ts`, `renderer/next.config.mjs`, `renderer/app/page.tsx`, `renderer/app/globals.css`, `renderer/app/components/shared/update-banner.css`
+
 * **2026-03-26** (2)
   * **작업 내용**: 툴팁 시스템 통일 및 UX 개선. 헤더 영역 버튼들(`AutoStartToggle`, 다운로드 수집 설정 버튼)에서 브라우저 네이티브 `title` 속성을 CSS 커스텀 `data-tooltip`으로 교체하여 앱 전체 툴팁 스타일 통일. `ThemeToggle` 버튼에도 `data-tooltip` 속성 추가. 툴팁 CSS 트랜지션을 간소화(`cubic-bezier` → `ease`, 0.2s → 0.1s)하고, `:focus` → `:focus-visible`로 변경하여 마우스 클릭 시 불필요한 툴팁 노출 방지.
   * **변경된 핵심 파일**: `renderer/app/components/shared/auto-start-toggle.tsx`, `renderer/app/components/shared/theme-toggle.tsx`, `renderer/app/globals.css`, `renderer/app/page.tsx`
