@@ -9,6 +9,8 @@ import { useToast } from './components/shared/toast-provider';
 import TagFormModal from './components/tag-form-modal/tag-form-modal';
 import AutoStartToggle from './components/shared/auto-start-toggle';
 import ThemeToggle from './components/shared/theme-toggle';
+import AutoCollectSettingsModal from './components/auto-collect-settings/auto-collect-settings';
+import './components/auto-collect-settings/auto-collect-settings.css';
 import TagSidebar from './components/tag-sidebar/tag-sidebar';
 import VaultInfo from './components/vault-info/vault-info';
 import type { FileWithTags, SortOption, Tag } from './types';
@@ -34,6 +36,10 @@ export default function Home() {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingTag, setEditingTag] = useState<Tag | null>(null);
     const [defaultParentId, setDefaultParentId] = useState<number | null>(null);
+
+    // 자동 수집 상태
+    const [isCollectModalOpen, setIsCollectModalOpen] = useState(false);
+    const [isCollectEnabled, setIsCollectEnabled] = useState(false);
 
     // 파일 상태
     const [fileList, setFileList] = useState<FileWithTags[]>([]);
@@ -238,6 +244,41 @@ export default function Home() {
 
         return cleanup;
     }, [updateProgress]);
+
+    /** 자동 수집 이벤트를 구독한다. */
+    useEffect(() => {
+        if (typeof window === 'undefined' || !window.electronAPI) return;
+
+        const cleanup = window.electronAPI.onFileCollected((event) => {
+            if (event.error) {
+                showToast({ type: 'error', message: `수집 실패: ${event.filename} — ${event.error}`, duration: 4000 });
+                return;
+            }
+            if (event.skipped) return;
+
+            const tagInfo = event.tagNames.length > 0 ? ` [${event.tagNames.join(', ')}]` : '';
+            showToast({
+                type: 'success',
+                message: `자동 수집: ${event.filename}${tagInfo}`,
+                duration: 3000,
+            });
+            loadFiles();
+            loadTags();
+        });
+
+        return cleanup;
+    }, [loadFiles, loadTags, showToast]);
+
+    /** 자동 수집 설정 상태를 로드한다. */
+    useEffect(() => {
+        if (typeof window === 'undefined' || !window.electronAPI) return;
+
+        window.electronAPI.getAutoCollectSettings().then((response) => {
+            if (response.success && response.data) {
+                setIsCollectEnabled(response.data.enabled);
+            }
+        });
+    }, []);
 
     /** 앱이 다시 포커스를 얻으면 조용히 동기화한다. (파일 작업 중이면 스킵) */
     useEffect(() => {
@@ -822,6 +863,19 @@ export default function Home() {
                         </h1>
                     </div>
                     <div className="main-content__header-right">
+                        <button
+                            className={`collect-settings-button${isCollectEnabled ? ' collect-settings-button--active' : ''}`}
+                            onClick={() => setIsCollectModalOpen(true)}
+                            title={`다운로드 자동 수집 설정 (${isCollectEnabled ? '켜짐' : '꺼짐'})`}
+                            type="button"
+                        >
+                            {isCollectEnabled && <span className="collect-settings-button__indicator" />}
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                                <polyline points="7 10 12 15 17 10" />
+                                <line x1="12" y1="15" x2="12" y2="3" />
+                            </svg>
+                        </button>
                         <AutoStartToggle />
                         <ThemeToggle />
                     </div>
@@ -873,6 +927,19 @@ export default function Home() {
                 existingTag={editingTag}
                 allTags={tagList}
                 defaultParentId={defaultParentId}
+            />
+
+            <AutoCollectSettingsModal
+                isOpen={isCollectModalOpen}
+                onClose={() => setIsCollectModalOpen(false)}
+                allTags={tagList}
+                onSettingsChanged={() => {
+                    window.electronAPI.getAutoCollectSettings().then((response) => {
+                        if (response.success && response.data) {
+                            setIsCollectEnabled(response.data.enabled);
+                        }
+                    });
+                }}
             />
 
             {tagEditorFiles && (

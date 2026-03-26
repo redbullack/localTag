@@ -46,7 +46,7 @@ interface AddFileParams {
 // ─── 유틸리티 ────────────────────────────────────────
 
 /** 특정 임시 파일/숨김 파일을 완전히 무시하는 필터 함수 */
-const isIgnoredFile = (filename: string): boolean => {
+export const isIgnoredFile = (filename: string): boolean => {
     const lower = filename.toLowerCase();
     return (
         filename.startsWith('.') ||

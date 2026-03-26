@@ -21,6 +21,10 @@ Electron과 Next.js 기반의 데스크탑 애플리케이션 프로젝트입니
 ---
 ## 진행 및 수정 사항 (Changelog)
 
+* **2026-03-26**
+  * **작업 내용**: 다운로드 자동 수집 기능 추가. 지정한 감시 폴더(예: 다운로드 폴더)에 새 파일이 추가되면 Vault로 자동 이동하고 기본 태그를 부여하는 기능. (1) **Main 프로세스**: `download-watcher.ts` 싱글톤 클래스 신규 생성 — `fs.watch` 이벤트 감시 + 60초 폴링 fallback 병행, 파일 크기 안정성 검사(최대 10회) 및 잠금 해제 확인 후 수집, 브라우저 임시 파일(.crdownload, .part 등) 자동 필터링. `collect-handler.ts` 신규 생성 — `collect:get-settings`, `collect:update-settings`, `collect:toggle`, `collect:select-watch-folder`, `collect:get-status` IPC 채널 5개 및 `collect:file-collected` Main→Renderer 이벤트 1개 구현. (2) **설정 영속화**: `store.ts`에 `AutoCollectSettings` 타입 및 `getAutoCollectSettings`/`setAutoCollectSettings` 함수 추가, electron-store 기반 설정 저장. (3) **Renderer**: `AutoCollectSettingsModal` 컴포넌트 신규 생성 — 토글 ON/OFF, 감시 폴더 추가/제거, 기본 태그 선택 UI. 헤더에 다운로드 아이콘 버튼 추가(활성 시 초록 점 표시). 수집 완료/실패 시 Toast 알림. (4) **기타**: 개발 포트 3123→3456 변경, `next.config.mjs`에 turbopack root 설정 추가.
+  * **변경된 핵심 파일**: `main/lib/download-watcher.ts`(신규), `main/ipc/collect-handler.ts`(신규), `main/lib/store.ts`, `main/main.ts`, `main/preload.ts`, `main/lib/file-repository.ts`, `renderer/app/components/auto-collect-settings/auto-collect-settings.tsx`(신규), `renderer/app/components/auto-collect-settings/auto-collect-settings.css`(신규), `renderer/app/page.tsx`, `renderer/global.d.ts`, `package.json`, `renderer/next.config.mjs`, `CLAUDE.md`
+
 * **2026-03-25** (3)
   * **작업 내용**: v1.1.1 버그픽스 릴리스. `latest.yml`에 명시된 파일명(`LocalTag-Setup-1.1.0.exe`)과 실제 GitHub 릴리스에 업로드된 파일명(`LocalTag.Setup.1.1.0.exe`)이 달라 `electron-updater`가 다운로드 실패하는 문제 수정. `package.json`의 `nsis` 설정에 `artifactName` 필드를 명시(`LocalTag-Setup-${version}.exe`)하여 빌드 시 파일명이 항상 일치하도록 고정. 버전 `1.1.0` → `1.1.1` bump.
   * **변경된 핵심 파일**: `package.json`
