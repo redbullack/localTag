@@ -459,7 +459,7 @@ export default function TagSidebar({
                         className="tag-sidebar__collapse-btn"
                         onClick={collapsedIds.size > 0 ? handleExpandAll : handleCollapseAll}
                         aria-label={collapsedIds.size > 0 ? '모두 펼치기' : '모두 접기'}
-                        title={collapsedIds.size > 0 ? '모두 펼치기' : '모두 접기'}
+                        data-tooltip={collapsedIds.size > 0 ? '모두 펼치기' : '모두 접기'}
                     >
                         <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
                             {collapsedIds.size > 0
@@ -472,7 +472,7 @@ export default function TagSidebar({
                         className={`tag-sidebar__sort-btn ${sortOrder !== 'none' ? 'tag-sidebar__sort-btn--active' : ''}`}
                         onClick={cycleSortOrder}
                         aria-label={`정렬: ${SORT_LABELS[sortOrder]}`}
-                        title={`정렬: ${SORT_LABELS[sortOrder]}`}
+                        data-tooltip={`정렬: ${SORT_LABELS[sortOrder]}`}
                     >
                         <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
                             {(sortOrder === 'count-asc' || sortOrder === 'count-desc') ? (
@@ -502,7 +502,7 @@ export default function TagSidebar({
                         className="tag-sidebar__add-btn"
                         onClick={onCreateTag}
                         aria-label="새 태그 만들기"
-                        title="새 태그 만들기"
+                        data-tooltip="새 태그 만들기"
                     >
                         +
                     </button>
