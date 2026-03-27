@@ -515,6 +515,7 @@ export default function TagSidebar({
                     selectedTagIds={new Set(selectedTagIds)}
                     onSelectTag={(id) => id !== null && onSelectTag(id)}
                     selectionMode="single"
+                    showFavoritesFirst={false}
                     searchPlaceholder="태그 검색..."
                 />
             </div>
