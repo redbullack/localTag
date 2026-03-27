@@ -83,6 +83,20 @@
     border: 1px solid var(--color-dot-border);
 }
 
+/* ===== 즐겨찾기 구분선 ===== */
+.tag-search-dropdown__divider {
+    height: 1px;
+    background: var(--border-subtle);
+    margin: 4px 8px;
+    list-style: none;
+}
+
+/* ===== 즐겨찾기 별 아이콘 ===== */
+.tag-search-dropdown__favorite-star {
+    font-size: 12px;
+    line-height: 1;
+}
+
 /* ===== 빈 상태 메시지 ===== */
 .tag-search-dropdown__empty {
     padding: 16px;

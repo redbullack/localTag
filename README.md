@@ -21,6 +21,10 @@ Electron과 Next.js 기반의 데스크탑 애플리케이션 프로젝트입니
 ---
 ## 진행 및 수정 사항 (Changelog)
 
+* **2026-03-27** (3)
+  * **작업 내용**: 태그 검색 드롭다운에 즐겨찾기 태그 우선 표시 기능 추가. 드롭다운 오픈 시 즐겨찾기 등록된 태그를 최상단에 ⭐ 아이콘과 함께 표시하고 구분선으로 분리. 사이드바에는 이미 즐겨찾기 섹션이 별도 존재하므로 `showFavoritesFirst={false}` prop으로 비활성화.
+  * **변경된 핵심 파일**: `renderer/app/components/shared/tag-search-dropdown.tsx`, `renderer/app/components/shared/tag-search-dropdown.css`, `renderer/app/components/tag-sidebar/tag-sidebar.tsx`
+
 * **2026-03-27** (2)
   * **작업 내용**: 자동 수집 설정 모달 개선. (1) 감시 폴더 목록을 최대 10개로 제한 — 10개 도달 시 추가 버튼 비활성화 및 error toast 안내. (2) 폴더 추가 버튼에 현재/최대 개수(n/10) 표시. (3) 설정 저장 성공 시 success toast 메시지 표시.
   * **변경된 핵심 파일**: `renderer/app/components/auto-collect-settings/auto-collect-settings.tsx`
