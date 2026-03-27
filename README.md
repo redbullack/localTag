@@ -21,6 +21,10 @@ Electron과 Next.js 기반의 데스크탑 애플리케이션 프로젝트입니
 ---
 ## 진행 및 수정 사항 (Changelog)
 
+* **2026-03-27** (2)
+  * **작업 내용**: 자동 수집 설정 모달 개선. (1) 감시 폴더 목록을 최대 10개로 제한 — 10개 도달 시 추가 버튼 비활성화 및 error toast 안내. (2) 폴더 추가 버튼에 현재/최대 개수(n/10) 표시. (3) 설정 저장 성공 시 success toast 메시지 표시.
+  * **변경된 핵심 파일**: `renderer/app/components/auto-collect-settings/auto-collect-settings.tsx`
+
 * **2026-03-27**
   * **작업 내용**: 태그 사이드바 헤더 버튼 툴팁 시스템 통일. "모두 접기/펼치기", "정렬", "새 태그 만들기" 3개 버튼의 브라우저 네이티브 `title` 속성을 CSS 커스텀 `data-tooltip`으로 교체하여 앱 전체 툴팁 스타일과 통일(즉시 표시, 딜레이 없음).
   * **변경된 핵심 파일**: `renderer/app/components/tag-sidebar/tag-sidebar.tsx`
