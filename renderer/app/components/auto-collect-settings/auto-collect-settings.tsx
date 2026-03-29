@@ -2,10 +2,13 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import type { Tag } from '../../types';
+import { useToast } from '../shared/toast-provider';
 import TagSearchDropdown from '../shared/tag-search-dropdown';
 import TagBadge from '../shared/tag-badge';
 import '../tag-form-modal/tag-form-modal.css';
 import './auto-collect-settings.css';
+
+const MAX_WATCH_PATHS = 10;
 
 interface AutoCollectSettingsModalProps {
     isOpen: boolean;
@@ -20,6 +23,7 @@ export default function AutoCollectSettingsModal({
     allTags,
     onSettingsChanged,
 }: AutoCollectSettingsModalProps) {
+    const { showToast } = useToast();
     const [enabled, setEnabled] = useState(false);
     const [watchPaths, setWatchPaths] = useState<string[]>([]);
     const [selectedTagIds, setSelectedTagIds] = useState<Set<number>>(new Set());
@@ -50,6 +54,10 @@ export default function AutoCollectSettingsModal({
     // 폴더 추가
     const handleAddFolder = useCallback(async () => {
         if (typeof window === 'undefined' || !window.electronAPI) return;
+        if (watchPaths.length >= MAX_WATCH_PATHS) {
+            showToast({ type: 'error', message: `감시 폴더는 최대 ${MAX_WATCH_PATHS}개까지 추가할 수 있습니다.` });
+            return;
+        }
 
         const response = await window.electronAPI.selectWatchFolder();
         if (response.success && response.data?.folderPath) {
@@ -59,7 +67,7 @@ export default function AutoCollectSettingsModal({
                 return [...prev, newPath];
             });
         }
-    }, []);
+    }, [watchPaths.length, showToast]);
 
     // 폴더 제거
     const handleRemoveFolder = useCallback((pathToRemove: string) => {
@@ -108,10 +116,11 @@ export default function AutoCollectSettingsModal({
         setIsSaving(false);
 
         if (response.success) {
+            showToast({ type: 'success', message: '자동 수집 설정이 저장되었습니다.' });
             onSettingsChanged();
             onClose();
         }
-    }, [enabled, watchPaths, selectedTagIds, onSettingsChanged, onClose]);
+    }, [enabled, watchPaths, selectedTagIds, onSettingsChanged, onClose, showToast]);
 
     // 키보드 핸들링
     const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
@@ -192,9 +201,10 @@ export default function AutoCollectSettingsModal({
                                     <button
                                         className="watch-path-add"
                                         onClick={handleAddFolder}
+                                        disabled={watchPaths.length >= MAX_WATCH_PATHS}
                                         type="button"
                                     >
-                                        + 폴더 추가
+                                        + 폴더 추가 ({watchPaths.length}/{MAX_WATCH_PATHS})
                                     </button>
                                 </div>
                             </div>

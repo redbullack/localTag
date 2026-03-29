@@ -20,6 +20,7 @@ import { useDebounce } from './utils/use-debounce';
 import { useAutoUpdate } from './utils/use-auto-update';
 import { handleAddFilesResponse, handleFileTransferResponse } from './utils/file-transfer';
 import UpdateBanner from './components/shared/update-banner';
+import OnboardingGuide from './components/onboarding-guide/onboarding-guide';
 import './components/shared/tag-badge.css';
 
 export default function Home() {
@@ -36,6 +37,9 @@ export default function Home() {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingTag, setEditingTag] = useState<Tag | null>(null);
     const [defaultParentId, setDefaultParentId] = useState<number | null>(null);
+
+    // 온보딩 가이드 상태
+    const [isOnboardingOpen, setIsOnboardingOpen] = useState(false);
 
     // 자동 수집 상태
     const [isCollectModalOpen, setIsCollectModalOpen] = useState(false);
@@ -149,12 +153,21 @@ export default function Home() {
         triggerStorageRefresh();
     }, [currentPage, debouncedSearchKeyword, selectedTagIds, sortOption, triggerStorageRefresh]);
 
-    /** Vault가 준비되면 태그와 파일을 함께 로드한다. */
+    /** Vault가 준비되면 태그와 파일을 함께 로드하고, 최초 실행 시 온보딩을 표시한다. */
     useEffect(() => {
         if (!vaultPath) return;
 
         loadTags();
         loadFiles();
+
+        const checkOnboarding = async () => {
+            if (!window.electronAPI) return;
+            const response = await window.electronAPI.getConfig({ key: 'hasSeenOnboarding' });
+            if (response.success && !response.data) {
+                setIsOnboardingOpen(true);
+            }
+        };
+        checkOnboarding();
     }, [loadFiles, loadTags, vaultPath]);
 
     /** 파일 목록이 갱신되면 현재 선택된 파일도 초기화한다. */
@@ -878,6 +891,18 @@ export default function Home() {
                         </button>
                         <AutoStartToggle />
                         <ThemeToggle />
+                        <button
+                            className="onboarding-help-button"
+                            onClick={() => setIsOnboardingOpen(true)}
+                            data-tooltip="사용법 가이드"
+                            type="button"
+                        >
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                <circle cx="12" cy="12" r="10" />
+                                <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3" />
+                                <line x1="12" y1="17" x2="12.01" y2="17" />
+                            </svg>
+                        </button>
                         <span className="main-content__version">v{process.env.NEXT_PUBLIC_APP_VERSION}</span>
                     </div>
                 </div>
@@ -941,6 +966,11 @@ export default function Home() {
                         }
                     });
                 }}
+            />
+
+            <OnboardingGuide
+                isOpen={isOnboardingOpen}
+                onClose={() => setIsOnboardingOpen(false)}
             />
 
             {tagEditorFiles && (

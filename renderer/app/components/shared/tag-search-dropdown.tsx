@@ -22,6 +22,8 @@ interface TagSearchDropdownProps {
     showRootOption?: boolean;
     /** 검색창 placeholder 문자열 */
     searchPlaceholder?: string;
+    /** 즐겨찾기 태그를 최상위에 먼저 표시할지 여부 */
+    showFavoritesFirst?: boolean;
     /** 추가적인 CSS 클래스 (컨테이너용) */
     className?: string;
     /** 컴포넌트 마운트 시 검색창에 포커스를 줄지 여부 */
@@ -34,6 +36,7 @@ export default function TagSearchDropdown({
     onSelectTag,
     selectionMode,
     showRootOption = false,
+    showFavoritesFirst = true,
     searchPlaceholder = '🔍 검색...',
     className = '',
     autoFocus = false,
@@ -72,6 +75,17 @@ export default function TagSearchDropdown({
         );
     }, [flatTagList, searchQuery]);
 
+    // 즐겨찾기 태그를 상단에 분리
+    const favoriteTagList = useMemo(() => {
+        if (!showFavoritesFirst) return [];
+        return filteredTagList.filter(({ tag }) => tag.isFavorite);
+    }, [filteredTagList, showFavoritesFirst]);
+
+    const normalTagList = useMemo(() => {
+        if (!showFavoritesFirst) return filteredTagList;
+        return filteredTagList.filter(({ tag }) => !tag.isFavorite);
+    }, [filteredTagList, showFavoritesFirst]);
+
     const isRootSelected = selectionMode === 'single' && selectedTagIds.size === 0;
 
     return (
@@ -108,37 +122,78 @@ export default function TagSearchDropdown({
                             일치하는 태그가 없습니다
                         </li>
                     ) : (
-                        filteredTagList.map(({ tag, depth }) => {
-                            const isSelected = selectedTagIds.has(tag.id);
-                            return (
-                                <button
-                                    type="button"
-                                    key={tag.id}
-                                    className={`tag-search-dropdown__item ${isSelected ? 'tag-search-dropdown__item--selected' : ''}`}
-                                    role="option"
-                                    aria-selected={isSelected}
-                                    style={{ paddingLeft: `${10 + depth * 16}px` }}
-                                    onClick={() => {
-                                        onSelectTag(tag.id);
-                                        setIsDropdownOpen(false);
-                                    }}
-                                >
-                                    <span
-                                        className="tag-color-dot"
-                                        style={{
-                                            backgroundColor: tag.color || DEFAULT_TAG_MUTED_COLOR,
-                                        }}
-                                    />
-                                    {tag.name}
-                                    {/* 만약 다중 선택 모드이고, 선택된 상태라면 체크 표시 렌더링 */}
-                                    {selectionMode === 'multiple' && isSelected && (
-                                        <span className="tag-search-dropdown__item-check">
-                                            ✓
-                                        </span>
+                        <>
+                            {/* 즐겨찾기 태그 우선 표시 */}
+                            {favoriteTagList.length > 0 && (
+                                <>
+                                    {favoriteTagList.map(({ tag }) => {
+                                        const isSelected = selectedTagIds.has(tag.id);
+                                        return (
+                                            <button
+                                                type="button"
+                                                key={`fav-${tag.id}`}
+                                                className={`tag-search-dropdown__item ${isSelected ? 'tag-search-dropdown__item--selected' : ''}`}
+                                                role="option"
+                                                aria-selected={isSelected}
+                                                onClick={() => {
+                                                    onSelectTag(tag.id);
+                                                    setIsDropdownOpen(false);
+                                                }}
+                                            >
+                                                <span
+                                                    className="tag-color-dot"
+                                                    style={{
+                                                        backgroundColor: tag.color || DEFAULT_TAG_MUTED_COLOR,
+                                                    }}
+                                                />
+                                                <span className="tag-search-dropdown__favorite-star">⭐</span>
+                                                {tag.name}
+                                                {selectionMode === 'multiple' && isSelected && (
+                                                    <span className="tag-search-dropdown__item-check">
+                                                        ✓
+                                                    </span>
+                                                )}
+                                            </button>
+                                        );
+                                    })}
+                                    {normalTagList.length > 0 && (
+                                        <li className="tag-search-dropdown__divider" />
                                     )}
-                                </button>
-                            );
-                        })
+                                </>
+                            )}
+
+                            {/* 일반 태그 리스트 */}
+                            {normalTagList.map(({ tag, depth }) => {
+                                const isSelected = selectedTagIds.has(tag.id);
+                                return (
+                                    <button
+                                        type="button"
+                                        key={tag.id}
+                                        className={`tag-search-dropdown__item ${isSelected ? 'tag-search-dropdown__item--selected' : ''}`}
+                                        role="option"
+                                        aria-selected={isSelected}
+                                        style={{ paddingLeft: `${10 + depth * 16}px` }}
+                                        onClick={() => {
+                                            onSelectTag(tag.id);
+                                            setIsDropdownOpen(false);
+                                        }}
+                                    >
+                                        <span
+                                            className="tag-color-dot"
+                                            style={{
+                                                backgroundColor: tag.color || DEFAULT_TAG_MUTED_COLOR,
+                                            }}
+                                        />
+                                        {tag.name}
+                                        {selectionMode === 'multiple' && isSelected && (
+                                            <span className="tag-search-dropdown__item-check">
+                                                ✓
+                                            </span>
+                                        )}
+                                    </button>
+                                );
+                            })}
+                        </>
                     )}
                 </ul>
             )}

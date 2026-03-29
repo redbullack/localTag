@@ -21,6 +21,22 @@ Electron과 Next.js 기반의 데스크탑 애플리케이션 프로젝트입니
 ---
 ## 진행 및 수정 사항 (Changelog)
 
+* **2026-03-29** (4)
+  * **작업 내용**: 앱 최초 실행 시 주요 기능을 소개하는 온보딩 가이드 슬라이드 모달 추가. Vault 설정 후 메인 화면 첫 진입 시 자동 표시되며, 헤더 우측 `?` 버튼으로 언제든 재열람 가능. 총 6장의 슬라이드(Vault 개념, 파일 추가, 계층형 태그, 태그 필터링, 우클릭 수정, 시작)로 구성. 이전/다음 버튼, 도트 인디케이터, 키보드(←→Esc) 네비게이션 지원. `hasSeenOnboarding` 플래그를 `AppSettings`에 추가하여 최초 표시 여부를 영속적으로 관리.
+  * **변경된 핵심 파일**: `renderer/app/components/onboarding-guide/onboarding-guide.tsx`, `renderer/app/components/onboarding-guide/onboarding-slides-data.tsx`, `renderer/app/components/onboarding-guide/onboarding-guide.css`, `main/lib/store.ts`, `renderer/app/page.tsx`, `renderer/app/globals.css`
+
+* **2026-03-27** (3)
+  * **작업 내용**: 태그 검색 드롭다운에 즐겨찾기 태그 우선 표시 기능 추가. 드롭다운 오픈 시 즐겨찾기 등록된 태그를 최상단에 ⭐ 아이콘과 함께 표시하고 구분선으로 분리. 사이드바에는 이미 즐겨찾기 섹션이 별도 존재하므로 `showFavoritesFirst={false}` prop으로 비활성화.
+  * **변경된 핵심 파일**: `renderer/app/components/shared/tag-search-dropdown.tsx`, `renderer/app/components/shared/tag-search-dropdown.css`, `renderer/app/components/tag-sidebar/tag-sidebar.tsx`
+
+* **2026-03-27** (2)
+  * **작업 내용**: 자동 수집 설정 모달 개선. (1) 감시 폴더 목록을 최대 10개로 제한 — 10개 도달 시 추가 버튼 비활성화 및 error toast 안내. (2) 폴더 추가 버튼에 현재/최대 개수(n/10) 표시. (3) 설정 저장 성공 시 success toast 메시지 표시.
+  * **변경된 핵심 파일**: `renderer/app/components/auto-collect-settings/auto-collect-settings.tsx`
+
+* **2026-03-27**
+  * **작업 내용**: 태그 사이드바 헤더 버튼 툴팁 시스템 통일. "모두 접기/펼치기", "정렬", "새 태그 만들기" 3개 버튼의 브라우저 네이티브 `title` 속성을 CSS 커스텀 `data-tooltip`으로 교체하여 앱 전체 툴팁 스타일과 통일(즉시 표시, 딜레이 없음).
+  * **변경된 핵심 파일**: `renderer/app/components/tag-sidebar/tag-sidebar.tsx`
+
 * **2026-03-26** (3)
   * **작업 내용**: 앱 버전 표시 및 기본 메뉴바 제거. (1) `next.config.mjs`에서 `package.json`의 버전을 읽어 `NEXT_PUBLIC_APP_VERSION` 환경변수로 주입. (2) 헤더 우측에 `v{버전}` 텍스트를 소형 뮤트 스타일로 표시. (3) Electron 기본 애플리케이션 메뉴바를 `Menu.setApplicationMenu(null)`로 제거. (4) `update-banner.css`에서 메시지 텍스트의 ellipsis(말줄임) 처리를 제거하여 긴 업데이트 메시지가 잘리지 않도록 개선.
   * **변경된 핵심 파일**: `main/main.ts`, `renderer/next.config.mjs`, `renderer/app/page.tsx`, `renderer/app/globals.css`, `renderer/app/components/shared/update-banner.css`

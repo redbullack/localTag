@@ -282,6 +282,7 @@
     color: var(--text-primary);
 }
 
+
 /* ===== 드래그 리사이즈 핸들 ===== */
 .sidebar-resize-handle {
     position: absolute;
