@@ -13,6 +13,7 @@ export interface AppSettings {
     theme: ThemeMode;
     autoStart: boolean;
     autoCollect: AutoCollectSettings;
+    hasSeenOnboarding: boolean;
 }
 
 const DEFAULT_AUTO_COLLECT: AutoCollectSettings = {
@@ -26,6 +27,7 @@ const DEFAULT_SETTINGS: AppSettings = {
     theme: 'system',
     autoStart: false,
     autoCollect: DEFAULT_AUTO_COLLECT,
+    hasSeenOnboarding: false,
 };
 
 interface ConfigType {
